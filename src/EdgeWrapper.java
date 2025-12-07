@@ -15,7 +15,9 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import java.util.List;
 import java.util.ArrayList;
 
-
+/**
+ * @author Tai
+ */
 public class EdgeWrapper
 {
     // initialize the connection
@@ -27,7 +29,7 @@ public class EdgeWrapper
         this.connection = connection;
     }
 
-    // getEdgeCount wrapper
+    // Get the number of edges
     public int getEdgeCount()
     {
         try
@@ -36,13 +38,13 @@ public class EdgeWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get number of Edges");
+            System.out.println("Failed to get number of edges");
             e.printStackTrace();
         }
         return 0;
     }
 
-    // get edge ids
+    // Get edge IDs
     public List<String> getEdgeIDs()
     {
         try
@@ -51,13 +53,13 @@ public class EdgeWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the list of Edge IDs");
+            System.out.println("Failed to get the list of edge IDs");
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    // get the lane number
+    // Get the lane number
     public int getLaneNumber(String EdgeId)
     {
         try
@@ -66,10 +68,35 @@ public class EdgeWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the speed of the Edge " + EdgeId);
+            System.out.println("Failed to get the lane number");
             e.printStackTrace();
         }
         return 0;
+    }
+
+
+    public String getStreetName(String EdgeId) {
+        try
+        {
+            return (String) connection.do_job_get(Edge.getStreetName(EdgeId))
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the street name");
+            e.printStackTrace();
+        }
+    }
+
+    public double getTravelTime(string EdgeId) {
+        try
+        {
+            return (Double) connection.do_job_get(Edge.getTravelTime(EdgeId))
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the travel time");
+            e.printStackTrace();
+        }
     }
 
 }

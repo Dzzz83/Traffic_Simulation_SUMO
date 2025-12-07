@@ -68,7 +68,7 @@ public class EdgeWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the speed of the Edge " + EdgeId);
+            System.out.println("Failed to get the lane number");
             e.printStackTrace();
         }
         return 0;

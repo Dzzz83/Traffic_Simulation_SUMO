@@ -74,29 +74,4 @@ public class EdgeWrapper
         return 0;
     }
 
-
-    public String getStreetName(String EdgeId) {
-        try
-        {
-            return (String) connection.do_job_get(Edge.getStreetName(EdgeId))
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to get the street name");
-            e.printStackTrace();
-        }
-    }
-
-    public double getTravelTime(string EdgeId) {
-        try
-        {
-            return (Double) connection.do_job_get(Edge.getTravelTime(EdgeId))
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to get the travel time");
-            e.printStackTrace();
-        }
-    }
-
 }

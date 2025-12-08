@@ -30,21 +30,45 @@ public class Main
 
 
         // step 20 times
-        int total_step = 20;
+        int total_step = 100;
         for (int i = 0; i < total_step; i++)
         {
             System.out.println("\n--- Step " + (i+1) + "/" + total_step);
             panel.step();
-            if (!trafficLightIDs.isEmpty())
+//            if (!trafficLightIDs.isEmpty())
+//            {
+//                // show traffic light states after each step
+//                System.out.println("Traffic light states:");
+//                for (String tlId : trafficLightIDs) {
+//                    String state = panel.getRedYellowGreenState(tlId);
+//                    System.out.println("  " + tlId + ": " + state);
+//                }
+//                System.out.println();
+//            }
+
+            if (i == 5)
             {
-                // show traffic light states after each step
-                System.out.println("Traffic light states:");
-                for (String tlId : trafficLightIDs) {
-                    String state = panel.getRedYellowGreenState(tlId);
-                    System.out.println("  " + tlId + ": " + state);
-                }
-                System.out.println();
+                panel.setColor(new_car, 0, 0, 255, 255);
+                System.out.println("The new car's color has been changed");
+                System.out.println("The speed of the " + new_car + " is (before): " + panel.getVehicleSpeed(new_car));
+                panel.setSpeed(new_car, 10);
+                System.out.println("The lane of the " + new_car + " is (before): " + panel.getLaneID(new_car));
+                panel.changeLane(new_car, 1, 3000);
             }
+            if (i == 6)
+            {
+                System.out.println("The speed of the " + new_car + " is (after): " + panel.getVehicleSpeed(new_car));
+                System.out.println("The lane of the " + new_car + " is (after): " + panel.getLaneID(new_car));
+                panel.slowDown(new_car, 5, 2);
+
+            }
+            if (i == 7)
+            {
+                System.out.println("The speed of the " + new_car + " is (after): " + panel.getVehicleSpeed(new_car));
+                System.out.println("Current Road of the new vehicle is: " + panel.getRoadID(new_car));
+
+            }
+
             // check if the new car exists in the simulation
             if (panel.getVehicleIDs().contains(new_car))
             {
@@ -55,6 +79,17 @@ public class Main
                 System.out.println("The new car's speed is " + speed);
                 System.out.println("The position of the new car is " + pos);
             }
+            if (i == 50)
+            {
+                System.out.println("Current Road of the new vehicle is: " + panel.getRoadID(new_car));
+                // change the destination of the new car
+                panel.changeTarget(new_car, "E4");
+                System.out.println("Successfully changed the target");
+            }
+            if (i == 80)
+            {
+                System.out.println("Current Road of the new vehicle is: " + panel.getRoadID(new_car));
+            }
         }
         // check if the new car exists
         if (panel.getVehicleIDs().contains(new_car))
@@ -64,9 +99,6 @@ public class Main
             String roadID = panel.getRoadID(new_car);
             System.out.println("The new car's lane is " + laneID);
             System.out.println("The new car's positon is " + roadID);
-
-            // change the route
-            panel.setRouteID(new_car, "r_0");
 
             // change the speed
             double newSpeed = 15;

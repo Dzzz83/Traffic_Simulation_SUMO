@@ -14,6 +14,7 @@ package wrapperSUMO;
 
 import de.tudresden.sumo.cmd.Vehicle;
 import it.polito.appeal.traci.SumoTraciConnection;
+import de.tudresden.sumo.objects.SumoColor;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -213,4 +214,66 @@ public class VehicleWrapper
         }
         return 0.0;
     }
+
+    // changeLane() function
+    public void changeLane(String vehicleId, int laneIndex, int laneDuration)
+    {
+        try
+        {
+            connection.do_job_set(Vehicle.changeLane(vehicleId, (byte) laneIndex, laneDuration));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to change the lane of the vehicle");
+            e.printStackTrace();
+        }
+    }
+
+    // slowDown() function
+    public void slowDown(String vehicleId, double newSpeed, int duration)
+    {
+        try
+        {
+            connection.do_job_set(Vehicle.slowDown(vehicleId, newSpeed, duration));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to slow down the vehicle");
+            e.printStackTrace();
+        }
+    }
+
+    // setColor() function
+    public void setColor(String vehicleId, int r, int g, int b, int a)
+    {
+
+        SumoColor color = new SumoColor(r, g, b, a);
+        try
+        {
+            connection.do_job_set(Vehicle.setColor(vehicleId, color));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set the color");
+            e.printStackTrace();
+        }
+    }
+    // change the desination of the vehicle
+    public void changeTarget(String vehicleId, String edgeId)
+    {
+        try
+        {
+            connection.do_job_set(Vehicle.changeTarget(vehicleId, edgeId));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to change the target");
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
 }

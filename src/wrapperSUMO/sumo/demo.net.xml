@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2025-12-07T19:56:11.585101+01:00 by Eclipse SUMO netedit 1.25.0
+<!-- generated on 2025-12-08T12:45:28.426232+01:00 by Eclipse SUMO netedit 1.25.0
 <neteditConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/neteditConfiguration.xsd">
 
     <input>
@@ -2000,12 +2000,12 @@
     <connection from="-E21" to="E21" fromLane="2" toLane="0" via=":clusterJ76_J81_4_0" dir="t" state="m"/>
     <connection from="-E21" to="E21" fromLane="2" toLane="1" via=":clusterJ76_J81_4_1" dir="t" state="m"/>
     <connection from="-E21" to="-E23" fromLane="3" toLane="3" keepClear="0" via=":clusterJ76_J81_6_0" dir="r" state="M"/>
-    <connection from="-E21.217" to="-E22" fromLane="1" toLane="1" via=":clusterJ79_J87_7_0" dir="r" state="M"/>
-    <connection from="-E21.217" to="-E21" fromLane="1" toLane="1" via=":clusterJ79_J87_8_0" dir="s" state="M"/>
-    <connection from="-E21.217" to="-E22" fromLane="2" toLane="2" via=":clusterJ79_J87_9_0" dir="r" state="m"/>
-    <connection from="-E21.217" to="-E21" fromLane="2" toLane="2" via=":clusterJ79_J87_10_0" dir="s" state="M"/>
-    <connection from="-E21.217" to="-E21" fromLane="3" toLane="3" via=":clusterJ79_J87_10_1" dir="s" state="M"/>
-    <connection from="-E21.217" to="E21.217" fromLane="3" toLane="1" via=":clusterJ79_J87_12_0" dir="t" state="m"/>
+    <connection from="-E21.217" to="-E22" fromLane="1" toLane="1" uncontrolled="1" via=":clusterJ79_J87_7_0" dir="r" state="M"/>
+    <connection from="-E21.217" to="-E21" fromLane="1" toLane="1" uncontrolled="1" via=":clusterJ79_J87_8_0" dir="s" state="M"/>
+    <connection from="-E21.217" to="-E22" fromLane="2" toLane="2" uncontrolled="1" via=":clusterJ79_J87_9_0" dir="r" state="m"/>
+    <connection from="-E21.217" to="-E21" fromLane="2" toLane="2" uncontrolled="1" via=":clusterJ79_J87_10_0" dir="s" state="M"/>
+    <connection from="-E21.217" to="-E21" fromLane="3" toLane="3" uncontrolled="1" via=":clusterJ79_J87_10_1" dir="s" state="M"/>
+    <connection from="-E21.217" to="E21.217" fromLane="3" toLane="1" uncontrolled="1" via=":clusterJ79_J87_12_0" dir="t" state="m"/>
     <connection from="-E21.331" to="-E24" fromLane="1" toLane="1" via=":clusterJ83_J84_6_0" tl="clusterJ83_J84" linkIndex="6" dir="r" state="O"/>
     <connection from="-E21.331" to="-E21.217" fromLane="1" toLane="1" via=":clusterJ83_J84_7_0" tl="clusterJ83_J84" linkIndex="7" dir="s" state="O"/>
     <connection from="-E21.331" to="-E24" fromLane="2" toLane="2" via=":clusterJ83_J84_8_0" tl="clusterJ83_J84" linkIndex="8" dir="r" state="o"/>
@@ -2152,10 +2152,10 @@
     <connection from="E20.176" to="E12.171" fromLane="1" toLane="1" via=":clusterJ43_clusterJ48_J73_2_0" dir="r" state="M"/>
     <connection from="E20.176" to="E12.171" fromLane="2" toLane="2" via=":clusterJ43_clusterJ48_J73_2_1" dir="r" state="M"/>
     <connection from="E20.176" to="E12.171" fromLane="3" toLane="3" via=":clusterJ43_clusterJ48_J73_2_2" dir="r" state="M"/>
-    <connection from="E21" to="E21.217" fromLane="0" toLane="0" via=":clusterJ79_J87_0_0" dir="s" state="M"/>
-    <connection from="E21" to="E21.217" fromLane="1" toLane="1" via=":clusterJ79_J87_0_1" dir="s" state="M"/>
-    <connection from="E21" to="-E22" fromLane="1" toLane="2" via=":clusterJ79_J87_2_0" dir="l" state="m"/>
-    <connection from="E21" to="-E21" fromLane="1" toLane="3" via=":clusterJ79_J87_3_0" dir="t" state="m"/>
+    <connection from="E21" to="E21.217" fromLane="0" toLane="0" uncontrolled="1" via=":clusterJ79_J87_0_0" dir="s" state="M"/>
+    <connection from="E21" to="E21.217" fromLane="1" toLane="1" uncontrolled="1" via=":clusterJ79_J87_0_1" dir="s" state="M"/>
+    <connection from="E21" to="-E22" fromLane="1" toLane="2" uncontrolled="1" via=":clusterJ79_J87_2_0" dir="l" state="m"/>
+    <connection from="E21" to="-E21" fromLane="1" toLane="3" uncontrolled="1" via=":clusterJ79_J87_3_0" dir="t" state="m"/>
     <connection from="E21.217" to="E21.331" fromLane="0" toLane="0" via=":clusterJ83_J84_0_0" tl="clusterJ83_J84" linkIndex="0" dir="s" state="O"/>
     <connection from="E21.217" to="E21.331" fromLane="1" toLane="1" via=":clusterJ83_J84_0_1" tl="clusterJ83_J84" linkIndex="1" dir="s" state="O"/>
     <connection from="E21.217" to="-E24" fromLane="1" toLane="2" via=":clusterJ83_J84_2_0" tl="clusterJ83_J84" linkIndex="2" dir="l" state="o"/>
@@ -2164,9 +2164,9 @@
     <connection from="E21.331" to="-E4" fromLane="1" toLane="3" via=":clusterJ12_J86_2_0" tl="clusterJ12_J86" linkIndex="2" dir="l" state="o"/>
     <connection from="E21.462" to="-E14" fromLane="0" toLane="0" via=":clusterJ52_J77_0_0" dir="l" state="M"/>
     <connection from="E21.462" to="-E14" fromLane="1" toLane="1" via=":clusterJ52_J77_0_1" dir="l" state="M"/>
-    <connection from="E22" to="-E21" fromLane="1" toLane="1" via=":clusterJ79_J87_4_0" dir="r" state="m"/>
-    <connection from="E22" to="-E21" fromLane="2" toLane="2" via=":clusterJ79_J87_4_1" dir="r" state="m"/>
-    <connection from="E22" to="E21.217" fromLane="2" toLane="1" via=":clusterJ79_J87_6_0" dir="l" state="m"/>
+    <connection from="E22" to="-E21" fromLane="1" toLane="1" uncontrolled="1" via=":clusterJ79_J87_4_0" dir="r" state="m"/>
+    <connection from="E22" to="-E21" fromLane="2" toLane="2" uncontrolled="1" via=":clusterJ79_J87_4_1" dir="r" state="m"/>
+    <connection from="E22" to="E21.217" fromLane="2" toLane="1" uncontrolled="1" via=":clusterJ79_J87_6_0" dir="l" state="m"/>
     <connection from="E23" to="E21" fromLane="0" toLane="0" keepClear="0" via=":clusterJ76_J81_0_0" dir="l" state="M"/>
     <connection from="E23" to="E21" fromLane="1" toLane="1" keepClear="0" via=":clusterJ76_J81_0_1" dir="l" state="M"/>
     <connection from="E24" to="-E21.217" fromLane="1" toLane="1" via=":clusterJ83_J84_3_0" tl="clusterJ83_J84" linkIndex="3" dir="r" state="o"/>

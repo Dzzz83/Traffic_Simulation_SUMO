@@ -7,7 +7,8 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 import java.util.List;
 import java.util.ArrayList;
 
-public class ControlPanel {
+public class ControlPanel
+{
 
     // create the connection
     private SumoTraciConnection connection;
@@ -29,7 +30,8 @@ public class ControlPanel {
     // create function startSimulation
     public void startSimulation()
     {
-        try {
+        try
+        {
             // initialize the connection with your specific paths
             connection = new SumoTraciConnection("C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo-gui.exe",
                     "src/wrapperSUMO/sumo/demo.sumocfg");
@@ -98,28 +100,97 @@ public class ControlPanel {
         return 0.0;
     }
 
-    // ==========================================
-    //       VEHICLE WRAPPER METHODS
-    // ==========================================
 
     public int getVehicleCount()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
             return vehicleWrapper.getVehicleCount();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the number of vehicles");
             e.printStackTrace();
         }
         return 0;
     }
 
+    // create function setColor
+    public void setColor(String vehicleId, int r, int g, int b, int a)
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.setColor(vehicleId, r, g, b, a);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set the color");
+            e.printStackTrace();
+        }
+    }
+
+    // create function changeLane
+    public void changeLane(String vehicleId, int laneIndex, int duration)
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.changeLane(vehicleId, laneIndex, duration);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to change lane for vehicle: " + vehicleId);
+            e.printStackTrace();
+        }
+    }
+
+    // create function slowDown
+    public void slowDown(String vehicleId, double newSpeed, int duration)
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.slowDown(vehicleId, newSpeed, duration);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to slow down vehicle: " + vehicleId);
+            e.printStackTrace();
+        }
+    }
+
+
     public List<String> getVehicleIDs()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return new ArrayList<>(); }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
             return vehicleWrapper.getVehicleIDs();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get lists of vehicle ids");
             e.printStackTrace();
         }
@@ -128,25 +199,37 @@ public class ControlPanel {
 
     public double getVehicleSpeed(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0.0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
             return vehicleWrapper.getVehicleSpeed(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the speed");
             e.printStackTrace();
         }
         return 0.0;
     }
 
-    // --- Methods from the second file (Advanced Vehicle Control) ---
-
     // create function getPosition
     public SumoPosition2D getPosition(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return new SumoPosition2D(0.0, 0.0); }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return new SumoPosition2D(0.0, 0.0);
+        }
+        try
+        {
             return vehicleWrapper.getPosition(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the position of the vehicle " + vehicleId);
             e.printStackTrace();
         }
@@ -156,10 +239,17 @@ public class ControlPanel {
     // create function getLaneID
     public String getLaneID(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return ""; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return "";
+        }
+        try
+        {
             return vehicleWrapper.getLaneID(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the laneID of the vehicle " + vehicleId);
             e.printStackTrace();
         }
@@ -169,10 +259,17 @@ public class ControlPanel {
     // create function getRoadID
     public String getRoadID(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return ""; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return "";
+        }
+        try
+        {
             return vehicleWrapper.getRoadID(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the roadId of the vehicle " + vehicleId);
             e.printStackTrace();
         }
@@ -182,10 +279,17 @@ public class ControlPanel {
     // create function addVehicle
     public void addVehicle(String vehicleId, String typeId, String routeId, int depart, double position, double speed, byte lane)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
             vehicleWrapper.addVehicle(vehicleId, typeId, routeId, depart, position, speed, lane);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to add the vehicle " + vehicleId);
             e.printStackTrace();
         }
@@ -194,10 +298,17 @@ public class ControlPanel {
     // create function setRouteID
     public void setRouteID(String vehicleId, String routeId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
             vehicleWrapper.setRouteID(vehicleId, routeId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to set the route of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
@@ -206,10 +317,17 @@ public class ControlPanel {
     // create function removeVehicle
     public void removeVehicle(String vehicleId, byte reason)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
             vehicleWrapper.removeVehicle(vehicleId, reason);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to remove the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
@@ -218,10 +336,17 @@ public class ControlPanel {
     // create function setSpeed
     public void setSpeed(String vehicleId, double speed)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
             vehicleWrapper.setSpeed(vehicleId, speed);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to set the speed of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
@@ -230,10 +355,17 @@ public class ControlPanel {
     // create function getDistance
     public double getDistance(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0.0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
             return vehicleWrapper.getDistance(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the distance of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
@@ -243,26 +375,36 @@ public class ControlPanel {
     // create function getCo2
     public double getCO2Emission(String vehicleId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0.0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
             return vehicleWrapper.getCO2Emission(vehicleId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get the CO2 Emission:  " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
     }
 
-    // ==========================================
-    //       TRAFFIC LIGHT WRAPPER METHODS
-    // ==========================================
-
     public List<String> getTrafficLightIDs()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return new ArrayList<>(); }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
             return trafficLightWrapper.getTrafficLightIDs();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get traffic light IDs");
             e.printStackTrace();
         }
@@ -271,10 +413,17 @@ public class ControlPanel {
 
     public int getTrafficLightCount()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
             return trafficLightWrapper.getTrafficLightCount();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get number of traffic lights");
             e.printStackTrace();
         }
@@ -283,26 +432,36 @@ public class ControlPanel {
 
     public String getRedYellowGreenState(String trafficLightId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return ""; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return "";
+        }
+        try
+        {
             return trafficLightWrapper.getRedYellowGreenState(trafficLightId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get traffic light state");
             e.printStackTrace();
         }
         return "";
     }
 
-    // ==========================================
-    //          EDGE WRAPPER METHODS
-    // ==========================================
-
     public int getEdgeCount()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
             return edgeWrapper.getEdgeCount();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get number of edges");
             e.printStackTrace();
         }
@@ -311,10 +470,17 @@ public class ControlPanel {
 
     public List<String> getEdgeIDs()
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return new ArrayList<>(); }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
             return edgeWrapper.getEdgeIDs();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get edge IDs");
             e.printStackTrace();
         }
@@ -323,19 +489,40 @@ public class ControlPanel {
 
     public int getLaneNumber(String edgeId)
     {
-        if (!isRunning) { System.out.println("The simulation is not running"); return 0; }
-        try {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
             return edgeWrapper.getLaneNumber(edgeId);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("Failed to get lane number");
             e.printStackTrace();
         }
         return 0;
     }
 
-    // ==========================================
-    //          SYSTEM CONTROL METHODS
-    // ==========================================
+    public void changeTarget(String vehicleId, String edgeId)
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.changeTarget(vehicleId, edgeId);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to change the destination of that vehicle");
+            e.printStackTrace();
+        }
+    }
 
     // create function stopSimulation
     public void stopSimulation()

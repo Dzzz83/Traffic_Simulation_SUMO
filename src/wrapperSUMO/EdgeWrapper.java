@@ -17,10 +17,12 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import java.util.List;
 import java.util.ArrayList;
 
-
+/**
+ * @author Tai
+ */
 public class EdgeWrapper
 {
-    // initialize the connection
+    // Initialize the connection
     private final SumoTraciConnection connection;
 
     // Constructor
@@ -29,31 +31,41 @@ public class EdgeWrapper
         this.connection = connection;
     }
 
-    // getEdgeCount wrapper
+    // Get the amount of edges in the map without counting the internal edges
     public int getEdgeCount()
     {
         try
         {
-            return (Integer) connection.do_job_get(Edge.getIDCount());
+            // Only count the visible edges
+            List<String> visibleEdges = getEdgeIDs();
+            return visibleEdges.size();
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get number of Edges");
+            System.out.println("Failed to get number of edges");
             e.printStackTrace();
         }
         return 0;
     }
 
-    // get edge ids
+    // Get edge ids excluding the internal edges
     public List<String> getEdgeIDs()
     {
         try
         {
-            return (List<String>) connection.do_job_get(Edge.getIDList());
+            // Because the get EdgeIDs also include internal edges, we have to filter them out
+            List<String> allIds = (List<String>) connection.do_job_get(Edge.getIDList());
+            List<String> filterIds = new ArrayList<>();
+            for (String id : allIds) {
+                if (!id.startsWith(":")) {
+                    filterIds.add(id);
+                }
+            }
+            return filterIds;
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the list of Edge IDs");
+            System.out.println("Failed to get the list of edge IDs");
             e.printStackTrace();
         }
         return new ArrayList<>();

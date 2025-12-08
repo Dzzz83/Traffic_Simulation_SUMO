@@ -1,4 +1,6 @@
 package wrapperSUMO;
+import de.tudresden.sumo.cmd.Trafficlight;
+
 import java.util.List;
 
 public class Main
@@ -21,6 +23,13 @@ public class Main
 
         List<String> trafficLightIDs = panel.getTrafficLightIDs();
         System.out.println("Traffic light IDs: " + trafficLightIDs);
+
+        // Edges methods
+        int edgeCount = panel.getEdgeCount();
+        System.out.println("Number of edges: " + edgeCount);
+
+        List<String> getEdgeIDs = panel.getEdgeIDs();
+        System.out.println("Edge IDs: " + getEdgeIDs);
 
         // step 3 times and show traffic light states
         for (int i = 0; i < 500000000; i++)

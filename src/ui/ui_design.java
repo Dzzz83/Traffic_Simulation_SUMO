@@ -255,7 +255,7 @@ public class ui_design extends Application {
     private void drawMap(GraphicsContext gc, double width, double height) {
         try {
             // Define the file to pass to the xml parser
-            File mapFile = new File("/Users/lamquangthien/Downloads/Traffic_Simulation_SUMO/src/demo.net.xml");
+            File mapFile = new File("src/map/demo.net.xml");
 
             // Init the xml parser
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

@@ -86,4 +86,9 @@ public class EdgeWrapper
         return 0;
     }
 
+    public int setMaxSpeed(String typeID, double speed)
+    {
+
+    }
+
 }

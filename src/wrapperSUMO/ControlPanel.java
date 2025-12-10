@@ -7,6 +7,11 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 import java.util.List;
 import java.util.ArrayList;
 
+import de.tudresden.sumo.cmd.Lane;
+import de.tudresden.sumo.objects.SumoGeometry;
+import java.util.Map;
+import java.util.HashMap;
+
 public class ControlPanel
 {
 
@@ -33,13 +38,13 @@ public class ControlPanel
         try
         {
             // initialize the connection with your specific paths
-            connection = new SumoTraciConnection("C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo-gui.exe",
+            connection = new SumoTraciConnection("C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.exe",
                     "src/map/demo.sumocfg");
 
             // start the simulation
             connection.runServer();
 
-            // initialize ALL wrappers (Merged from File 1 so TL and Edge work)
+            // initialize all wrappers
             vehicleWrapper = new VehicleWrapper(connection);
             trafficLightWrapper = new TrafficLightWrapper(connection);
             edgeWrapper = new EdgeWrapper(connection);
@@ -52,6 +57,37 @@ public class ControlPanel
             System.out.println("Failed to run the simulation");
             e.printStackTrace();
         }
+    }
+    // Retrieves the shape (list of X,Y points) for EVERY lane in your map
+    public Map<String, List<SumoPosition2D>> getMapShape()
+    {
+        Map<String, List<SumoPosition2D>> allShapes = new HashMap<>();
+
+        if (!isRunning)
+        {
+            return allShapes;
+        }
+
+        try {
+            // get the list of ALL lane IDs in the simulation
+            List<String> laneIDs = (List<String>) connection.do_job_get(Lane.getIDList());
+
+            // loop through each lane and retrieve all the lane shapes from SUMO
+            for (String laneId : laneIDs) {
+                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneId));
+
+                // convert SumoGeometry to a simple Java List
+                List<SumoPosition2D> points = new ArrayList<>();
+                for (SumoPosition2D p : geometry.coords) {
+                    points.add(p);
+                }
+                allShapes.put(laneId, points);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to get the shapes of all lanes in map");
+            e.printStackTrace();
+        }
+        return allShapes;
     }
 
     // function step

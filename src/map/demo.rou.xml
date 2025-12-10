@@ -4,6 +4,7 @@
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="DEFAULT_VEHTYPE" accel="2.6" decel="4.5" sigma="0.5" length="5.0" minGap="2.5" maxSpeed="70"/>
     <!-- Routes -->
     <route id="r_0" edges="E9 -E2 E1 E14.98 -E21.462 -E21.331 -E24 E7 E5 -E0.221 E4"/>
     <route id="r_1" edges="-E9 E10 -E8 -E7 -E9 E10 -E8 -E7 -E9 E10 E11"/>

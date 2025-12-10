@@ -33,12 +33,12 @@ public class ControlPanel
     }
 
     // create function startSimulation
-    public void startSimulation()
+    public boolean startSimulation()
     {
         try
         {
             // initialize the connection with your specific paths
-            connection = new SumoTraciConnection("C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.exe",
+            connection = new SumoTraciConnection("sumo",
                     "src/map/demo.sumocfg");
 
             // start the simulation
@@ -57,6 +57,7 @@ public class ControlPanel
             System.out.println("Failed to run the simulation");
             e.printStackTrace();
         }
+        return true;
     }
     // Retrieves the shape (list of X,Y points) for EVERY lane in your map
     public Map<String, List<SumoPosition2D>> getMapShape()

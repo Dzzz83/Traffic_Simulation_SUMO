@@ -275,7 +275,7 @@ public class ControlPanel {
         return 0;
     }
 
-    public int setMaxSpeed(String typeID, double speed) {
+    public int setMaxSpeed(String edgeID, double speed) {
         if (!isRunning)
         {
             System.out.println("The simulation is not running");
@@ -283,14 +283,32 @@ public class ControlPanel {
         }
         try
         {
-            return edgeWrapper.setMaxSpeed(typeID, speed);
+            return edgeWrapper.setMaxSpeed(edgeID, speed);
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get lane number");
+            System.out.println("Failed to set max speed");
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public double getMeanSpeed(String edgeID) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return edgeWrapper.getMeanSpeed(edgeID);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get mean speed");
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 
     // create function stopSimulation

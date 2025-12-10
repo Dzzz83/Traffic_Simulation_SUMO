@@ -20,28 +20,22 @@ import java.util.ArrayList;
 /**
  * @author Tai
  */
-public class EdgeWrapper
-{
+public class EdgeWrapper {
     // Initialize the connection
     private final SumoTraciConnection connection;
 
     // Constructor
-    public EdgeWrapper(SumoTraciConnection connection)
-    {
+    public EdgeWrapper(SumoTraciConnection connection) {
         this.connection = connection;
     }
 
     // Get the amount of edges in the map without counting the internal edges
-    public int getEdgeCount()
-    {
-        try
-        {
+    public int getEdgeCount() {
+        try {
             // Only count the visible edges
             List<String> visibleEdges = getEdgeIDs();
             return visibleEdges.size();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("Failed to get number of edges");
             e.printStackTrace();
         }
@@ -49,10 +43,8 @@ public class EdgeWrapper
     }
 
     // Get edge ids excluding the internal edges
-    public List<String> getEdgeIDs()
-    {
-        try
-        {
+    public List<String> getEdgeIDs() {
+        try {
             // Because the get EdgeIDs also include internal edges, we have to filter them out
             List<String> allIds = (List<String>) connection.do_job_get(Edge.getIDList());
             List<String> filterIds = new ArrayList<>();
@@ -62,9 +54,7 @@ public class EdgeWrapper
                 }
             }
             return filterIds;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("Failed to get the list of edge IDs");
             e.printStackTrace();
         }
@@ -72,23 +62,19 @@ public class EdgeWrapper
     }
 
     // get the lane number
-    public int getLaneNumber(String EdgeId)
-    {
-        try
-        {
-            return (Integer) connection.do_job_get(Edge.getLaneNumber(EdgeId));
-        }
-        catch (Exception e)
-        {
+    public int getLaneNumber(String edgeId) {
+        try {
+            return (Integer) connection.do_job_get(Edge.getLaneNumber(edgeId));
+        } catch (Exception e) {
             System.out.println("Failed to get the lane number");
             e.printStackTrace();
         }
         return 0;
     }
 
-    public int setMaxSpeed(String typeID, double speed) {
-        if (typeID == null || typeID.isEmpty()) {
-            System.err.println("Error: typeID cannot be empty.");
+    public int setMaxSpeed(String edgeID, double speed) {
+        if (edgeID == null || edgeID.isEmpty()) {
+            System.err.println("Error: edgeID cannot be empty.");
             return -1;
         }
         if (speed < 0) {
@@ -96,15 +82,23 @@ public class EdgeWrapper
             return -2;
         }
         try {
-            connection.do_job_set(Edge.setMaxSpeed(typeID, speed));
+            connection.do_job_set(Edge.setMaxSpeed(edgeID, speed));
             return 0;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Failed to set max speed");
             e.printStackTrace();
             return 1;
         }
     }
 
-
+    public double getMeanSpeed(String edgeID) {
+        try {
+            return (Double) connection.do_job_get(Edge.getLastStepMeanSpeed(edgeID));
+        }
+        catch (Exception e) {
+            System.out.println("Failed to get mean speed");
+            e.printStackTrace();
+            return -1.0;
+        }
+    }
 }

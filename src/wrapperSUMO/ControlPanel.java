@@ -1,5 +1,6 @@
 package wrapperSUMO;
 
+import de.tudresden.sumo.cmd.Trafficlight;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -88,6 +89,106 @@ public class ControlPanel
             e.printStackTrace();
         }
         return allShapes;
+    }
+
+    // Get the position of traffic light
+    public SumoPosition2D get_traffic_light_pos(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new SumoPosition2D(0.0, 0.0);
+        }
+        try
+        {
+            Object obj = connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+            List<String> controlled_lanes = (List<String>) obj;
+            if (controlled_lanes.size() > 0)
+            {
+                SumoGeometry geom = (SumoGeometry) connection.do_job_get(Lane.getShape(controlled_lanes.get(0)));
+                return geom.coords.get(0);
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the traffic light pos in map");
+        }
+        return new SumoPosition2D(0.0, 0.0);
+    }
+
+    // get traffic state for all directions
+    public List<Character> get_traffic_light_state(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new ArrayList<>();
+        }
+        try
+        {
+            String state = (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(trafficLightId));
+            List<Character> states = new ArrayList<>();
+            for (char c : state.toCharArray())
+            {
+                states.add(c);
+            }
+            return states;
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the traffic light state in map");
+        }
+        return new ArrayList<>();
+    }
+
+    // get controlled lanes for traffic light
+    public List<String> get_controlled_lanes(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new ArrayList<>();
+        }
+        try
+        {
+            return (List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the controlled lanes in map");
+        }
+        return new ArrayList<>();
+    }
+    // Set traffic light to manual mode
+    public void set_manual_trafficlight(String trafficLightId, double red_duration, double green_duration, double yellow_duration)
+    {
+        if  (!isRunning)
+        {
+            return;
+        }
+        try
+        {
+            trafficLightWrapper.set_manual_mode(trafficLightId, red_duration, green_duration, yellow_duration);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set manual traffic light");
+        }
+    }
+
+    // Set traffic light to automatic mode
+    public void set_automatic_state(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+        try
+        {
+            trafficLightWrapper.setautomaticmode(trafficLightId);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set auto traffic light");
+        }
+        return;
     }
 
     // function step

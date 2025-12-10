@@ -5,10 +5,7 @@
     import javafx.fxml.FXML;
     import javafx.scene.canvas.Canvas;
     import javafx.scene.canvas.GraphicsContext;
-    import javafx.scene.control.Button;
-    import javafx.scene.control.ComboBox;
-    import javafx.scene.control.Slider;
-    import javafx.scene.control.ToggleButton;
+    import javafx.scene.control.*;
     import javafx.scene.paint.Color;
     import wrapperSUMO.ControlPanel;
     import de.tudresden.sumo.objects.SumoPosition2D;
@@ -29,6 +26,9 @@
         @FXML private Slider sliderRed;
         @FXML private Slider sliderGreen;
         @FXML private Slider sliderYellow;
+        @FXML private Label labelRed;
+        @FXML private Label labelGreen;
+        @FXML private Label labelYellow;
 
         private ControlPanel panel;
         private AnimationTimer simulationLoop;
@@ -140,6 +140,55 @@
             panel.addVehicle(vehId, "DEFAULT_VEHTYPE", "route_0", 0, 50.0, 10.0, (byte)0);
             drawMap();
         }
+        @FXML
+        public void onAutoModeToggle()
+        {
+            String selectedTL = trafficIdCombo.getValue();
+            if (selectedTL == null || selectedTL.isEmpty())
+            {
+                System.out.println("Please select a traffic light first");
+                return;
+            }
+
+            if (autoModeToggle.isSelected()) {
+                panel.set_automatic_state(selectedTL);
+
+                // Disable sliders
+                sliderRed.setDisable(true);
+                sliderGreen.setDisable(true);
+                sliderYellow.setDisable(true);
+            }
+            else
+            {
+                apply_manual_timings();
+                sliderRed.setDisable(false);
+                sliderGreen.setDisable(false);
+                sliderYellow.setDisable(false);
+            }
+        }
+
+        @FXML
+        public void on_slider_changed()
+        {
+            labelRed.setText(String.format("%.0fs", sliderRed.getValue()));
+            labelGreen.setText(String.format("%.0fs", sliderGreen.getValue()));
+            labelYellow.setText(String.format("%.0fs", sliderYellow.getValue()));
+
+            if (!autoModeToggle.isSelected() && panel.isRunning()) {
+                apply_manual_timings();
+            }
+        }
+
+        private void apply_manual_timings() {
+            String selectedTL = trafficIdCombo.getValue();
+            if (selectedTL != null && !selectedTL.isEmpty())
+            {
+                double redTime = sliderRed.getValue();
+                double greenTime = sliderGreen.getValue();
+                double yellowTime = sliderYellow.getValue();
+                panel.set_manual_trafficlight(selectedTL, redTime, greenTime, yellowTime);
+            }
+        }
 
         // step and draw map accordingly
         private void updateSimulation() {
@@ -172,6 +221,41 @@
                     gc.strokePolyline(xPoints, yPoints, points.size());
                 }
             }
+            // draw traffic light
+            List<String> trafficLightId = panel.getTrafficLightIDs();
+            for (String trafficid : trafficLightId) {
+                SumoPosition2D position = panel.get_traffic_light_pos(trafficid);
+                String state = panel.getRedYellowGreenState(trafficid);
+                List<String> controlledLanes = panel.get_controlled_lanes(trafficid);
+
+                if (state.length() >= 8) {
+                    double baseX = (position.x * SCALE) + OFFSET_X;
+                    double baseY = mapCanvas.getHeight() - ((position.y * SCALE) + OFFSET_Y);
+
+                    double offset = 15;
+
+                    // Draw 4 lights in cardinal directions
+                    // North light
+                    draw_traffic_light(gc, baseX, baseY - offset, state.charAt(0));
+
+                    // South light
+                    draw_traffic_light(gc, baseX, baseY + offset, state.charAt(2));
+
+                    // East light
+                    draw_traffic_light(gc, baseX + offset, baseY, state.charAt(4));
+
+                    // West light
+                    draw_traffic_light(gc, baseX - offset, baseY, state.charAt(6));
+                }
+                else
+                {
+                    // Fallback: single circle if state is short
+                    double x = (position.x * SCALE) + OFFSET_X;
+                    double y = mapCanvas.getHeight() - ((position.y * SCALE) + OFFSET_Y);
+                    draw_traffic_light(gc, x, y, state.length() > 0 ? state.charAt(0) : 'r');
+                }
+
+            }
 
             // draw vehicles
             if (panel.isRunning()) {
@@ -188,5 +272,32 @@
                     gc.fillOval(x - size/2, y - size/2, size, size);
                 }
             }
+        }
+        // Helper method for drawing 4 traffic light per intersection
+        private void draw_traffic_light(GraphicsContext gc, double x, double y, char state) {
+            Color color;
+            switch (state) {
+                case 'r':
+                case 'R':
+                    color = Color.RED;
+                    break;
+                case 'y':
+                case 'Y':
+                    color = Color.YELLOW;
+                    break;
+                case 'g':
+                case 'G':
+                    color = Color.GREEN;
+                    break;
+                default:
+                    color = Color.GRAY;
+                    break;
+            }
+
+            gc.setFill(color);
+            gc.fillOval(x - 5, y - 5, 10, 10);
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(1);
+            gc.strokeOval(x - 5, y - 5, 10, 10);
         }
     }

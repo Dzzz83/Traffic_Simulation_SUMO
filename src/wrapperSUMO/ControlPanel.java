@@ -275,6 +275,24 @@ public class ControlPanel {
         return 0;
     }
 
+    public int setMaxSpeed(String typeID, double speed) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return edgeWrapper.setMaxSpeed(typeID, speed);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get lane number");
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     // create function stopSimulation
     public void stopSimulation()
     {

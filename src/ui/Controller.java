@@ -1,0 +1,333 @@
+// this file serves as the central code that connects backend (ControlPanel.java) and frontend (ui_design.java & ControlPanel.fxml)
+    package ui;
+
+    import javafx.animation.AnimationTimer;
+    import javafx.fxml.FXML;
+    import javafx.scene.canvas.Canvas;
+    import javafx.scene.canvas.GraphicsContext;
+    import javafx.scene.control.Button;
+    import javafx.scene.control.ComboBox;
+    import javafx.scene.control.Slider;
+    import javafx.scene.control.ToggleButton;
+    import javafx.scene.layout.VBox;
+    import javafx.scene.paint.Color;
+    import jfx.incubator.scene.control.richtext.SelectionSegment;
+    import wrapperSUMO.ControlPanel;
+    import de.tudresden.sumo.objects.SumoPosition2D;
+    import javafx.scene.control.Label;
+
+    import java.util.List;
+    import java.util.Map;
+
+    public class Controller {
+
+        // initialize variables
+        // @FXML is a special tag that tells Java to look into fxml file and link the correct object this file
+        @FXML private Canvas mapCanvas;
+        @FXML private Button startBtn;
+        @FXML private Button stopBtn;
+        @FXML private Label menuIcon;
+        @FXML private VBox sidebar;
+        @FXML private Button addVehicleBtn;
+        @FXML private Button stressTestBtn;
+
+        @FXML private Button EdgeIDBtn;
+        @FXML private Button RouteIDBtn;
+        @FXML private Button VehicleIDBtn;
+        @FXML private Button TrafficLightIDBtn;
+
+        @FXML private ComboBox<String> trafficIdCombo;
+        @FXML private ToggleButton autoModeToggle;
+
+        // sliders
+        @FXML private Slider delaySlider;
+        @FXML private Slider inFlowSlider;
+        @FXML private Slider maxSpeedSlider;
+        @FXML private Slider sliderRed;
+        @FXML private Slider sliderGreen;
+        @FXML private Slider sliderYellow;
+
+        @FXML private Label connectionStatus;
+        @FXML private Label numberVehicles;
+        @FXML private Label averageSpeed;
+        @FXML private Label congestionDensity;
+
+        private ControlPanel panel;
+        private AnimationTimer simulationLoop;
+        private Map<String, List<SumoPosition2D>> mapShapes = null;
+
+
+        private double SCALE = 1.0;       // initial Zoom
+        private double OFFSET_X = 0;      // initial Pan X
+        private double OFFSET_Y = 0;      // initial Pan Y
+        private double lastMouseX, lastMouseY; // for dragging calculation
+        private boolean isSidebarVisible = true;
+
+        private long lastUpdate = 0;
+        private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
+
+        @FXML
+        public void initialize() {
+            System.out.println("Starting the GUI ...");
+
+            // initialize Control Panel
+            panel = new ControlPanel();
+
+            // connect to SUMO and load Map
+            System.out.println("Connecting to SUMO to fetch map...");
+            if (panel.startSimulation()) {
+                connectionStatus.setText("Connection: Connected");
+                connectionStatus.setStyle("-fx-text-fill: green");
+            }
+            else {
+                connectionStatus.setText("Connection: Disconnected");
+                connectionStatus.setStyle("-fx-text-fill: red");
+            }
+
+            // get the map data
+            mapShapes = panel.getMapShape();
+
+            // setup UI interactions
+            setupMapInteractions();
+            setupMenu();
+            setupControls();
+
+            // Center the map
+            OFFSET_X = mapCanvas.getWidth() / 4;
+            OFFSET_Y = mapCanvas.getHeight() / 4;
+            drawMap();
+
+            // setup loop
+            simulationLoop = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    if (panel.isRunning()) {
+                        // Only update if enough time has passed (throttling)
+                        if (now - lastUpdate >= simulationDelay) {
+                            updateSimulation();
+                            lastUpdate = now;
+                        }
+                    }
+                }
+            };
+
+            trafficIdCombo.getItems().addAll("Junction_1", "Junction_2");
+            trafficIdCombo.getSelectionModel().selectFirst();
+        }
+
+        private void setupMenu() {
+            menuIcon.setOnMouseClicked(event -> {
+                isSidebarVisible = !isSidebarVisible;
+                sidebar.setVisible(isSidebarVisible);
+                sidebar.setManaged(isSidebarVisible);
+            });
+        }
+
+        private void setupMapInteractions() {
+            // zoom in zoom out feature
+            mapCanvas.setOnScroll(event -> {
+                double zoomFactor = 1.1; // 10% zoom per scroll
+                if (event.getDeltaY() < 0) {
+                    SCALE /= zoomFactor; // zoom out logic
+                } else {
+                    SCALE *= zoomFactor; // zoom in logic
+                }
+                drawMap(); // redraw map according to the zoom
+            });
+
+            // drag mouse feature
+            // capture mouse position when user clicks
+            mapCanvas.setOnMousePressed(event -> {
+                lastMouseX = event.getX();
+                lastMouseY = event.getY();
+            });
+
+            // calculate movement when dragged logic
+            mapCanvas.setOnMouseDragged(event -> {
+                double deltaX = event.getX() - lastMouseX;
+                double deltaY = event.getY() - lastMouseY;
+
+                OFFSET_X += deltaX;
+
+
+                // dragging down
+                OFFSET_Y -= deltaY;
+
+                lastMouseX = event.getX();
+                lastMouseY = event.getY();
+
+                drawMap(); // redraw map when done calculating
+            });
+        }
+
+        private void setupControls() {
+            startBtn.setOnAction(e -> onStartClick());
+            stopBtn.setOnAction(e -> onStopClick());
+
+            // slider traffic lights status
+            if (sliderRed != null) {
+                sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->
+                        System.out.println(String.valueOf(newVal)));
+            }
+            if (sliderGreen != null) {
+                sliderGreen.valueProperty().addListener((obs, oldVal, newVal) ->
+                        System.out.println(String.valueOf(newVal)));
+            }
+            if (sliderYellow != null) {
+                sliderYellow.valueProperty().addListener((obs, oldVal, newVal) ->
+                    System.out.println("Red duration set to: " + newVal.intValue()));
+            }
+
+            if (delaySlider != null) {
+                // Set initial value
+                simulationDelay = (long) (delaySlider.getValue() * 1_000_000);
+
+                delaySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    // Convert ms to nanoseconds
+                    simulationDelay = (long) (newVal.doubleValue() * 1_000_000);
+                    System.out.println("Delay set to: " + newVal.intValue() + "ms");
+                });
+            }
+
+            if (inFlowSlider != null) {
+                inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) ->
+                        System.out.println("In Flow: " + newVal));
+            }
+
+            if (maxSpeedSlider != null) {
+                maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) ->
+                        System.out.println("Max Speed: " + newVal));
+            }
+
+            // auto mode
+            if (autoModeToggle != null) {
+                autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                    if (newVal) {
+                        autoModeToggle.setText("OFF");
+                        autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
+                        System.out.println("Auto mode: OFF");
+                    }
+                    else {
+                        autoModeToggle.setText("ON");
+                        autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                        System.out.println("Auto mode: ON");
+                    }
+                });
+            }
+        }
+
+
+        // button logic
+        // startButton
+        @FXML
+        public void onStartClick() {
+            System.out.println("Resuming Simulation Loop...");
+            simulationLoop.start();
+            startBtn.setDisable(true);
+            stopBtn.setDisable(false);
+        }
+        // stop button
+        @FXML
+        public void onStopClick() {
+            System.out.println("Stopping Simulation...");
+            simulationLoop.stop();
+            startBtn.setDisable(false);
+            stopBtn.setDisable(true);
+        }
+        // add vehicle button (haven't fully implemented)
+        @FXML
+        public void onAddVehicleClick() {
+            System.out.println("Adding Vehicle...");
+            String vehId = "veh_" + System.currentTimeMillis();
+
+            try {
+                int departure_time = (int) panel.getCurrentTime();
+                panel.addVehicle(vehId, "DEFAULT_VEHTYPE", "r_0", departure_time, 50.0, 10.0, (byte) -2);
+                panel.step();
+                drawMap();
+            } catch (Exception e) {
+                System.err.println("Failed to add vehicle: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // add the stress test button
+        public void onStressTestClick()
+        {
+            System.out.println("Performing Stress Test");
+            final int vehicleCount = 500;
+            try
+            {
+                // call the function stressTest
+                panel.stressTest(vehicleCount);
+                // redraw map
+                drawMap();
+                System.out.println("Adding " + vehicleCount + " to the simulation");
+            }
+            catch (Exception e)
+            {
+                System.out.println("Failed to perform stress test");
+                e.printStackTrace();
+            }
+        }
+
+        private void updateStats() {
+            int count = panel.getVehicleCount();
+            numberVehicles.setText(String.valueOf(count));
+
+            if (!panel.getVehicleIDs().isEmpty()) {
+                double avgSpeed = panel.getVehicleSpeed(panel.getVehicleIDs().getFirst());
+                averageSpeed.setText(String.valueOf(avgSpeed));
+            }
+        }
+
+        // step and draw map accordingly
+        private void updateSimulation() {
+            panel.step();
+            updateStats();
+            drawMap();
+        }
+
+        // draw map function
+        private void drawMap() {
+            GraphicsContext gc = mapCanvas.getGraphicsContext2D();
+
+            // set background color
+            gc.setFill(Color.web("#147213")); // green
+            gc.fillRect(0, 0, mapCanvas.getWidth(), mapCanvas.getHeight());
+
+            // draw Roads
+            if (mapShapes != null) {
+                gc.setStroke(Color.GRAY);
+                gc.setLineWidth(2.0);
+
+                for (List<SumoPosition2D> points : mapShapes.values()) {
+                    double[] xPoints = new double[points.size()];
+                    double[] yPoints = new double[points.size()];
+
+                    for (int i = 0; i < points.size(); i++) {
+                        // transform: Scale + Pan + Flip Y
+                        xPoints[i] = (points.get(i).x * SCALE) + OFFSET_X;
+                        yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
+                    }
+                    gc.strokePolyline(xPoints, yPoints, points.size());
+                }
+            }
+
+            // draw vehicles
+            if (panel.isRunning()) {
+                List<String> vehicles = panel.getVehicleIDs();
+                gc.setFill(Color.YELLOW);
+
+                for (String id : vehicles) {
+                    SumoPosition2D pos = panel.getPosition(id);
+                    double x = (pos.x * SCALE) + OFFSET_X;
+                    double y = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
+
+                    // draw size scales slightly with zoom so they don't vanish
+                    double size = Math.max(5, 5 * SCALE);
+                    gc.fillOval(x - size/2, y - size/2, size, size);
+                }
+            }
+        }
+    }

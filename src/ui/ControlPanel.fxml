@@ -17,7 +17,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.Controller">
+<StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/21
+" xmlns:fx="http://javafx.com/fxml/1
+" fx:controller="ui.Controller">
+
+    <fx:define>
+        <Font fx:id="x1" name="System Bold" size="12.0" />
+    </fx:define>
+
     <children>
 
         <Canvas fx:id="mapCanvas" height="2000.0" width="2000.0" />
@@ -25,13 +32,13 @@
         <AnchorPane pickOnBounds="false">
             <children>
 
-                <Label fx:id="menuIcon" layoutX="20.0" layoutY="10.0" style="-fx-cursor: hand;" text="☰" textFill="WHITE">
+                <Label fx:id="menuIcon" layoutX="20.0" layoutY="100.0" style="-fx-cursor: hand;" text="☰" textFill="WHITE">
                     <font>
                         <Font size="30.0" />
                     </font>
                 </Label>
 
-                <VBox fx:id="sidebar" layoutX="40.0" layoutY="60.0" prefWidth="320.0" maxHeight="700.0" spacing="15.0" style="-fx-background-color: rgba(240, 240, 240, 0.9); -fx-background-radius: 10;">
+                <VBox fx:id="sidebar" layoutX="260.0" layoutY="390.0" prefWidth="420.0" maxHeight="700.0" spacing="15.0" style="-fx-background-color: rgba(240, 240, 240, 0.9); -fx-background-radius: 10;">
                     <padding>
                         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                     </padding>
@@ -39,7 +46,7 @@
 
                         <Label text="Control Panel" textFill="#333333">
                             <font>
-                                <Font name="Arial Bold" size="24.0" />
+                                <Font name="System Bold" size="24.0" />
                             </font>
                         </Label>
                         <Separator prefWidth="200.0" />
@@ -54,32 +61,39 @@
 
                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                             <children>
-                                                <Button fx:id="startBtn" mnemonicParsing="false" prefWidth="80.0" style="-fx-background-color: #009933;" text="Start" textFill="WHITE">
+                                                <Button fx:id="startBtn" onAction="#onStartClick" mnemonicParsing="false" prefWidth="80.0" style="-fx-background-color: #009933;" text="Start" textFill="WHITE">
                                                     <font>
-                                                        <Font name="Arial Bold" size="14.0" />
+                                                        <Font name="System Bold" size="14.0" />
                                                     </font>
                                                 </Button>
-                                                <Button fx:id="stopBtn" mnemonicParsing="false" prefWidth="80.0" style="-fx-background-color: #ff0000;" text="Stop" textFill="WHITE">
+                                                <Button fx:id="stopBtn" onAction="#onStopClick" mnemonicParsing="false" prefWidth="80.0" style="-fx-background-color: #ff0000;" text="Stop" textFill="WHITE">
                                                     <font>
-                                                        <Font name="Arial Bold" size="14.0" />
+                                                        <Font name="System Bold" size="14.0" />
                                                     </font>
                                                 </Button>
                                             </children>
                                         </HBox>
 
-                                        <Button fx:id="addVehicleBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onAddVehicleClick" style="-fx-background-color: #2196F3;" text="Add Vehicle" textFill="WHITE">
-                                            <font>
-                                                <Font name="Arial Bold" size="14.0" />
-                                            </font>
-                                        </Button>
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <Button fx:id="addVehicleBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onAddVehicleClick" style="-fx-background-color: #2196F3;" text="Add Vehicle" textFill="WHITE">
+                                                    <font>
+                                                        <Font name="System Bold" size="14.0" />
+                                                    </font>
+                                                </Button>
+
+                                                <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test (500 Vehicles)" textFill="WHITE">
+                                                    <font>
+                                                        <Font name="System Bold" size="14.0" />
+                                                    </font>
+                                                </Button>
+                                            </children>
+                                        </HBox>
 
                                         <VBox spacing="8.0">
                                             <children>
-                                                <Label text="Toggle View IDs:">
-                                                    <font>
-                                                        <Font name="Arial Bold" size="12.0" fx:id="x1" />
-                                                    </font>
-                                                </Label>
+                                                <Label text="Toggle View IDs:" font="$x1" />
+
                                                 <HBox spacing="10.0">
                                                     <children>
                                                         <Button fx:id="EdgeIDBtn" mnemonicParsing="false" text="Edge ID" />
@@ -121,7 +135,7 @@
 
                                         <Label text="Traffic Light Controls" textFill="#333333">
                                             <font>
-                                                <Font name="Arial Bold" size="16.0" />
+                                                <Font name="System Bold" size="16.0" />
                                             </font>
                                         </Label>
 
@@ -164,10 +178,9 @@
 
                                         <Label text="Stats">
                                             <font>
-                                                <Font name="Arial Bold" size="24.0" />
+                                                <Font name="System Bold" size="24.0" />
                                             </font>
                                         </Label>
-
                                         <VBox spacing="5.0">
                                             <children>
                                                 <Label fx:id="connectionStatus" text="Connection: Disconnected" textFill="#555555">

@@ -49,6 +49,7 @@ public class ControlPanel
             vehicleWrapper = new VehicleWrapper(connection);
             trafficLightWrapper = new TrafficLightWrapper(connection);
             edgeWrapper = new EdgeWrapper(connection);
+            routeWrapper = new RouteWrapper(connection);
 
             // set the isRunning to true
             isRunning = true;
@@ -119,7 +120,7 @@ public class ControlPanel
                 // get the current routeID
                 String routeId = routeIDs.get(routeIndex);
                 // add the vehicle in the current time and loop over route id
-                vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)0);
+                vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)-2);
                 routeIndex = (routeIndex+1) % routeIDs.size();
             }
             System.out.println("Strees Testing successfully");

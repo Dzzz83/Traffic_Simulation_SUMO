@@ -11,7 +11,6 @@
     import javafx.scene.control.ToggleButton;
     import javafx.scene.layout.VBox;
     import javafx.scene.paint.Color;
-    import jfx.incubator.scene.control.richtext.SelectionSegment;
     import wrapperSUMO.ControlPanel;
     import de.tudresden.sumo.objects.SumoPosition2D;
     import javafx.scene.control.Label;
@@ -31,6 +30,7 @@
         @FXML private Button addVehicleBtn;
         @FXML private Button stressTestBtn;
 
+        // buttons
         @FXML private Button EdgeIDBtn;
         @FXML private Button RouteIDBtn;
         @FXML private Button VehicleIDBtn;
@@ -47,21 +47,34 @@
         @FXML private Slider sliderGreen;
         @FXML private Slider sliderYellow;
 
+        // sliders values
+        @FXML private Label delayValue;
+        @FXML private Label inFlowValue;
+        @FXML private Label maxSpeedValue;
+        @FXML private Label redValue;
+        @FXML private Label greenValue;
+        @FXML private Label yellowValue;
+
+        // stats
         @FXML private Label connectionStatus;
         @FXML private Label numberVehicles;
         @FXML private Label averageSpeed;
         @FXML private Label congestionDensity;
 
+        // logical variables
         private ControlPanel panel;
         private AnimationTimer simulationLoop;
         private Map<String, List<SumoPosition2D>> mapShapes = null;
 
-
+        // variables for map
         private double SCALE = 1.0;       // initial Zoom
         private double OFFSET_X = 0;      // initial Pan X
         private double OFFSET_Y = 0;      // initial Pan Y
         private double lastMouseX, lastMouseY; // for dragging calculation
+
+        // logic variables to show/hide to sidebar
         private boolean isSidebarVisible = true;
+
 
         private long lastUpdate = 0;
         private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
@@ -166,16 +179,22 @@
 
             // slider traffic lights status
             if (sliderRed != null) {
-                sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->
-                        System.out.println(String.valueOf(newVal)));
+                sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->{
+                    redValue.setText(String.format("%.2fs", newVal.doubleValue()));
+                    System.out.println(String.valueOf(newVal));
+                });
             }
             if (sliderGreen != null) {
-                sliderGreen.valueProperty().addListener((obs, oldVal, newVal) ->
-                        System.out.println(String.valueOf(newVal)));
+                sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    greenValue.setText(String.format("%.2fs", newVal.doubleValue()));
+                    System.out.println(String.valueOf(newVal));
+                });
             }
             if (sliderYellow != null) {
-                sliderYellow.valueProperty().addListener((obs, oldVal, newVal) ->
-                    System.out.println("Red duration set to: " + newVal.intValue()));
+                sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    yellowValue.setText(String.format("%.2fs", newVal.doubleValue()));
+                    System.out.println("Red duration set to: " + newVal.intValue());
+                });
             }
 
             if (delaySlider != null) {
@@ -185,18 +204,23 @@
                 delaySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                     // Convert ms to nanoseconds
                     simulationDelay = (long) (newVal.doubleValue() * 1_000_000);
+                    delayValue.setText(String.format("%.0f", newVal.doubleValue()));
                     System.out.println("Delay set to: " + newVal.intValue() + "ms");
                 });
             }
 
             if (inFlowSlider != null) {
-                inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) ->
-                        System.out.println("In Flow: " + newVal));
+                inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                        inFlowValue.setText(String.format("%.1f", newVal.doubleValue()));
+                        System.out.println("In Flow: " + newVal);
+                });
             }
 
             if (maxSpeedSlider != null) {
-                maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) ->
-                        System.out.println("Max Speed: " + newVal));
+                maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    maxSpeedValue.setText(String.format("%.1f", newVal.doubleValue()));
+                    System.out.println("Max Speed: " + newVal);
+                        });
             }
 
             // auto mode

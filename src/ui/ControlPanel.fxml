@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.layout.Region?>
 
 <StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.Controller">
 
@@ -30,13 +31,13 @@
         <AnchorPane pickOnBounds="false">
             <children>
 
-                <Label fx:id="menuIcon" layoutX="20.0" layoutY="100.0" style="-fx-cursor: hand;" text="☰" textFill="WHITE">
+                <Label fx:id="menuIcon" layoutX="20.0" layoutY="10.0" style="-fx-cursor: hand;" text="☰" textFill="WHITE">
                     <font>
                         <Font size="30.0" />
                     </font>
                 </Label>
 
-                <VBox fx:id="sidebar" layoutX="260.0" layoutY="390.0" prefWidth="420.0" maxHeight="700.0" spacing="15.0" style="-fx-background-color: rgba(240, 240, 240, 0.9); -fx-background-radius: 10;">
+                <VBox fx:id="sidebar" layoutX="40.0" layoutY="60.0" prefWidth="420.0" maxHeight="700.0" spacing="15.0" style="-fx-background-color: rgba(240, 240, 240, 0.9); -fx-background-radius: 10;">
                     <padding>
                         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                     </padding>
@@ -110,22 +111,40 @@
 
                                         <VBox spacing="5.0">
                                             <children>
-                                                <Label font="$x1" text="Delay (ms)" />
-                                                <Slider fx:id="delaySlider" min="0" max="1000" value="100" showTickMarks="true" majorTickUnit="200" />
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label font="$x1" text="Delay (ms)" textFill="black"/>
+                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                        <Label fx:id="delayValue" text="0" textFill="black"/>
+                                                    </children>
+                                                </HBox>
+                                                <Slider fx:id="delaySlider" min="0" max="1000" showTickMarks="true" />
                                             </children>
                                         </VBox>
 
                                         <VBox spacing="5.0">
                                             <children>
-                                                <Label font="$x1" text="Inflow" />
-                                                <Slider fx:id="inFlowSlider" blockIncrement="0.1" max="5.0" showTickMarks="true" />
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label font="$x1" text="Inflow" textFill="black"/>
+                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                        <Label fx:id="inFlowValue" text="0.0" textFill="black"/>
+                                                    </children>
+                                                </HBox>
+                                                <Slider fx:id="inFlowSlider" min="0" max="5.0" showTickMarks="true" />
                                             </children>
                                         </VBox>
 
                                         <VBox spacing="5.0">
                                             <children>
-                                                <Label font="$x1" text="Max Speed" />
-                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="5.0" showTickMarks="true" />
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label font="$x1" text="Max Speed" textFill="black"/>
+                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                        <Label fx:id="maxSpeedValue" text="0.0" textFill="black"/>
+                                                    </children>
+                                                </HBox>
+                                                <Slider fx:id="maxSpeedSlider" min="0" max="5.0" showTickMarks="true" />
                                             </children>
                                         </VBox>
 
@@ -158,15 +177,15 @@
                                                     <children>
                                                         <Label text="RED" GridPane.columnIndex="0" GridPane.rowIndex="0" font="$x1"/>
                                                         <Slider fx:id="sliderRed" max="60.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                                        <Label text="30s" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                                        <Label fx:id="redValue" GridPane.columnIndex="2" GridPane.rowIndex="0" text="30s"/>
 
                                                         <Label text="GREEN" GridPane.columnIndex="0" GridPane.rowIndex="1" font="$x1"/>
                                                         <Slider fx:id="sliderGreen" max="60.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                        <Label text="30s" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                        <Label fx:id="greenValue" GridPane.columnIndex="2" GridPane.rowIndex="1" text="30s"/>
 
                                                         <Label text="YELLOW" GridPane.columnIndex="0" GridPane.rowIndex="2" font="$x1"/>
-                                                        <Slider fx:id="sliderYellow" max="10.0" min="1.0" value="3.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                        <Label text="3s" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                                        <Slider fx:id="sliderYellow" max="60.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                        <Label fx:id="yellowValue" GridPane.columnIndex="2" GridPane.rowIndex="2" text="30s"/>
                                                     </children>
                                                 </GridPane>
                                             </children>

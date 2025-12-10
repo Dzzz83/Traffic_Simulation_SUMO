@@ -95,41 +95,47 @@ public class ControlPanel
 
     public void stressTest(int vehicleCount)
     {
-        // check if the simulation is running
-        if (!isRunning)
+        synchronized (connection)
         {
-            System.out.println("The simulation is not running");
-            return;
-        }
-        try
-        {
-            // get all routes
-            List<String> routeIDs = routeWrapper.getRouteIDs();
-            int currentTime = (int) getCurrentTime();
-            if (routeIDs.isEmpty())
+            // check if the simulation is running
+            if (!isRunning)
             {
-                System.out.println("Can't find any routes on the map");
+                System.out.println("The simulation is not running");
                 return;
             }
-
-            // declare a routeIndex variable
-            int routeIndex = 0;
-            for (int i = 0; i < vehicleCount; i++)
+            // generate a unique batch id
+            String batchID = String.valueOf(System.currentTimeMillis());
+            try
             {
-                String vehicleId = "stresstess_" + i;
-                // get the current routeID
-                String routeId = routeIDs.get(routeIndex);
-                // add the vehicle in the current time and loop over route id
-                vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)-2);
-                routeIndex = (routeIndex+1) % routeIDs.size();
+                // get all routes
+                List<String> routeIDs = routeWrapper.getRouteIDs();
+                int currentTime = (int) getCurrentTime();
+                if (routeIDs.isEmpty())
+                {
+                    System.out.println("Can't find any routes on the map");
+                    return;
+                }
+
+                // declare a routeIndex variable
+                int routeIndex = 0;
+                for (int i = 0; i < vehicleCount; i++)
+                {
+                    String vehicleId = "stresstess_" + batchID + "_" + i;
+                    // get the current routeID
+                    String routeId = routeIDs.get(routeIndex);
+                    // add the vehicle in the current time and loop over route id
+                    vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)-2);
+                    routeIndex = (routeIndex+1) % routeIDs.size();
+                }
+                System.out.println("Strees Testing successfully");
             }
-            System.out.println("Strees Testing successfully");
+            catch (Exception e)
+            {
+                System.out.println("Failed to perform stress test");
+//            e.printStackTrace();
+            }
         }
-        catch (Exception e)
-        {
-            System.out.println("Failed to perform stress test");
-            e.printStackTrace();
-        }
+
     }
     // get the list of all routes
     public List<String> getRouteIDs()

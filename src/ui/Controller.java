@@ -255,7 +255,7 @@
         public void onStressTestClick()
         {
             System.out.println("Performing Stress Test");
-            final int vehicleCount = 5000;
+            final int vehicleCount = 500;
             try
             {
                 // call the function stressTest

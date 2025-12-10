@@ -86,9 +86,25 @@ public class EdgeWrapper
         return 0;
     }
 
-    public int setMaxSpeed(String typeID, double speed)
-    {
-
+    public int setMaxSpeed(String typeID, double speed) {
+        if (typeID == null || typeID.isEmpty()) {
+            System.err.println("Error: typeID cannot be empty.");
+            return -1;
+        }
+        if (speed < 0) {
+            System.err.println("Error: speed cannot be negative.");
+            return -2;
+        }
+        try {
+            connection.do_job_set(Edge.setMaxSpeed(typeID, speed));
+            return 0;
+        }
+        catch (Exception e) {
+            System.out.println("Failed to set max speed");
+            e.printStackTrace();
+            return 1;
+        }
     }
+
 
 }

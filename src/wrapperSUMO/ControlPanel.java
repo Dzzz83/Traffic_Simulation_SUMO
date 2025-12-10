@@ -22,6 +22,7 @@ public class ControlPanel
     private VehicleWrapper vehicleWrapper;
     private TrafficLightWrapper trafficLightWrapper;
     private EdgeWrapper edgeWrapper;
+    private RouteWrapper routeWrapper;
 
     // initialize the boolean value isRunning
     private boolean isRunning = false;
@@ -89,6 +90,64 @@ public class ControlPanel
             e.printStackTrace();
         }
         return allShapes;
+    }
+
+    public void stressTest(int vehicleCount)
+    {
+        // check if the simulation is running
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return;
+        }
+        try
+        {
+            // get all routes
+            List<String> routeIDs = routeWrapper.getRouteIDs();
+            int currentTime = (int) getCurrentTime();
+            if (routeIDs.isEmpty())
+            {
+                System.out.println("Can't find any routes on the map");
+                return;
+            }
+
+            // declare a routeIndex variable
+            int routeIndex = 0;
+            for (int i = 0; i < vehicleCount; i++)
+            {
+                String vehicleId = "stresstess_" + i;
+                // get the current routeID
+                String routeId = routeIDs.get(routeIndex);
+                // add the vehicle in the current time and loop over route id
+                vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)0);
+                routeIndex = (routeIndex+1) % routeIDs.size();
+            }
+            System.out.println("Strees Testing successfully");
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to perform stress test");
+            e.printStackTrace();
+        }
+    }
+    // get the list of all routes
+    public List<String> getRouteIDs()
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return routeWrapper.getRouteIDs();
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get lists of route ids");
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     // function step

@@ -29,6 +29,7 @@
         @FXML private Label menuIcon;
         @FXML private VBox sidebar;
         @FXML private Button addVehicleBtn;
+        @FXML private Button stressTestBtn;
 
         @FXML private Button EdgeIDBtn;
         @FXML private Button RouteIDBtn;
@@ -246,6 +247,26 @@
                 drawMap();
             } catch (Exception e) {
                 System.err.println("Failed to add vehicle: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // add the stress test button
+        public void onStressTestClick()
+        {
+            System.out.println("Performing Stress Test");
+            final int vehicleCount = 500;
+            try
+            {
+                // call the function stressTest
+                panel.stressTest(vehicleCount);
+                // redraw map
+                drawMap();
+                System.out.println("Adding " + vehicleCount + " to the simulation");
+            }
+            catch (Exception e)
+            {
+                System.out.println("Failed to perform stress test");
                 e.printStackTrace();
             }
         }

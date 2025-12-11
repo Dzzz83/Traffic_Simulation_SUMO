@@ -5,13 +5,10 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import de.tudresden.sumo.cmd.Lane;
 import de.tudresden.sumo.objects.SumoGeometry;
-import java.util.Map;
-import java.util.HashMap;
 
 public class ControlPanel
 {
@@ -100,13 +97,7 @@ public class ControlPanel
         }
         try
         {
-            Object obj = connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
-            List<String> controlled_lanes = (List<String>) obj;
-            if (controlled_lanes.size() > 0)
-            {
-                SumoGeometry geom = (SumoGeometry) connection.do_job_get(Lane.getShape(controlled_lanes.get(0)));
-                return geom.coords.get(0);
-            }
+            List<String> controlled_edges = this.get_controlled_lanes(trafficLightId);
         }
         catch (Exception e)
         {
@@ -115,63 +106,33 @@ public class ControlPanel
         return new SumoPosition2D(0.0, 0.0);
     }
 
-    // get traffic state for all directions
-    public List<Character> get_traffic_light_state(String trafficLightId)
+    // get the incomming controlled road for traffic light
+    public Map<String, String> get_controlled_lanes(String trafficLightId)
     {
         if (!isRunning)
         {
-            return new ArrayList<>();
+            return new HashMap<>();
         }
         try
         {
-            String state = (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(trafficLightId));
-            List<Character> states = new ArrayList<>();
-            for (char c : state.toCharArray())
+            // get controlled lanes
+            List<String> controlled_lanes =(List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+            // get edge
+            Map<String, String> edges = new HashMap<>();
+            for (String landid : controlled_lanes)
             {
-                states.add(c);
+                String edgeid = landid.split("_")[0];
+                edges.putIfAbsent(edgeid, landid);
             }
-            return states;
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to get the traffic light state in map");
-        }
-        return new ArrayList<>();
-    }
-
-    // get controlled lanes for traffic light
-    public List<String> get_controlled_lanes(String trafficLightId)
-    {
-        if (!isRunning)
-        {
-            return new ArrayList<>();
-        }
-        try
-        {
-            return (List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+            return edges;
         }
         catch (Exception e)
         {
             System.out.println("Failed to get the controlled lanes in map");
         }
-        return new ArrayList<>();
+        return new HashMap<>();
     }
-    // Set traffic light to manual mode
-    public void set_manual_trafficlight(String trafficLightId, double red_duration, double green_duration, double yellow_duration)
-    {
-        if  (!isRunning)
-        {
-            return;
-        }
-        try
-        {
-            trafficLightWrapper.set_manual_mode(trafficLightId, red_duration, green_duration, yellow_duration);
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to set manual traffic light");
-        }
-    }
+
 
     // Set traffic light to automatic mode
     public void set_automatic_state(String trafficLightId)

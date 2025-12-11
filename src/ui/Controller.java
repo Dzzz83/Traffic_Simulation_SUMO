@@ -1,6 +1,7 @@
 // this file serves as the central code that connects backend (ControlPanel.java) and frontend (ui_design.java & ControlPanel.fxml)
     package ui;
 
+    import de.tudresden.sumo.cmd.Edge;
     import javafx.animation.AnimationTimer;
     import javafx.fxml.FXML;
     import javafx.scene.canvas.Canvas;
@@ -11,6 +12,7 @@
     import javafx.scene.control.ToggleButton;
     import javafx.scene.layout.VBox;
     import javafx.scene.paint.Color;
+    import javafx.scene.text.TextAlignment;
     import wrapperSUMO.ControlPanel;
     import de.tudresden.sumo.objects.SumoPosition2D;
     import javafx.scene.control.Label;
@@ -65,6 +67,12 @@
         private ControlPanel panel;
         private AnimationTimer simulationLoop;
         private Map<String, List<SumoPosition2D>> mapShapes = null;
+
+        // variables to highlight edgeID on the map
+        private boolean showEdgesID = false;
+        private boolean showTrafficLightID = false;
+        private boolean showRouteID = false;
+        private boolean showVehicleID = false;
 
         // variables for map
         private double SCALE = 1.0;       // initial Zoom
@@ -176,6 +184,21 @@
         private void setupControls() {
             startBtn.setOnAction(e -> onStartClick());
             stopBtn.setOnAction(e -> onStopClick());
+
+            //
+            if (EdgeIDBtn != null) {
+                EdgeIDBtn.setOnAction(e -> {
+                    showEdgesID = !showEdgesID;
+
+                    if (showEdgesID) {
+                        EdgeIDBtn.setStyle("-fx-background-color: #add8e6;");
+                    }
+                    else {
+                        EdgeIDBtn.setStyle("");
+                    }
+                    drawMap();
+                });
+            }
 
             // slider traffic lights status
             if (sliderRed != null) {
@@ -322,10 +345,20 @@
 
             // draw Roads
             if (mapShapes != null) {
-                gc.setStroke(Color.GRAY);
-                gc.setLineWidth(2.0);
+                if (showEdgesID){
+                    gc.setStroke(Color.CYAN);
+                    gc.setLineWidth(3);
+                    gc.setFill(Color.WHITE);
+                    gc.setTextAlign(TextAlignment.CENTER);
+                }
+                else {
+                    gc.setStroke(Color.GRAY);
+                    gc.setLineWidth(2.0);
+                }
+                for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
+                    String laneID = entry.getKey();
+                    List<SumoPosition2D> points = entry.getValue();
 
-                for (List<SumoPosition2D> points : mapShapes.values()) {
                     double[] xPoints = new double[points.size()];
                     double[] yPoints = new double[points.size()];
 
@@ -334,7 +367,24 @@
                         xPoints[i] = (points.get(i).x * SCALE) + OFFSET_X;
                         yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
                     }
+
+                    // draw the road
                     gc.strokePolyline(xPoints, yPoints, points.size());
+
+                    // draw the edgeID label to display which edge it is
+                    if (showEdgesID && points.size() > 1) {
+                        // get edgeID from laneID (example: laneID "E1_0" -> edgeID "E1")
+                        String edgeID = laneID;
+                        int _index = laneID.lastIndexOf('_');
+                        if (_index != -1) {
+                            edgeID = laneID.substring(0, _index);
+                        }
+                        int midIndex = points.size() / 2;
+                        double midX = xPoints[midIndex];
+                        double midY = yPoints[midIndex];
+
+                        gc.fillText(edgeID, midX, midY);
+                    }
                 }
             }
 

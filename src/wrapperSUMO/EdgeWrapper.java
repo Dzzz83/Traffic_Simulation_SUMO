@@ -94,8 +94,7 @@ public class EdgeWrapper {
     public double getMeanSpeed(String edgeID) {
         try {
             return (Double) connection.do_job_get(Edge.getLastStepMeanSpeed(edgeID));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Failed to get mean speed");
             e.printStackTrace();
             return -1.0;
@@ -104,12 +103,19 @@ public class EdgeWrapper {
 
     public int setGlobalMaxSpeed(double speed) {
         if (speed < 0) {
-            System.out.println("Error: Speed cannot be negative");
+            System.err.println("Error: Speed cannot be negative");
+            return -1;
         }
-
         try {
             List<String> allEdges = getEdgeIDs();
-
+            for (String edgeID : allEdges) {
+                setMaxSpeed(edgeID, speed);
+            }
+            return 0;
+        } catch (Exception e) {
+            System.out.println("Failed to set the global max speed");
+            e.printStackTrace();
+            return -1;
         }
     }
 }

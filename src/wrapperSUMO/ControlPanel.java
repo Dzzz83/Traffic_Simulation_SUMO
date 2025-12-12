@@ -311,6 +311,15 @@ public class ControlPanel {
         return 0.0;
     }
 
+    public int setGlobalMaxSpeed(double speed) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        return edgeWrapper.setGlobalMaxSpeed(speed);
+    }
+
     // create function stopSimulation
     public void stopSimulation()
     {

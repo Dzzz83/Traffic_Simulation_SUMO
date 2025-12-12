@@ -101,4 +101,15 @@ public class EdgeWrapper {
             return -1.0;
         }
     }
+
+    public int setGlobalMaxSpeed(double speed) {
+        if (speed < 0) {
+            System.out.println("Error: Speed cannot be negative");
+        }
+
+        try {
+            List<String> allEdges = getEdgeIDs();
+
+        }
+    }
 }

@@ -66,6 +66,16 @@ public class VehicleWrapper
         return new ArrayList<>();
     }
 
+    public String getRouteID(String vehicleId) {
+        try {
+            return (String) connection.do_job_get(Vehicle.getRouteID(vehicleId));
+        } catch (Exception e) {
+            System.out.println("Failed to get Route ID for vehicle: " + vehicleId);
+            e.printStackTrace();
+        }
+        return "";
+    }
+
     // get the vehicle's speed
     public double getVehicleSpeed(String vehicleId)
     {

@@ -157,6 +157,14 @@ public class ControlPanel
         return new ArrayList<>();
     }
 
+    // for display routeID next to Vehicle
+    public String getVehicleRouteID(String vehicleId) {
+        if (!isRunning) {
+            return "";
+        }
+        return vehicleWrapper.getRouteID(vehicleId);
+    }
+
     // function step
     public void step()
     {

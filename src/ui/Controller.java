@@ -185,7 +185,7 @@
             startBtn.setOnAction(e -> onStartClick());
             stopBtn.setOnAction(e -> onStopClick());
 
-            //
+            // toggle view EdgeID button
             if (EdgeIDBtn != null) {
                 EdgeIDBtn.setOnAction(e -> {
                     showEdgesID = !showEdgesID;
@@ -195,6 +195,51 @@
                     }
                     else {
                         EdgeIDBtn.setStyle("");
+                    }
+                    drawMap();
+                });
+            }
+
+            // toggle view TrafficLightID button
+            if (TrafficLightIDBtn != null) {
+                TrafficLightIDBtn.setOnAction(e -> {
+                    showTrafficLightID= !showTrafficLightID;
+
+                    if (showTrafficLightID) {
+                        TrafficLightIDBtn.setStyle("-fx-background-color: #add8e6;");
+                    }
+                    else {
+                        TrafficLightIDBtn.setStyle("");
+                    }
+                    drawMap();
+                });
+            }
+
+            // toggle view RouteID button
+            if (RouteIDBtn != null) {
+                RouteIDBtn.setOnAction(e -> {
+                    showRouteID = !showRouteID;
+
+                    if (showRouteID) {
+                        RouteIDBtn.setStyle("-fx-background-color: #add8e6;");
+                    }
+                    else {
+                        RouteIDBtn.setStyle("");
+                    }
+                    drawMap();
+                });
+            }
+
+            // toggle view VehicleID button
+            if (VehicleIDBtn != null) {
+                VehicleIDBtn.setOnAction(e -> {
+                    showVehicleID= !showVehicleID;
+
+                    if (showVehicleID) {
+                        VehicleIDBtn.setStyle("-fx-background-color: #add8e6;");
+                    }
+                    else {
+                        VehicleIDBtn.setStyle("");
                     }
                     drawMap();
                 });
@@ -379,11 +424,12 @@
                         if (_index != -1) {
                             edgeID = laneID.substring(0, _index);
                         }
-                        int midIndex = points.size() / 2;
-                        double midX = xPoints[midIndex];
-                        double midY = yPoints[midIndex];
-
-                        gc.fillText(edgeID, midX, midY);
+                        if (!edgeID.startsWith(":")) {
+                            int midIndex = points.size() / 2;
+                            double midX = xPoints[midIndex];
+                            double midY = yPoints[midIndex];
+                            gc.fillText(edgeID, midX, midY);
+                        }
                     }
                 }
             }
@@ -391,16 +437,44 @@
             // draw vehicles
             if (panel.isRunning()) {
                 List<String> vehicles = panel.getVehicleIDs();
-                gc.setFill(Color.YELLOW);
 
-                for (String id : vehicles) {
-                    SumoPosition2D pos = panel.getPosition(id);
-                    double x = (pos.x * SCALE) + OFFSET_X;
-                    double y = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
+                for (String vehId : vehicles) {
+                    SumoPosition2D pos = panel.getPosition(vehId);
+                    double vehX = (pos.x * SCALE) + OFFSET_X;
+                    double vehY = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
 
                     // draw size scales slightly with zoom so they don't vanish
                     double size = Math.max(5, 5 * SCALE);
-                    gc.fillOval(x - size/2, y - size/2, size, size);
+                    gc.setFill(Color.YELLOW);
+                    gc.fillOval(vehX - size/2, vehY - size/2, size, size);
+
+                    if (showVehicleID) {
+                        gc.setFill(Color.LIME);
+                        gc.fillText(vehId, vehX, vehY - 8); // Above vehicle
+                    }
+
+                    if (showRouteID) {
+                        String routeID = panel.getVehicleRouteID(vehId);
+
+                        gc.setFill(Color.GREEN);
+                        gc.fillText(routeID, vehX, vehY + 15);
+
+                        String currentEdgeID = panel.getRoadID(vehId);
+
+                        String laneID = currentEdgeID.startsWith(":") ? currentEdgeID + "_0" : currentEdgeID + "_0";
+
+                        if (mapShapes.containsKey(laneID)) {
+                            List<SumoPosition2D> roadPoints = mapShapes.get(laneID);
+                            if (roadPoints != null && roadPoints.size() > 1) {
+                                int mid = roadPoints.size() / 2;
+                                double roadX = (roadPoints.get(mid).x * SCALE) + OFFSET_X;
+                                double roadY = mapCanvas.getHeight() - ((roadPoints.get(mid).y * SCALE) + OFFSET_Y);
+
+                                gc.setFill(Color.MAGENTA);
+                                gc.fillText("RouteID: " + routeID, roadX, roadY);
+                            }
+                        }
+                    }
                 }
             }
         }

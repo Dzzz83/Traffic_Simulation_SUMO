@@ -104,7 +104,7 @@
                                                                     <children>
                                                                         <Label font="$x1" text="Delay (ms)" textFill="black"/>
                                                                         <Region HBox.hgrow="ALWAYS"/>
-                                                                        <Label fx:id="delayValue" text="0" textFill="black"/>
+                                                                        <Label fx:id="delayValue" text="100" textFill="black"/>
                                                                     </children>
                                                                 </HBox>
                                                                 <Slider fx:id="delaySlider" majorTickUnit="200" max="1000" min="0" showTickMarks="true" value="100" />

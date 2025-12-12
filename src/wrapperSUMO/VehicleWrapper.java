@@ -271,6 +271,20 @@ public class VehicleWrapper
             e.printStackTrace();
         }
     }
+    // get the angle of the vehicle
+    public double getAngle(String vehicleID)
+    {
+        try
+        {
+            return (Double) connection.do_job_get(Vehicle.getAngle(vehicleID));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Can't get the angle of the vehicle");
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
 
 
 

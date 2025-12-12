@@ -25,7 +25,7 @@ public class ControlPanel
     private RouteWrapper routeWrapper;
 
     // initialize the boolean value isRunning
-    private boolean isRunning = false;
+    public boolean isRunning = false;
 
     // default Constructor
     public ControlPanel()
@@ -39,7 +39,7 @@ public class ControlPanel
         try
         {
             // initialize the connection with your specific paths
-            connection = new SumoTraciConnection("sumo",
+            connection = new SumoTraciConnection("sumo.exe",
                     "src/map/demo.sumocfg");
 
             // start the simulation
@@ -132,7 +132,7 @@ public class ControlPanel
             catch (Exception e)
             {
                 System.out.println("Failed to perform stress test");
-//            e.printStackTrace();
+                // e.printStackTrace();
             }
         }
 
@@ -647,6 +647,26 @@ public class ControlPanel
             System.out.println("Can't stop the simulation");
             e.printStackTrace();
         }
+    }
+
+    // create function getVehicleAngle
+    public double getVehicleAngle(String vehicleId)
+    {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return vehicleWrapper.getAngle(vehicleId);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the angle of the vehicle " + vehicleId);
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 
     // create function isRunning()

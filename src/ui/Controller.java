@@ -65,6 +65,7 @@ public class Controller {
     @FXML private Label numberVehicles;
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
+    @FXML private Label numberOfEdges;
 
     // logical variables
     private ControlPanel panel;
@@ -348,11 +349,14 @@ public class Controller {
 
     private void updateStats() {
         int count = panel.getVehicleCount();
-        numberVehicles.setText(String.valueOf(count));
+        numberVehicles.setText("Vehicles: " + count);
+        int edgeCount = panel.getEdgeCount();
+        numberOfEdges.setText("Edges: " + edgeCount);
+
 
         if (!panel.getVehicleIDs().isEmpty()) {
             double avgSpeed = panel.getVehicleSpeed(panel.getVehicleIDs().getFirst());
-            averageSpeed.setText(String.valueOf(avgSpeed));
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed));
         }
     }
 

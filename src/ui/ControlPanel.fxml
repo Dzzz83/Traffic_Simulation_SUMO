@@ -204,6 +204,9 @@
                                                 <Label fx:id="congestionDensity" text="Density: 0%" textFill="#555555">
                                                     <font><Font name="Arial" size="13.0" /></font>
                                                 </Label>
+                                                <Label fx:id="numberOfEdges" text="Number of Edges: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
                                             </children>
                                         </VBox>
                                     </content>

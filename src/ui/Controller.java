@@ -15,6 +15,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.chart.NumberAxis;
 
 import wrapperSUMO.ControlPanel;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -70,6 +73,9 @@ public class Controller {
     @FXML private Label congestionDensity;
     @FXML private Label numberOfEdges;
 
+    // chart
+    @FXML private LineChart<Number, Number> avgSpeedChart;
+
     // traffic light
     @FXML private Label labelRed;
     @FXML private Label labelGreen;
@@ -92,6 +98,10 @@ public class Controller {
     private boolean showTrafficLightID = false;
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
+
+    // variables for chart
+    private XYChart.Series<Number, Number> speedSeries;
+    private double timeSeconds = 0;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -179,6 +189,12 @@ public class Controller {
 
         // calculate, create and store the lane separators
         generateLaneSeparators();
+
+        // setup chart
+
+        speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
+        avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
         setupMapInteractions();
@@ -487,7 +503,19 @@ public class Controller {
 
         if (!panel.getVehicleIDs().isEmpty()) {
             double avgSpeed = panel.getGlobalMeanSpeed();
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed));
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+        }
+
+        if (panel.isRunning()) {
+            double currentSpeed = panel.getGlobalMeanSpeed();
+            currentSpeed *= 3.6;
+
+            timeSeconds += 0.1;
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+
+            if (speedSeries.getData().size() > 50) {
+                speedSeries.getData().remove(0);
+            }
         }
     }
 

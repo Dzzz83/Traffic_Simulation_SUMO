@@ -105,6 +105,7 @@ public class Controller {
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
+    // variables for delay button
     private long lastUpdate = 0;
     private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
 

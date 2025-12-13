@@ -83,6 +83,9 @@
                                                                 <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
+                                                                <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
                                                             </children>
                                                         </HBox>
 
@@ -131,12 +134,12 @@
                                                             <children>
                                                                 <HBox alignment="CENTER_LEFT">
                                                                     <children>
-                                                                        <Label text="Max Speed" textFill="black" />
-                                                                        <Region HBox.hgrow="ALWAYS" />
-                                                                        <Label fx:id="maxSpeedValue" text="0.0" textFill="black" />
+                                                                        <Label font="$x1" text="Max Speed" textFill="black"/>
+                                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                                        <Label fx:id="maxSpeedValue" text="20.0" textFill="black"/>
                                                                     </children>
                                                                 </HBox>
-                                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="50.0" showTickMarks="true" />
+                                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="50.0" value="20" showTickMarks="true" />
                                                             </children>
                                                         </VBox>
 

@@ -115,6 +115,9 @@ public class Controller {
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
+    // variable remembers the route for the next click
+    private int clickRouteIndex = 0;
+
     // variables for delay button
     private long lastUpdate = 0;
     private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
@@ -492,6 +495,27 @@ public class Controller {
             System.out.println("Failed to perform stress test");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    // restart button
+    public void onRestartClick() {
+        System.out.println("Restarting map...");
+
+        // stop the JavaFX drawing loop first!
+        if (simulationLoop != null) {
+            simulationLoop.stop();
+        }
+        // call the restart logic in the backend
+        panel.restartSimulation();
+        // reset the UI variables
+        clickRouteIndex = 0;
+        // redraw the empty map
+        drawMap();
+        // update the UI buttons
+        startBtn.setDisable(false);
+        stopBtn.setDisable(true);
+        System.out.println("Map returned to beginning state. Press Start to begin.");
     }
 
     private void updateStats() {

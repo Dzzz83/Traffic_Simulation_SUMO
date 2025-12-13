@@ -486,7 +486,7 @@ public class Controller {
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getVehicleSpeed(panel.getVehicleIDs().getFirst());
+            double avgSpeed = panel.getGlobalMeanSpeed();
             averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed));
         }
     }

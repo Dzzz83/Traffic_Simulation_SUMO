@@ -69,6 +69,11 @@ public class Controller {
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
 
+    // traffic light
+    @FXML private Label labelRed;
+    @FXML private Label labelGreen;
+    @FXML private Label labelYellow;
+
     // logical variables
     private ControlPanel panel;
     private AnimationTimer simulationLoop;
@@ -125,9 +130,50 @@ public class Controller {
             connectionStatus.setText("Connection: Disconnected");
             connectionStatus.setStyle("-fx-text-fill: red");
         }
-
-        // get the map data
         mapShapes = panel.getMapShape();
+        // traffic light
+        List<String> tlsIds = panel.getTrafficLightIDs();
+        trafficIdCombo.getItems().clear();
+        if (tlsIds != null && !tlsIds.isEmpty())
+        {
+            trafficIdCombo.getItems().addAll(tlsIds);
+            trafficIdCombo.getSelectionModel().selectFirst();
+        }
+
+        autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            String selectedId = trafficIdCombo.getValue();
+            if (selectedId == null) return;
+
+            if (newVal) {
+                // Button is ON -> Enable Logic "0" (Standard Program)
+                autoModeToggle.setText("ON");
+                autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                // Call backend:
+                panel.turnOnTrafficLight(selectedId);
+            } else {
+                // Button is OFF -> Disable Lights "off"
+                autoModeToggle.setText("OFF");
+                autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
+                // Call backend:
+                panel.turnOffTrafficLight(selectedId);
+            }
+        });
+
+        // Helper listener for Red Slider
+        sliderRed.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelRed.setText(seconds + "s");
+        });
+
+        sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelGreen.setText(seconds + "s");
+        });
+
+        sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelYellow.setText(seconds + "s");
+        });
 
         // calculate, create and store the lane separators
         generateLaneSeparators();
@@ -376,6 +422,38 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void onTurnAllOffClick() {
+        System.out.println("User requested: Turning ALL Lights OFF.");
+        panel.turnOffAllLights();
+    }
+
+    // Action for the new button: Turn ALL Lights ON
+    @FXML
+    public void onTurnAllOnClick() {
+        System.out.println("User requested: Turning ALL Lights ON.");
+        panel.turnOnAllLights();
+    }
+    @FXML
+    public void turn_all_lights_red() {
+        System.out.println("User requested: FORCING ALL LIGHTS TO RED.");
+        panel.turn_all_light_red();
+        // Note: The UI drawing will update automatically on the next simulation step
+        // because it calls panel.getRedYellowGreenState()
+    }
+
+    @FXML
+    public void turn_all_lights_green() {
+        System.out.println("User requested: FORCING ALL LIGHTS TO GREEN.");
+        panel.turn_all_light_green();
+    }
+    @FXML
+    public void onRestoreAutoClick() {
+        System.out.println("User requested: RESTORING AUTOMATIC PROGRAM.");
+        // This calls the method that sets the program back to "0"
+        panel.turnOnAllLights();
+    }
+
     // add the stress test button
     public void onStressTestClick()
     {
@@ -600,6 +678,50 @@ public class Controller {
                 // Cleanup: Reset settings for next drawing
                 gc.setLineDashes(null);
                 gc.setLineCap(StrokeLineCap.ROUND);
+            }
+        }
+
+        // draw traffic light
+        // draw traffic light
+        List<String> trafficLightId = panel.getTrafficLightIDs();
+        for (String trafficid : trafficLightId)
+        {
+            Map<String, List<SumoPosition2D>> position = panel.get_traffic_light_pos(trafficid);
+            String state = panel.getRedYellowGreenState(trafficid);
+            int laneIndex = 0;
+
+            for (Map.Entry<String, List<SumoPosition2D>> entry : position.entrySet())
+            {
+                List<SumoPosition2D> shape = entry.getValue();
+                if (shape == null || shape.isEmpty())
+                {
+                    continue;
+                }
+                SumoPosition2D position2D = shape.get(shape.size() - 1);
+                double x = (position2D.x * SCALE) + OFFSET_X;
+                double y = mapCanvas.getHeight() - ((position2D.y * SCALE) + OFFSET_Y);
+
+                Color color;
+
+                if (state != null && state.length() > laneIndex) {
+                    char s = state.charAt(laneIndex);
+                    switch (s) {
+                        case 'r': color = Color.RED; break;
+                        case 'y': color = Color.YELLOW; break;
+                        case 'g': color = Color.GREEN; break;
+                        default: color = Color.GRAY; break;
+                    }
+                }
+                else
+                {
+                    color = Color.GRAY;
+                }
+
+                double size = 10;
+                gc.setFill(color);
+                gc.fillOval(x - size/2, y - size/2, size, size);
+
+                laneIndex++;
             }
         }
 

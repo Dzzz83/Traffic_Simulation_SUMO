@@ -155,17 +155,15 @@
                                                                     </children>
                                                                 </HBox>
 
-                                                                <Separator />
-                                                                    <VBox spacing="5.0">
-                                                                        <Label text="Global Control (Force State):" style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" />
-                                                                        <Button text="FORCE ALL RED" onAction="#turn_all_lights_red" maxWidth="Infinity"
-                                                                                style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" />
-                                                                        <Button text="FORCE ALL GREEN" onAction="#turn_all_lights_green" maxWidth="Infinity"
-                                                                                style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" />
-                                                                        <Button text="RESTORE AUTO" onAction="#onRestoreAutoClick" maxWidth="Infinity"
-                                                                                style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" />
-                                                                    </VBox>
-                                                                <Separator />
+                                                                <Separator /> <VBox spacing="5.0">
+                                                                <Label text="Global Control (Force State):" style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" />
+                                                                <Button text="FORCE ALL RED" onAction="#turn_all_lights_red" maxWidth="Infinity"
+                                                                        style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" />
+                                                                <Button text="FORCE ALL GREEN" onAction="#turn_all_lights_green" maxWidth="Infinity"
+                                                                        style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" />
+                                                                <Button text="RESTORE AUTO" onAction="#onRestoreAutoClick" maxWidth="Infinity"
+                                                                        style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" />
+                                                                </VBox> <Separator />
 
                                                                 <GridPane hgap="10.0" vgap="10.0">
                                                                     <columnConstraints>

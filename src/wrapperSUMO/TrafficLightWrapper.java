@@ -72,5 +72,17 @@ public class TrafficLightWrapper
         }
         return "";
     }
+    // set automatic mode
+    public void setautomaticmode(String trafficLightId)
+    {
+        try
+        {
+            connection.do_job_set(Trafficlight.setProgram(trafficLightId, "0"));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set the program of Traffic Lights" + trafficLightId);
+        }
+    }
 
 }

@@ -40,6 +40,9 @@ public class Controller {
 
     // buttons
     @FXML private Button EdgeIDBtn;
+    @FXML private Button RouteIDBtn;
+    @FXML private Button VehicleIDBtn;
+    @FXML private Button TrafficLightIDBtn;
 
     @FXML private ComboBox<String> trafficIdCombo;
     @FXML private ToggleButton autoModeToggle;
@@ -67,6 +70,11 @@ public class Controller {
     @FXML private Label congestionDensity;
     @FXML private Label numberOfEdges;
 
+    // traffic light
+    @FXML private Label labelRed;
+    @FXML private Label labelGreen;
+    @FXML private Label labelYellow;
+
     // logical variables
     private ControlPanel panel;
     private AnimationTimer simulationLoop;
@@ -81,6 +89,9 @@ public class Controller {
 
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
+    private boolean showTrafficLightID = false;
+    private boolean showRouteID = false;
+    private boolean showVehicleID = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -120,9 +131,50 @@ public class Controller {
             connectionStatus.setText("Connection: Disconnected");
             connectionStatus.setStyle("-fx-text-fill: red");
         }
-
-        // get the map data
         mapShapes = panel.getMapShape();
+        // traffic light
+        List<String> tlsIds = panel.getTrafficLightIDs();
+        trafficIdCombo.getItems().clear();
+        if (tlsIds != null && !tlsIds.isEmpty())
+        {
+            trafficIdCombo.getItems().addAll(tlsIds);
+            trafficIdCombo.getSelectionModel().selectFirst();
+        }
+
+        autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            String selectedId = trafficIdCombo.getValue();
+            if (selectedId == null) return;
+
+            if (newVal) {
+                // Button is ON -> Enable Logic "0" (Standard Program)
+                autoModeToggle.setText("ON");
+                autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                // Call backend:
+                panel.turnOnTrafficLight(selectedId);
+            } else {
+                // Button is OFF -> Disable Lights "off"
+                autoModeToggle.setText("OFF");
+                autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
+                // Call backend:
+                panel.turnOffTrafficLight(selectedId);
+            }
+        });
+
+        // Helper listener for Red Slider
+        sliderRed.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelRed.setText(seconds + "s");
+        });
+
+        sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelGreen.setText(seconds + "s");
+        });
+
+        sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int seconds = newVal.intValue();
+            labelYellow.setText(seconds + "s");
+        });
 
         // calculate, create and store the lane separators
         generateLaneSeparators();
@@ -206,7 +258,7 @@ public class Controller {
         startBtn.setOnAction(e -> onStartClick());
         stopBtn.setOnAction(e -> onStopClick());
 
-        //
+        // make the edge button function
         if (EdgeIDBtn != null) {
             EdgeIDBtn.setOnAction(e -> {
                 showEdgesID = !showEdgesID;
@@ -216,6 +268,50 @@ public class Controller {
                 }
                 else {
                     EdgeIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        if (TrafficLightIDBtn != null) {
+            TrafficLightIDBtn.setOnAction(e -> {
+                showTrafficLightID= !showTrafficLightID;
+
+                if (showTrafficLightID) {
+                    TrafficLightIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    TrafficLightIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        // toggle view RouteID button
+        if (RouteIDBtn != null) {
+            RouteIDBtn.setOnAction(e -> {
+                showRouteID = !showRouteID;
+
+                if (showRouteID) {
+                    RouteIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    RouteIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        // toggle view VehicleID button
+        if (VehicleIDBtn != null) {
+            VehicleIDBtn.setOnAction(e -> {
+                showVehicleID= !showVehicleID;
+
+                if (showVehicleID) {
+                    VehicleIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    VehicleIDBtn.setStyle("");
                 }
                 drawMap();
             });
@@ -327,6 +423,38 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void onTurnAllOffClick() {
+        System.out.println("User requested: Turning ALL Lights OFF.");
+        panel.turnOffAllLights();
+    }
+
+    // Action for the new button: Turn ALL Lights ON
+    @FXML
+    public void onTurnAllOnClick() {
+        System.out.println("User requested: Turning ALL Lights ON.");
+        panel.turnOnAllLights();
+    }
+    @FXML
+    public void turn_all_lights_red() {
+        System.out.println("User requested: FORCING ALL LIGHTS TO RED.");
+        panel.turn_all_light_red();
+        // Note: The UI drawing will update automatically on the next simulation step
+        // because it calls panel.getRedYellowGreenState()
+    }
+
+    @FXML
+    public void turn_all_lights_green() {
+        System.out.println("User requested: FORCING ALL LIGHTS TO GREEN.");
+        panel.turn_all_light_green();
+    }
+    @FXML
+    public void onRestoreAutoClick() {
+        System.out.println("User requested: RESTORING AUTOMATIC PROGRAM.");
+        // This calls the method that sets the program back to "0"
+        panel.turnOnAllLights();
+    }
+
     // add the stress test button
     public void onStressTestClick()
     {
@@ -388,23 +516,72 @@ public class Controller {
     // edge id button function. labels the road with its id
     public void drawEdgeLabel(GraphicsContext gc, String laneID, List<SumoPosition2D> points)
     {
+        // Safety check: need at least 2 points to determine direction
+        if (points.size() < 2) return;
+
+        // Clean the ID string
         String edgeID = laneID;
         int _index = laneID.lastIndexOf('_');
-        if (_index != -1)
-        {
+            if (_index != -1) {
             edgeID = laneID.substring(0, _index);
         }
 
+        // Find the middle segment of the road
         int midIndex = points.size() / 2;
-        double midX = (points.get(midIndex).x * SCALE) + OFFSET_X;
-        double midY = (points.get(midIndex).y * SCALE) + OFFSET_Y;
+        // Ensure it do not go out of bounds if midIndex is the last point
+            if (midIndex >= points.size() - 1) {
+            midIndex = points.size() - 2;
+        }
 
-        gc.fillText(edgeID, midX, midY);
+        SumoPosition2D p1 = points.get(midIndex);
+        SumoPosition2D p2 = points.get(midIndex + 1);
+
+        // Calculate the direction vector (dx, dy)
+        double dx = p2.x - p1.x;
+        double dy = p2.y - p1.y;
+
+        // Calculate length to normalize
+        double length = Math.sqrt(dx * dx + dy * dy);
+
+            if (length == 0) return; // Prevent division by zero
+
+        // Normalize (make length 1.0)
+        double unitX = dx / length;
+        double unitY = dy / length;
+
+        // Rotate 90 degrees clockwise
+        // Vector (x, y) rotated 90 deg clockwise is (y, -x)
+        double normalX = unitY;
+        double normalY = -unitX;
+
+        // Calculate Offset Position
+        // Shift by 6 meters to the right
+        double offsetDistance = 7.0; // still experimenting
+
+        // We use the midpoint of the segment as the base
+        double worldX = ((p1.x + p2.x) / 2.0) + (normalX * offsetDistance);
+        double worldY = ((p1.y + p2.y) / 2.0) + (normalY * offsetDistance);
+
+        // Convert World Coordinates to Screen Coordinates
+        // NOTE: Flip the Y-axis calculation for the text to stick to the map correctly
+        double screenX = (worldX * SCALE) + OFFSET_X;
+        double screenY = mapCanvas.getHeight() - ((worldY * SCALE) + OFFSET_Y);
+
+        // Draw Text with Outline
+            gc.setTextAlign(TextAlignment.CENTER);
+
+        // Draw black outline
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(2.5); // Thicker line for shadow effect
+            gc.strokeText(edgeID, screenX, screenY);
+
+        // Draw white text on top
+            gc.setFill(Color.WHITE);
+            gc.fillText(edgeID, screenX, screenY);
     }
 
     // draw map function
     private void drawMap() {
-
         // initialize gc
         GraphicsContext gc = mapCanvas.getGraphicsContext2D();
 
@@ -421,22 +598,28 @@ public class Controller {
         // draw the roads part
         // debug mode (Show Edge IDs)
         if (showEdgesID) {
-            gc.setStroke(Color.CYAN); // blue lines
-            gc.setLineWidth(3);
             gc.setFill(Color.WHITE);  // white text
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setLineDashes(null);   // solid lines
 
             // loop through all roads and draw them with their ID names
             for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
+                String laneID = entry.getKey();
+                // Logic to extract clean Edge ID
+                String edgeID = laneID;
+                int _index = laneID.lastIndexOf('_');
+                if (_index != -1) {
+                    edgeID = laneID.substring(0, _index);
+                }
+
                 drawPolyLine(gc, entry.getValue());
-                if (entry.getValue().size() > 1) {
+
+                if (!edgeID.startsWith(":") && entry.getValue().size() > 1) {
                     drawEdgeLabel(gc, entry.getKey(), entry.getValue());
                 }
             }
         }
         // normal mode: draw the roads normally (border --> asphalt --> white lines)
-        {
+        else {
             // calculate road width relative to zoom (SCALE)
             double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
             double visualWidth = baseRoadWidth * 1.2;
@@ -502,6 +685,50 @@ public class Controller {
             }
         }
 
+        // draw traffic light
+        // draw traffic light
+        List<String> trafficLightId = panel.getTrafficLightIDs();
+        for (String trafficid : trafficLightId)
+        {
+            Map<String, List<SumoPosition2D>> position = panel.get_traffic_light_pos(trafficid);
+            String state = panel.getRedYellowGreenState(trafficid);
+            int laneIndex = 0;
+
+            for (Map.Entry<String, List<SumoPosition2D>> entry : position.entrySet())
+            {
+                List<SumoPosition2D> shape = entry.getValue();
+                if (shape == null || shape.isEmpty())
+                {
+                    continue;
+                }
+                SumoPosition2D position2D = shape.get(shape.size() - 1);
+                double x = (position2D.x * SCALE) + OFFSET_X;
+                double y = mapCanvas.getHeight() - ((position2D.y * SCALE) + OFFSET_Y);
+
+                Color color;
+
+                if (state != null && state.length() > laneIndex) {
+                    char s = state.charAt(laneIndex);
+                    switch (s) {
+                        case 'r': color = Color.RED; break;
+                        case 'y': color = Color.YELLOW; break;
+                        case 'g': color = Color.GREEN; break;
+                        default: color = Color.GRAY; break;
+                    }
+                }
+                else
+                {
+                    color = Color.GRAY;
+                }
+
+                double size = 10;
+                gc.setFill(color);
+                gc.fillOval(x - size/2, y - size/2, size, size);
+
+                laneIndex++;
+            }
+        }
+
         // draw vehicles
         // check if simulation is running
         if (panel.isRunning())
@@ -527,6 +754,34 @@ public class Controller {
 
                 // call draw car function
                 drawCar(gc, x, y, angle, carLength, carWidth);
+
+                if (showVehicleID) {
+                    gc.setFill(Color.LIME);
+                    gc.fillText(id, x, y - 8); // Above vehicle
+                }
+
+                if (showRouteID) {
+                    String routeID = panel.getVehicleRouteID(id);
+
+                    gc.setFill(Color.GREEN);
+                    gc.fillText(routeID, x, y + 15);
+
+                    String currentEdgeID = panel.getRoadID(id);
+
+                    String laneID = currentEdgeID.startsWith(":") ? currentEdgeID + "_0" : currentEdgeID + "_0";
+
+                    if (mapShapes.containsKey(laneID)) {
+                        List<SumoPosition2D> roadPoints = mapShapes.get(laneID);
+                        if (roadPoints != null && roadPoints.size() > 1) {
+                            int mid = roadPoints.size() / 2;
+                            double roadX = (roadPoints.get(mid).x * SCALE) + OFFSET_X;
+                            double roadY = mapCanvas.getHeight() - ((roadPoints.get(mid).y * SCALE) + OFFSET_Y);
+
+                            gc.setFill(Color.MAGENTA);
+                            gc.fillText(routeID, roadX, roadY);
+                        }
+                    }
+                }
             }
         }
     }

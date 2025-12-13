@@ -1,5 +1,6 @@
 package wrapperSUMO;
 
+import de.tudresden.sumo.cmd.Trafficlight;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -39,7 +40,7 @@ public class ControlPanel
         try
         {
             // initialize the connection with your specific paths
-            connection = new SumoTraciConnection("sumo.exe",
+            connection = new SumoTraciConnection("sumo",
                     "src/map/demo.sumocfg");
 
             // start the simulation
@@ -675,6 +676,179 @@ public class ControlPanel
             e.printStackTrace();
         }
         return 0.0;
+    }
+    // Get the position of traffic light
+    public Map<String, List<SumoPosition2D>> get_traffic_light_pos(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new HashMap<>();
+        }
+        try
+        {
+            Map<String, List<SumoPosition2D>> lane_position = new HashMap<>();
+            Map<String, String> edges = this.get_controlled_lanes(trafficLightId);
+            for (Map.Entry<String, String> entry : edges.entrySet())
+            {
+                String edgeid = entry.getKey();
+                String laneid = entry.getValue();
+                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneid));
+                List<SumoPosition2D> shape = geometry.coords;
+                lane_position.put(edgeid, shape);
+            }
+            return lane_position;
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the traffic light pos in map");
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
+
+    // get the incomming controlled road for traffic light
+    public Map<String, String> get_controlled_lanes(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new HashMap<>();
+        }
+        try
+        {
+            // get controlled lanes
+            List<String> controlled_lanes =(List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+            // get edge
+            Map<String, String> edges = new HashMap<>();
+            for (String landid : controlled_lanes)
+            {
+                String edgeid = landid.split("_")[0];
+                edges.putIfAbsent(edgeid, landid);
+            }
+            return edges;
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get the controlled lanes in map");
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
+
+
+    // Set traffic light to automatic mode
+    public void set_automatic_state(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+        try
+        {
+            trafficLightWrapper.setautomaticmode(trafficLightId);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set auto traffic light");
+        }
+        return;
+    }
+
+    // Logic to turn ON a specific light (Set program to default "0")
+    public void turnOnTrafficLight(String tlsID)
+    {
+        try {
+            connection.do_job_set(Trafficlight.setProgram(tlsID, "0"));
+            System.out.println("Traffic Light " + tlsID + " set to ON (Program 0)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    // Logic to turn OFF a specific light (Set program to "off")
+    public void turnOffTrafficLight(String tlsID)
+    {
+        try {
+            connection.do_job_set(Trafficlight.setProgram(tlsID, "off"));
+            System.out.println("Traffic Light " + tlsID + " set to OFF");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void turnOffAllLights() {
+        try {
+            // 1. Get the list of all Traffic Light IDs
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            // 2. Iterate and set program to "off"
+            for (String id : tlIDs) {
+                connection.do_job_set(Trafficlight.setProgram(id, "off"));
+            }
+            System.out.println("All traffic lights turned OFF.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getBaseStateString(String tlsID) throws Exception
+    {
+        return (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(tlsID));
+    }
+
+    // turn all light to red
+    public void turn_all_light_red()
+    {
+        try
+        {
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            for (String id : tlIDs)
+            {
+                String currentState = getBaseStateString(id);
+                int length = currentState.length();
+                String allRedState = "r".repeat(length);
+
+                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allRedState));
+            }
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error forcing all lights to RED: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // turn all lights to greeen
+    public void turn_all_light_green() {
+        try {
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            for (String id : tlIDs) {
+                String currentState = getBaseStateString(id);
+                int length = currentState.length();
+
+                String allGreenState = "g".repeat(length);
+                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allGreenState));
+            }
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public void turnOnAllLights() {
+        try {
+            // 1. Get the list of all Traffic Light IDs
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            // 2. Iterate and set program to "0" (default)
+            for (String id : tlIDs) {
+                connection.do_job_set(Trafficlight.setProgram(id, "0"));
+            }
+            System.out.println("All traffic lights turned ON.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // create function isRunning()

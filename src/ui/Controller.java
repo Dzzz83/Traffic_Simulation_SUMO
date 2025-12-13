@@ -40,6 +40,9 @@ public class Controller {
 
     // buttons
     @FXML private Button EdgeIDBtn;
+    @FXML private Button RouteIDBtn;
+    @FXML private Button VehicleIDBtn;
+    @FXML private Button TrafficLightIDBtn;
 
     @FXML private ComboBox<String> trafficIdCombo;
     @FXML private ToggleButton autoModeToggle;
@@ -80,6 +83,9 @@ public class Controller {
 
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
+    private boolean showTrafficLightID = false;
+    private boolean showRouteID = false;
+    private boolean showVehicleID = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -205,7 +211,7 @@ public class Controller {
         startBtn.setOnAction(e -> onStartClick());
         stopBtn.setOnAction(e -> onStopClick());
 
-        //
+        // make the edge button function
         if (EdgeIDBtn != null) {
             EdgeIDBtn.setOnAction(e -> {
                 showEdgesID = !showEdgesID;
@@ -215,6 +221,50 @@ public class Controller {
                 }
                 else {
                     EdgeIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        if (TrafficLightIDBtn != null) {
+            TrafficLightIDBtn.setOnAction(e -> {
+                showTrafficLightID= !showTrafficLightID;
+
+                if (showTrafficLightID) {
+                    TrafficLightIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    TrafficLightIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        // toggle view RouteID button
+        if (RouteIDBtn != null) {
+            RouteIDBtn.setOnAction(e -> {
+                showRouteID = !showRouteID;
+
+                if (showRouteID) {
+                    RouteIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    RouteIDBtn.setStyle("");
+                }
+                drawMap();
+            });
+        }
+
+        // toggle view VehicleID button
+        if (VehicleIDBtn != null) {
+            VehicleIDBtn.setOnAction(e -> {
+                showVehicleID= !showVehicleID;
+
+                if (showVehicleID) {
+                    VehicleIDBtn.setStyle("-fx-background-color: #add8e6;");
+                }
+                else {
+                    VehicleIDBtn.setStyle("");
                 }
                 drawMap();
             });
@@ -384,23 +434,72 @@ public class Controller {
     // edge id button function. labels the road with its id
     public void drawEdgeLabel(GraphicsContext gc, String laneID, List<SumoPosition2D> points)
     {
+        // Safety check: need at least 2 points to determine direction
+        if (points.size() < 2) return;
+
+        // Clean the ID string
         String edgeID = laneID;
         int _index = laneID.lastIndexOf('_');
-        if (_index != -1)
-        {
+            if (_index != -1) {
             edgeID = laneID.substring(0, _index);
         }
 
+        // Find the middle segment of the road
         int midIndex = points.size() / 2;
-        double midX = (points.get(midIndex).x * SCALE) + OFFSET_X;
-        double midY = (points.get(midIndex).y * SCALE) + OFFSET_Y;
+        // Ensure it do not go out of bounds if midIndex is the last point
+            if (midIndex >= points.size() - 1) {
+            midIndex = points.size() - 2;
+        }
 
-        gc.fillText(edgeID, midX, midY);
+        SumoPosition2D p1 = points.get(midIndex);
+        SumoPosition2D p2 = points.get(midIndex + 1);
+
+        // Calculate the direction vector (dx, dy)
+        double dx = p2.x - p1.x;
+        double dy = p2.y - p1.y;
+
+        // Calculate length to normalize
+        double length = Math.sqrt(dx * dx + dy * dy);
+
+            if (length == 0) return; // Prevent division by zero
+
+        // Normalize (make length 1.0)
+        double unitX = dx / length;
+        double unitY = dy / length;
+
+        // Rotate 90 degrees clockwise
+        // Vector (x, y) rotated 90 deg clockwise is (y, -x)
+        double normalX = unitY;
+        double normalY = -unitX;
+
+        // Calculate Offset Position
+        // Shift by 6 meters to the right
+        double offsetDistance = 7.0; // still experimenting
+
+        // We use the midpoint of the segment as the base
+        double worldX = ((p1.x + p2.x) / 2.0) + (normalX * offsetDistance);
+        double worldY = ((p1.y + p2.y) / 2.0) + (normalY * offsetDistance);
+
+        // Convert World Coordinates to Screen Coordinates
+        // NOTE: Flip the Y-axis calculation for the text to stick to the map correctly
+        double screenX = (worldX * SCALE) + OFFSET_X;
+        double screenY = mapCanvas.getHeight() - ((worldY * SCALE) + OFFSET_Y);
+
+        // Draw Text with Outline
+            gc.setTextAlign(TextAlignment.CENTER);
+
+        // Draw black outline
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(2.5); // Thicker line for shadow effect
+            gc.strokeText(edgeID, screenX, screenY);
+
+        // Draw white text on top
+            gc.setFill(Color.WHITE);
+            gc.fillText(edgeID, screenX, screenY);
     }
 
     // draw map function
     private void drawMap() {
-
         // initialize gc
         GraphicsContext gc = mapCanvas.getGraphicsContext2D();
 
@@ -417,22 +516,28 @@ public class Controller {
         // draw the roads part
         // debug mode (Show Edge IDs)
         if (showEdgesID) {
-            gc.setStroke(Color.CYAN); // blue lines
-            gc.setLineWidth(3);
             gc.setFill(Color.WHITE);  // white text
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setLineDashes(null);   // solid lines
 
             // loop through all roads and draw them with their ID names
             for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
+                String laneID = entry.getKey();
+                // Logic to extract clean Edge ID
+                String edgeID = laneID;
+                int _index = laneID.lastIndexOf('_');
+                if (_index != -1) {
+                    edgeID = laneID.substring(0, _index);
+                }
+
                 drawPolyLine(gc, entry.getValue());
-                if (entry.getValue().size() > 1) {
+
+                if (!edgeID.startsWith(":") && entry.getValue().size() > 1) {
                     drawEdgeLabel(gc, entry.getKey(), entry.getValue());
                 }
             }
         }
         // normal mode: draw the roads normally (border --> asphalt --> white lines)
-        {
+        else {
             // calculate road width relative to zoom (SCALE)
             double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
             double visualWidth = baseRoadWidth * 1.2;
@@ -523,6 +628,34 @@ public class Controller {
 
                 // call draw car function
                 drawCar(gc, x, y, angle, carLength, carWidth);
+
+                if (showVehicleID) {
+                    gc.setFill(Color.LIME);
+                    gc.fillText(id, x, y - 8); // Above vehicle
+                }
+
+                if (showRouteID) {
+                    String routeID = panel.getVehicleRouteID(id);
+
+                    gc.setFill(Color.GREEN);
+                    gc.fillText(routeID, x, y + 15);
+
+                    String currentEdgeID = panel.getRoadID(id);
+
+                    String laneID = currentEdgeID.startsWith(":") ? currentEdgeID + "_0" : currentEdgeID + "_0";
+
+                    if (mapShapes.containsKey(laneID)) {
+                        List<SumoPosition2D> roadPoints = mapShapes.get(laneID);
+                        if (roadPoints != null && roadPoints.size() > 1) {
+                            int mid = roadPoints.size() / 2;
+                            double roadX = (roadPoints.get(mid).x * SCALE) + OFFSET_X;
+                            double roadY = mapCanvas.getHeight() - ((roadPoints.get(mid).y * SCALE) + OFFSET_Y);
+
+                            gc.setFill(Color.MAGENTA);
+                            gc.fillText(routeID, roadX, roadY);
+                        }
+                    }
+                }
             }
         }
     }

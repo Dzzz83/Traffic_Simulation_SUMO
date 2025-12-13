@@ -39,7 +39,7 @@ public class ControlPanel
         try
         {
             // initialize the connection with your specific paths
-            connection = new SumoTraciConnection("sumo.exe",
+            connection = new SumoTraciConnection("sumo",
                     "src/map/demo.sumocfg");
 
             // start the simulation

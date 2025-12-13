@@ -69,6 +69,9 @@
                                                                 <Button fx:id="stopBtn" mnemonicParsing="false" onAction="#onStopClick" prefWidth="80.0" style="-fx-background-color: #ff0000;" text="Stop" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
+                                                                <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
                                                             </children>
                                                         </HBox>
 
@@ -78,9 +81,6 @@
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                                 <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test" textFill="WHITE">
-                                                                    <font><Font name="System Bold" size="14.0" /></font>
-                                                                </Button>
-                                                                <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                             </children>

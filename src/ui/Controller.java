@@ -358,8 +358,10 @@ public class Controller {
 
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-                maxSpeedValue.setText(String.format("%.1f", newVal.doubleValue()));
-                System.out.println("Max Speed: " + newVal);
+                double speed = newVal.doubleValue();
+                maxSpeedValue.setText(String.format("%.1f m/s", speed));
+                panel.setGlobalMaxSpeed(speed);
+                System.out.println("Max Speed: " + speed);
             });
         }
 

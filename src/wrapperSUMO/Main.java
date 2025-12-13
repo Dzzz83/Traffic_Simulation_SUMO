@@ -43,6 +43,8 @@ public class Main
                 String state = panel.getRedYellowGreenState(tlId);
                 System.out.println("  " + tlId + ": " + state);
             }
+            double globalMeanSpeed = panel.getGlobalMeanSpeed();
+            System.out.println("Average speed: " + globalMeanSpeed);
         }
 
         // stop the simulation

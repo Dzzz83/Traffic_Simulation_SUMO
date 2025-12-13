@@ -320,6 +320,32 @@ public class ControlPanel {
         return edgeWrapper.setGlobalMaxSpeed(speed);
     }
 
+    public double getGlobalMeanSpeed() {
+        if (!isRunning) {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+
+        try {
+            List<String> allVehicles = getVehicleIDs();
+            if (allVehicles.isEmpty()) {
+                return 0.0;
+            }
+
+            double totalSpeed = 0.0;
+
+            for (String vehicleId : allVehicles) {
+                totalSpeed += getVehicleSpeed(vehicleId);
+            }
+
+            return (totalSpeed / allVehicles.size());
+        } catch (Exception e) {
+            System.out.println("Failed to calculate global mean speed");
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
     // create function stopSimulation
     public void stopSimulation()
     {

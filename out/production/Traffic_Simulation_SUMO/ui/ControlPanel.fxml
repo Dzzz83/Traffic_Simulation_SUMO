@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Separator?>  <?import javafx.scene.control.Slider?>
 
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.Controller">
 
@@ -48,6 +49,15 @@
                     <ToggleButton fx:id="autoModeToggle" text="ON" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
                 </HBox>
 
+                <Separator /> <VBox spacing="5.0">
+                <Label text="Global Control (Force State):" style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" />
+                <Button text="FORCE ALL RED" onAction="#turn_all_lights_red" maxWidth="Infinity"
+                        style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" />
+                <Button text="FORCE ALL GREEN" onAction="#turn_all_lights_green" maxWidth="Infinity"
+                        style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" />
+                <Button text="RESTORE AUTO" onAction="#onRestoreAutoClick" maxWidth="Infinity"
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" />
+                </VBox> <Separator />
                 <GridPane hgap="10" vgap="15">
                     <columnConstraints>
                         <ColumnConstraints minWidth="50" />
@@ -57,15 +67,15 @@
 
                     <children>
                         <Label text="RED" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
-                        <Slider min="1" max="60" value="30" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Slider fx:id="sliderRed" min="1" max="60" value="30" GridPane.rowIndex="0" GridPane.columnIndex="1" />
                         <Label fx:id="labelRed" text="30s" GridPane.rowIndex="0" GridPane.columnIndex="2" />
 
                         <Label text="GREEN" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
-                        <Slider min="1" max="60" value="30" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Slider fx:id="sliderGreen" min="1" max="60" value="30" GridPane.rowIndex="1" GridPane.columnIndex="1" />
                         <Label fx:id="labelGreen" text="30s" GridPane.rowIndex="1" GridPane.columnIndex="2" />
 
                         <Label text="YELLOW" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
-                        <Slider min="1" max="10" value="3" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Slider fx:id="sliderYellow" min="1" max="10" value="3" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                         <Label fx:id="labelYellow" text="3s" GridPane.rowIndex="2" GridPane.columnIndex="2" />
                     </children>
                 </GridPane>

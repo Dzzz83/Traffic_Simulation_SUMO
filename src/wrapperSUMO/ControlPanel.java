@@ -63,6 +63,21 @@ public class ControlPanel
         }
         return true;
     }
+
+    public void restartSimulation() {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+            Thread.sleep(500);
+            startSimulation();
+            System.out.println("Simulation restarted successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to restart simulation: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // Retrieves the shape (list of X,Y points) for EVERY lane in your map
     public Map<String, List<SumoPosition2D>> getMapShape()
     {
@@ -481,6 +496,77 @@ public class ControlPanel
             System.out.println("Failed to set the speed of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
+    }
+
+    public int setMaxSpeed(String edgeID, double speed) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return edgeWrapper.setMaxSpeed(edgeID, speed);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to set max speed");
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public double getMeanSpeed(String edgeID) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return edgeWrapper.getMeanSpeed(edgeID);
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get mean speed");
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    public int setGlobalMaxSpeed(double speed) {
+        if (!isRunning)
+        {
+            System.out.println("The simulation is not running");
+            return 0;
+        }
+        return edgeWrapper.setGlobalMaxSpeed(speed);
+    }
+
+    public double getGlobalMeanSpeed() {
+        if (!isRunning) {
+            System.out.println("The simulation is not running");
+            return 0.0;
+        }
+
+        try {
+            List<String> allVehicles = getVehicleIDs();
+            if (allVehicles.isEmpty()) {
+                return 0.0;
+            }
+
+            double totalSpeed = 0.0;
+
+            for (String vehicleId : allVehicles) {
+                totalSpeed += getVehicleSpeed(vehicleId);
+            }
+
+            return (totalSpeed / allVehicles.size());
+        } catch (Exception e) {
+            System.out.println("Failed to calculate global mean speed");
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 
     // create function getDistance

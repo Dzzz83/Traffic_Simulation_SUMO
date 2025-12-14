@@ -17,6 +17,9 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.chart.NumberAxis;
 
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
@@ -72,6 +75,10 @@ public class Controller {
     @FXML private Label numberVehicles;
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
+    @FXML private Label numberOfEdges;
+
+    // chart
+    @FXML private LineChart<Number, Number> avgSpeedChart;
 
     // traffic light
     @FXML private Label labelRed;
@@ -98,6 +105,10 @@ public class Controller {
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
 
+    // variables for chart
+    private XYChart.Series<Number, Number> speedSeries;
+    private double timeSeconds = 0;
+
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
     private double SCALE = 1.0;       // initial Zoom
@@ -107,9 +118,12 @@ public class Controller {
     // variables to store the position of the mouse in the past to implement click and drag feature
     private double lastMouseX, lastMouseY; // for dragging calculation
 
+    // variable remembers the route for the next click
+    private int clickRouteIndex = 0;
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
+    // variables for delay button
     private long lastUpdate = 0;
     private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
 
@@ -186,6 +200,12 @@ public class Controller {
 
         // calculate, create and store the lane separators
         generateLaneSeparators();
+
+        // setup chart
+
+        speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
+        avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
         setupMapInteractions();
@@ -366,8 +386,10 @@ public class Controller {
 
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-                maxSpeedValue.setText(String.format("%.1f", newVal.doubleValue()));
-                System.out.println("Max Speed: " + newVal);
+                double speed = newVal.doubleValue();
+                maxSpeedValue.setText(String.format("%.1f m/s", speed));
+                panel.setGlobalMaxSpeed(speed);
+                System.out.println("Max Speed: " + speed);
             });
         }
 
@@ -415,12 +437,20 @@ public class Controller {
 
         try
         {
+            List <String> routeIDs = panel.getRouteIDs();
+            if (routeIDs.isEmpty()) {
+                System.err.println("No routes found in the map file");
+                return;
+            }
+            // pick the route based on counter
+            String targetRoute = routeIDs.get(clickRouteIndex);
             // get current time
             int departure_time = (int) panel.getCurrentTime();
             // add vehicle
-            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", "r_0", departure_time, 50.0, 10.0, (byte) -2);
-            // iterate
-            panel.step();
+            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", targetRoute, departure_time, 50.0, 10.0, (byte) -2);
+            System.out.println("Spawned " + vehId + " on route: " + targetRoute);
+            // update the counter for the next click
+            clickRouteIndex = (clickRouteIndex + 1) % routeIDs.size();
             // redraw map
             drawMap();
         }
@@ -483,13 +513,49 @@ public class Controller {
         }
     }
 
+    @FXML
+    // restart button
+    public void onRestartClick() {
+        System.out.println("Restarting map...");
+
+        // stop the JavaFX drawing loop first!
+        if (simulationLoop != null) {
+            simulationLoop.stop();
+        }
+        // call the restart logic in the backend
+        panel.restartSimulation();
+        // reset the UI variables
+        clickRouteIndex = 0;
+        // redraw the empty map
+        drawMap();
+        // update the UI buttons
+        startBtn.setDisable(false);
+        stopBtn.setDisable(true);
+        System.out.println("Map returned to beginning state. Press Start to begin.");
+    }
+
     private void updateStats() {
         int count = panel.getVehicleCount();
-        numberVehicles.setText(String.valueOf(count));
+        numberVehicles.setText("Vehicles: " + count);
+        int edgeCount = panel.getEdgeCount();
+        numberOfEdges.setText("Edges: " + edgeCount);
+
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getVehicleSpeed(panel.getVehicleIDs().getFirst());
-            averageSpeed.setText(String.valueOf(avgSpeed));
+            double avgSpeed = panel.getGlobalMeanSpeed();
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+        }
+
+        if (panel.isRunning()) {
+            double currentSpeed = panel.getGlobalMeanSpeed();
+            currentSpeed *= 3.6;
+
+            timeSeconds += 0.1;
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+
+            if (speedSeries.getData().size() > 50) {
+                speedSeries.getData().remove(0);
+            }
         }
     }
 

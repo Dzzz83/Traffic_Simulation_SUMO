@@ -178,16 +178,16 @@
                                                                     </columnConstraints>
                                                                     <children>
                                                                         <Label text="RED" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                                                        <Slider fx:id="sliderRed" max="60.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                                                        <Label fx:id="redValue" text="30s" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                                                        <Slider fx:id="sliderRed" max="60.0" min="1.0" value="40.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                                        <Label fx:id="redValue" text="40s" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
                                                                         <Label text="GREEN" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                                                        <Slider fx:id="sliderGreen" max="60.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                                        <Label fx:id="greenValue" text="30s" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                                        <Slider fx:id="sliderGreen" max="60.0" min="1.0" value="40.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                                        <Label fx:id="greenValue" text="40s" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
                                                                         <Label text="YELLOW" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                                                                        <Slider fx:id="sliderYellow" max="10.0" min="1.0" value="30.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                                        <Label fx:id="yellowValue" text="30s" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                                                        <Slider fx:id="sliderYellow" max="10.0" min="1.0" value="2.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                                        <Label fx:id="yellowValue" text="2s" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                                                                     </children>
                                                    <rowConstraints>
                                                       <RowConstraints />

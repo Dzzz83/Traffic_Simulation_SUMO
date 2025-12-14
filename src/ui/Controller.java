@@ -539,6 +539,14 @@ public class Controller {
         }
         // call the restart logic in the backend
         panel.restartSimulation();
+
+        // Re-initializes the Traffic Light Wrapper
+        tlsWrapper = panel.getTrafficLightWrapper();
+        if (tlsWrapper != null) {
+            tlsWrapper.isRunning = true;
+            tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
+        }
+
         // reset the UI variables
         clickRouteIndex = 0;
         // redraw the empty map
@@ -854,7 +862,7 @@ public class Controller {
 
 // main method for draw traffic lights based on its incoming edge
     private void drawTrafficLights(GraphicsContext gc) {
-        if (tlsWrapper == null) return;
+        if (tlsWrapper == null || !panel.isRunning) return;
 
         // Level of Detail (LOD) Check
         // If map is zoomed out too far, don't draw anything to keep it clean.

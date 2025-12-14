@@ -57,10 +57,10 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
 1. **Duong Xuan Ngan** - Developer, GUI Designer
    - *Responsibilities:* Traffic Light Logic & Visualization.
 2. **Nguyen Minh Hieu** - Lead Developer, Lead UI/UX Designer
-   - *Responsibilities:* Map Creation, Stress Test, Restart Button, Inject Vehicles features.
+   - *Responsibilities:* Map Creation, Improve Map & Control Panel Design & Visualization, Stress Test 2, Restart Button, Improve Inject Vehicles features.
 3. **Vo Thanh Tai** - Developer, Data Analyst, UI/UX Designer
-   - *Responsibilities:* Data-Related Features, Tilted Panes, Menu Bar.
+   - *Responsibilities:* Data-Related Features, Tilted Panes, Improve Control Panel Design, maxSpeed feature.
 4. **Huynh Tuan Phat** - Developer, UI/UX Designer
-   - *Responsibilities:* Map & Traffic Visualization, Stress Test, Inject Vehicles features.
+   - *Responsibilities:* Improve Map & Control Panel Design & Visualization, Stress Test 1, Improve Inject Vehicles features.
 5. **Lam Quang Thien** - Developer, UI/UX Designer
-   - *Responsibilities:* Map Visualization, Slide Bar, Toggle View IDs features.
+   - *Responsibilities:* Map & Control Panel Design & Visualization, Slide Bars, Toggle View IDs features, Inject Vehicles features, Logging infos & errors.

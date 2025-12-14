@@ -61,23 +61,25 @@ public class EdgeWrapper {
         return new ArrayList<>();
     }
 
-    // get the lane number
+    // Get the number of lanes
     public int getLaneNumber(String edgeId) {
         try {
             return (Integer) connection.do_job_get(Edge.getLaneNumber(edgeId));
         } catch (Exception e) {
-            System.out.println("Failed to get the lane number");
+            System.out.println("Failed to get the number of lanes");
             e.printStackTrace();
         }
         return 0;
     }
 
+    // Basically setting the speed limit for a specific edge
     public int setMaxSpeed(String edgeID, double speed) {
         if (edgeID == null || edgeID.isEmpty()) {
             System.err.println("Error: edgeID cannot be empty.");
             return -1;
         }
-        if (speed < 0) {
+        if (speed < 0) // Speed cannot be negative
+        {
             System.err.println("Error: speed cannot be negative.");
             return -2;
         }
@@ -91,6 +93,7 @@ public class EdgeWrapper {
         }
     }
 
+    // Get the mean speed of a specific edge
     public double getMeanSpeed(String edgeID) {
         try {
             return (Double) connection.do_job_get(Edge.getLastStepMeanSpeed(edgeID));
@@ -101,15 +104,19 @@ public class EdgeWrapper {
         }
     }
 
+    // Similar to setMaxSpeed but for every edge on the map, so like a speed limit for the whole map
     public int setGlobalMaxSpeed(double speed) {
-        if (speed < 0) {
+        if (speed < 0) // Check if the speed is negative
+        {
             System.err.println("Error: Speed cannot be negative");
             return -1;
         }
-        try {
-            List<String> allEdges = getEdgeIDs();
-            for (String edgeID : allEdges) {
-                setMaxSpeed(edgeID, speed);
+        try
+        {
+            List<String> allEdges = getEdgeIDs(); // Get the list of all the edges' ID
+            for (String edgeID : allEdges)  // Loop through all the edges
+            {
+                setMaxSpeed(edgeID, speed); // Set the speed limit for every single edge
             }
             return 0;
         } catch (Exception e) {

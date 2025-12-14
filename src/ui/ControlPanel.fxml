@@ -66,8 +66,7 @@
                                                     <children>
                                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                                             <children>
-                                                                <Button fx:id="startBtn" mnemonicParsing="false" onAction="#onStartClick" prefWidth="80.0" style="-fx-background-color: #009933;" text="Start" textFill="WHITE">
-                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                <Button fx:id="startBtn" mnemonicParsing="false" onAction="#onStartClick" prefWidth="80.0" style="-fx-background-color: #009933;" text="Start" textFill="WHITE"><font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                                 <Button fx:id="stopBtn" mnemonicParsing="false" onAction="#onStopClick" prefWidth="80.0" style="-fx-background-color: #ff0000;" text="Stop" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
@@ -84,6 +83,9 @@
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                                 <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                                <Button fx:id="stressTest2Btn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTest2Click" style="-fx-background-color: #FF9800;" text="Run Stress Test 2" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                             </children>

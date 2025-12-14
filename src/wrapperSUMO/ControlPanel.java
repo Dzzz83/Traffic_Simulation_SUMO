@@ -4,6 +4,9 @@ import de.tudresden.sumo.cmd.Trafficlight;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.objects.SumoPosition2D;
+import javafx.scene.paint.Color;
+import de.tudresden.sumo.objects.SumoColor;
+import de.tudresden.sumo.cmd.Vehicle;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -285,6 +288,28 @@ public class ControlPanel
         {
             LOG.error("Failed to set the color");
             e.printStackTrace();
+        }
+    }
+
+    // gets the current color of a vehicle from SUMO and converts it for JavaFX
+    public Color getVehicleColor(String id) {
+        // ff the simulation isn't running, return a default yellow color
+        if (!isRunning) return Color.YELLOW;
+        try {
+            // fetch the color from SUMO (TraCI)
+            SumoColor sc = (SumoColor) connection.do_job_get(Vehicle.getColor(id));
+
+            // use & 0xFF to convert potential negative signed bytes to positive integers (0-255)
+            int r = sc.r & 0xFF;
+            int g = sc.g & 0xFF;
+            int b = sc.b & 0xFF;
+            double a = (sc.a & 0xFF) / 255.0;
+
+            return Color.rgb(r, g, b, a);
+        } catch (Exception e) {
+            // log the error
+            System.err.println("TraCI Color Error for " + id + ": " + e.getMessage());
+            return Color.YELLOW;
         }
     }
 

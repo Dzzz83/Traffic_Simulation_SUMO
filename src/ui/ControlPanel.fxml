@@ -221,6 +221,9 @@
                                                 <Label fx:id="numberOfEdges" text="Number of Edges: ??" textFill="#555555">
                                                     <font><Font name="Arial" size="13.0" /></font>
                                                 </Label>
+                                                <Label fx:id="numOfTL" text="Number of Traffic Lights: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
                                                 <Label fx:id="averageSpeed" text="Avg Speed: 0 km/h" textFill="#555555">
                                                     <font><Font name="Arial" size="13.0" /></font>
                                                 </Label>
@@ -236,6 +239,9 @@
                                                       tickUnit="20" />
                                       </yAxis>
                                     </LineChart>
+                                                <Label fx:id="co2Emission" text="CO2 Emission: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
                                                 <Label fx:id="congestionDensity" text="Density: 0%" textFill="#555555">
                                                     <font><Font name="Arial" size="13.0" /></font>
                                                 </Label>

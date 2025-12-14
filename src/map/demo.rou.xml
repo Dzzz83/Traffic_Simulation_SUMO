@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2025-12-12T01:08:00.238577+01:00 by Eclipse SUMO netedit 1.25.0
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <!-- Routes -->
+    <route id="r_0" edges="E14 E0 E0.173 E5 -E10"/>
+    <route id="r_1" edges="-E14 -E21 E12 E12.217 E20 E35 -E34"/>
+    <route id="r_10" edges="-E6.216.153 -E6 -E21.217 E21.217.278 E6 -E6 -E21.217 -E21.217.170 E21.217.136 -E21.217.170 -E21.2170 E21.217 E9 -E2.130 E2"/>
+    <route id="r_11" edges="E21.217 -E21.2170 -E21 E12 E12.217 E20 -E20 E20 E35 -E35 E35 E34.128 -E29 E27 E28 E30 -E32 -E31 E33"/>
+    <route id="r_12" edges="-E18 E18 E17.77 -E17.77 -E17 E80 -E36 -E6.216 -E6.216.153 -E1 -E1.87 E8 -E8.290 E8 E8.151 -E8.151 E8.151 E80 -E5.134.173"/>
+    <route id="r_13" edges="E5 -E5 -E0 -E00 -E11 E12.217 E20 -E22 E23 E24 E25 E34 E34.128 -E29 E27 E28 E30 -E32"/>
+    <route id="r_14" edges="E36 -E5.134.173 E5.134 -E8 -E8.151 E8.151 E17 E17.77 -E6.216.153 E6.216 -E6.216.153 -E1 E18 -E18 -E1.87 E1 E110 -E6"/>
+    <route id="r_15" edges="-E34.128 E34.128 -E29 E27 E28 E30 -E32 -E31 E33"/>
+    <route id="r_16" edges="-E00 E0 E0.173 -E0 -E00 -E11 E12.217 E12.385 E13 -E13 -E12.217 E12.385 E13 -E0 -E00 -E11 E12.217 -E12.2170 E11 -E14 -E21 E12 E11 -E14 -E21 E21 E21.217 -E21.2170 E14 E2 -E9 -E21.2170 E14 E2 E15 -E15 E10 -E10.289 E10 E100 -E10"/>
+    <route id="r_17" edges="-E33 E31 E32 -E30 -E28 -E27 E29 -E34.128 -E34 -E25 -E24 -E23 E22 -E20 -E12.2170 -E12 E21 E21.217 E21.217.136 E21.217.278 E6 E6.216 -E6.216.153"/>
+    <route id="r_2" edges="-E9 -E21.2170 E14 E2 -E2.130 E0 -E00 E0 E19 -E19 E0.173 E5 -E10"/>
+    <route id="r_3" edges="-E10.289 E10 E100 E5.134 -E8 E80 -E8 -E8.151 -E8.290 -E15"/>
+    <route id="r_4" edges="E10 E100 E5.134 -E5.134.173 -E5 -E13 -E12.217 E20 -E22 E23 E24 E25"/>
+    <route id="r_5" edges="-E21.217 E7 E1 E110 -E6 -E21.217 E7 E8 E8.151 E17 E17.77 -E6.216.153 -E1 -E1.87 E8 E8.151 E80 -E36 -E6.216 -E6.216.153 -E1 E18"/>
+    <route id="r_6" edges="E13 -E13 -E12.217 E12.385 E13 -E13 -E12.217 -E12.2170 E11 -E11 E11 E2 -E9"/>
+    <route id="r_7" edges="-E7 -E21.217.170 E9 E15 -E15 E10 E16 -E16 -E19 E0.173 -E0 -E00 E2 -E2.130 -E14 E21.217"/>
+    <route id="r_8" edges="E6 E6.216 E6.2160 E36 -E5.134.173 -E5 -E13 -E12.217 E20 E35 E34.128 -E29"/>
+    <route id="r_9" edges="-E1 -E1.87 -E15 -E2.130 -E11 -E12 E21 E21.217 E9 -E9 E21.217.136 E7 -E7"/>
+    <!-- Vehicles, persons and containers (sorted by depart) -->
+    <vehicle id="v_0" depart="2.00" route="r_0"/>
+    <vehicle id="v_1" depart="2.00" color="white" route="r_1"/>
+    <vehicle id="v_10" depart="2.00" color="0,0,128" route="r_10"/>
+    <vehicle id="v_11" depart="2.00" color="128,128,0" route="r_11"/>
+    <vehicle id="v_12" depart="2.00" color="128,0,128" route="r_12"/>
+    <vehicle id="v_14" depart="2.00" color="0,128,128" route="r_13"/>
+    <vehicle id="v_17" depart="2.00" color="magenta" route="r_15"/>
+    <vehicle id="v_18" depart="2.00" color="magenta" route="r_14"/>
+    <vehicle id="v_19" depart="2.00" color="cyan" route="r_16"/>
+    <vehicle id="v_2" depart="2.00" color="black" route="r_2"/>
+    <vehicle id="v_20" depart="2.00" route="r_17"/>
+    <vehicle id="v_3" depart="2.00" color="red" route="r_3"/>
+    <vehicle id="v_4" depart="2.00" color="green" route="r_4"/>
+    <vehicle id="v_5" depart="2.00" color="blue" route="r_5"/>
+    <vehicle id="v_6" depart="2.00" color="cyan" route="r_6"/>
+    <vehicle id="v_7" depart="2.00" color="magenta" route="r_7"/>
+    <vehicle id="v_8" depart="2.00" color="128,0,0" route="r_8"/>
+    <vehicle id="v_9" depart="2.00" color="0,128,0" route="r_9"/>
+</routes>

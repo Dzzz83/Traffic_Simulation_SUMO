@@ -48,7 +48,7 @@ public class ControlPanel
         {
             // initialize the connection with your specific paths
             connection = new SumoTraciConnection("sumo",
-                    "src/map/demo.sumocfg");
+                    "src/SumoConfig/demo.sumocfg");
 
             // start the simulation
             connection.runServer();

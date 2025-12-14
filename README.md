@@ -5,7 +5,7 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
 
 ## II. Key Files Description
 - **`ControlPanel.java`** - Main facade class that orchestrates the simulation backend.
-- **`Controller.java`** - Handles UI logic, user input, map drawing, and animation loops (JavaFX).
+- **`Controller.java`** - Handles UI logic, user input, SumoConfig drawing, and animation loops (JavaFX).
 - **`ui_design.java` / `ControlPanel.fxml`** - Defines the graphical layout and elements.
 - **`VehicleWrapper.java`** - Handles all vehicle-related TraCI commands.
 - **`TrafficLightWrapper.java`** - Manages traffic light states and operations.
@@ -20,10 +20,10 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
     - **Manual Mode**: User can toggle lights and adjust phase duration via sliders.
     - **Auto Mode**: Automated traffic light logic.
 - **Vehicle Injection**: Spawn individual vehicles into the simulation via the "Add Vehicle" button.
-- **Navigation Controls**: Zoom (Scroll) and Pan (Drag) to navigate the map.
+- **Navigation Controls**: Zoom (Scroll) and Pan (Drag) to navigate the SumoConfig.
 - **Stress Testing**: A dedicated feature to spawn 500+ vehicles to test system stability.
 - **Real-time Statistics**: Dashboard displaying vehicle count, average speed, and congestion density.
-- **Restart Capability**: Reset the simulation and map to their initial state without restarting the application.
+- **Restart Capability**: Reset the simulation and SumoConfig to their initial state without restarting the application.
 
 ## IV. Requirements
 - **Java**: JDK 25 or higher
@@ -42,7 +42,7 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
 1. **Start Simulation**: Click the `Start` button in the top left to begin the SUMO connection.
 2. **Navigation**:
    - **Zoom**: Use the mouse scroll wheel.
-   - **Pan**: Click and drag the map to move around.
+   - **Pan**: Click and drag the SumoConfig to move around.
    - **Toggle Views**: Use the sidebar buttons to show/hide Edge IDs, Vehicle IDs, or Route IDs.
 3. **Traffic Control**:
    - Select a junction (e.g., "Junction_1") from the dropdown menu.
@@ -51,7 +51,7 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
 4. **Spawning Cars**:
    - Click **Add Vehicle** to spawn a single car on a random route.
    - Click **Stress Test** to spawn 500 cars immediately to test performance.
-5. **Restart**: Click the **Restart** button to clear the map and reset the simulation.
+5. **Restart**: Click the **Restart** button to clear the SumoConfig and reset the simulation.
 
 ## VII. Team Members & Roles
 1. **Duong Xuan Ngan** - Developer, GUI Designer

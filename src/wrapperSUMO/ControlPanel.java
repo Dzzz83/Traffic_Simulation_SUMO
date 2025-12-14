@@ -70,15 +70,21 @@ public class ControlPanel
         return true;
     }
 
+    // restartSimulation function
     public void restartSimulation() {
         try {
+            // check if a connection exists and close it
             if (connection != null) {
                 connection.close();
             }
+            // pause for 0.5 seconds to let the OS fully release the network port and resources
             Thread.sleep(500);
+            // call the startSimulation method to start a brand-new simulation
             startSimulation();
+            // log the success message
             LOG.info("Simulation restarted successfully");
         } catch (Exception e) {
+            // if the restart fails, log the error and print details for debugging
             LOG.error("Failed to restart simulation: " + e.getMessage());
             e.printStackTrace();
         }
@@ -293,21 +299,28 @@ public class ControlPanel
 
     // gets the current color of a vehicle from SUMO and converts it for JavaFX
     public Color getVehicleColor(String id) {
-        // ff the simulation isn't running, return a default yellow color
+        // if the simulation isn't running, return a default yellow color
         if (!isRunning) return Color.YELLOW;
         try {
-            // fetch the color from SUMO (TraCI)
+            // use TraCI to request the raw color data (SumoColor object)
+            // from the SUMO backend for this specific vehicle ID.
             SumoColor sc = (SumoColor) connection.do_job_get(Vehicle.getColor(id));
 
-            // use & 0xFF to convert potential negative signed bytes to positive integers (0-255)
+            // Java bytes are "signed" (-128 to 127), but colors
+            // are "unsigned" (0 to 255). Using '& 0xFF' to convert
+            // potential negative values into the correct positive integers
             int r = sc.r & 0xFF;
             int g = sc.g & 0xFF;
             int b = sc.b & 0xFF;
+            // convert the Alpha (transparency) channel from a 0-255 byte
+            // to a 0.0-1.0 double, which is what the JavaFX Color.rgb method requires
             double a = (sc.a & 0xFF) / 255.0;
 
+            // create and return the final JavaFX Color object to the Controller
             return Color.rgb(r, g, b, a);
         } catch (Exception e) {
-            // log the error
+            // if the vehicle ID doesn't exist yet or the connection drops,
+            // log the error and return Yellow to prevent the GUI from crashing
             System.err.println("TraCI Color Error for " + id + ": " + e.getMessage());
             return Color.YELLOW;
         }

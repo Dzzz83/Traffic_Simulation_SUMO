@@ -352,19 +352,19 @@ public class Controller {
         if (sliderRed != null) {
             sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->{
                 redValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info(String.valueOf(newVal));
+                LOG.info("set Red Traffic Light to: " + String.valueOf(newVal));
             });
         }
         if (sliderGreen != null) {
             sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
                 greenValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info(String.valueOf(newVal));
+                LOG.info("set Green Traffic Light to: " + String.valueOf(newVal));
             });
         }
         if (sliderYellow != null) {
             sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
                 yellowValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info("Red duration set to: " + newVal.intValue());
+                LOG.info("set Yellow Traffic Light to: " + newVal.intValue());
             });
         }
 

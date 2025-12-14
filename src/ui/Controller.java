@@ -1,7 +1,6 @@
 // this file serves as the central code that connects backend (ControlPanel.java) and frontend (ui_design.java & ControlPanel.fxml)
 package ui;
 
-import de.tudresden.sumo.cmd.Edge;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -19,7 +18,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.chart.NumberAxis;
 
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
@@ -741,10 +739,13 @@ public class Controller {
             // smooth line endings
             gc.setLineCap(StrokeLineCap.ROUND);
             gc.setLineJoin(StrokeLineJoin.ROUND);
+
+            // turn off drawing dashed
             gc.setLineDashes(null);
 
-            // draw the outline, border
+            // draw the curb
             gc.setStroke(Color.LIGHTGRAY);
+
             // draw it a little bit wider than the asphalt
             gc.setLineWidth(baseRoadWidth + (0.5 * SCALE));
 
@@ -773,27 +774,30 @@ public class Controller {
                 // draw the white dashed lines
                 gc.setStroke(Color.WHITESMOKE);
                 gc.setLineWidth(lineWidth);
+
                 // make it ends squarely
                 gc.setLineCap(StrokeLineCap.BUTT);
-                // draw the line in 3 meters then dashes for another 3 meters
-                gc.setLineDashes(3.0 * SCALE, 3.0 * SCALE);
 
+                // draw the line in 2 meters then dashes for another 3 meters
+                gc.setLineDashes(2.0 * SCALE, 3.0 * SCALE);
+
+                // draw the dashed line
                 for (List<SumoPosition2D> points : laneSeperators) {
                     drawPolyLine(gc, points);
                 }
 
-                // continuous white lines
-                // reset the line
+                // draw the continuous white lines
+                // reset the dashes
                 gc.setLineDashes(null);
                 gc.setLineWidth(lineWidth);
                 gc.setStroke(Color.WHITE);
 
-
+                // draw the solid lines
                 for (List<SumoPosition2D> points : solidCenterLines) {
                     drawPolyLine(gc, points);
                 }
 
-                // Cleanup: Reset settings for next drawing
+                // reset the dashes
                 gc.setLineDashes(null);
                 gc.setLineCap(StrokeLineCap.ROUND);
             }
@@ -804,7 +808,6 @@ public class Controller {
             drawTrafficLights(gc);
         }
 
-
         // draw vehicles
         // check if simulation is running
         if (panel.isRunning())
@@ -813,14 +816,27 @@ public class Controller {
             List<String> vehicles = panel.getVehicleIDs();
 
             // calculate car size
-            double carLength = Math.max(8.0, 4.5 * SCALE);
-            double carWidth = Math.max(4.0, 2.0 * SCALE);
+            double carLength = 4.5 * SCALE;
+
+            // make sure minimum length is 8 pixels
+            if (carLength < 8.0)
+            {
+                carLength = 8.0;
+            }
+
+            // make sure minimum width is 4 pixels
+            double carWidth = 2.0 * SCALE;
+            if (carWidth < 4.0)
+            {
+                carWidth = 4.0;
+            }
 
             // loop through every vehicle in the simulation
             for (String id: vehicles)
             {
-                // get the position
+                // get the position of the vehicle
                 SumoPosition2D pos = panel.getPosition(id);
+
                 // convert to screen pixel
                 double x = (pos.x * SCALE) + OFFSET_X;
                 double y = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
@@ -1054,15 +1070,15 @@ public class Controller {
 
     // calculates a smooth parallel line on the left to draw a straight or curved line that is always parallel to the road
     // what this function does is take the center line of the leftmost lane of the current direction and calculate to help draw a line
-    // which can be dashed line or solid line 1.6 meters to the left and it will always be parallel to the center line
+    // which can be dashed line or solid line that is 1.6 meters to the left and it will always be parallel to the center line
     // accepts the list of lane center points and the shift distance
-    private List<SumoPosition2D> calculateLeftBorder(List<SumoPosition2D> points, double offset) {
+    private List<SumoPosition2D> calculateLeftParallelLine(List<SumoPosition2D> points, double offset) {
         // create a list to store the coordinates of the parallel line
-        List<SumoPosition2D> shiftedLine = new ArrayList<>();
+        List<SumoPosition2D> leftParallelLine = new ArrayList<>();
         // if the input has less than 2 points then can't calculate
         if (points.size() < 2)
         {
-            return shiftedLine;
+            return leftParallelLine;
         }
 
         for (int i = 0; i < points.size(); i++) {
@@ -1081,8 +1097,8 @@ public class Controller {
                 double len = Math.sqrt(dx*dx + dy*dy); // sqrt(1 + 0) = 1
                 // check if the length is greater than zero
                 // calculate the perpendicular vector
-                if (len > 0) {
-
+                if (len > 0)
+                {
                     avgNx -= dy / len; // -= (0/1) ==> avgNx = 0 - 0 = 0
                     avgNy += dx / len; // += (1/1) ==> avgNx = 0 + 1 = 1
                     // ==> new vector = (0,1)
@@ -1092,7 +1108,7 @@ public class Controller {
             // 2. Normal from Next Segment (i & i+1)
             // check if i is not the last point of the road
             if (i < points.size() - 1) {
-                // calculate the distancy between the 2 points
+                // calculate the distance between the 2 points
                 // Ex: (Xi, Yi) = (5, 5)
                 // (Xi+1, Yi+1) = (6, 5)
                 double dx = points.get(i + 1).x - points.get(i).x; // dx = 1
@@ -1100,30 +1116,35 @@ public class Controller {
                 // calculate the length of the segment
                 double len = Math.sqrt(dx*dx + dy*dy); // len = 1
                 // check if the length is greater than zero
-                if (len > 0) {
+                if (len > 0)
+                {
                     // calculate the perpendicular vector
                     avgNx -= dy / len; // ==> avgNx = 0
                     avgNy += dx / len; // ==> avgNx = 2
                 }
             }
 
-            // 3. Average the normals for a smooth curve
+            // 3. Normalize the vector
+            // the vector stores the direction but it also contains length
+            // if we don't normalize then length will influence the distance between the leftmost lane and the parallel line
+            // Ex: (avgNx, avgNy) = (0, 2) ==> points north ==> normalize ==> (0, 1) ==> points north
             double len = Math.sqrt(avgNx*avgNx + avgNy*avgNy); // len = 2
-            if (len > 0) {
+            if (len > 0)
+            {
                 avgNx /= len; // ==> avgNx = 0
                 avgNy /= len; // ==> avgNy = 1
             }
 
             // 4. Apply Offset
             // (Xi, Yi) = (5, 5)
-            // (avgNx, avgNy) = (0, 1)
+            // (avgNx, avgNy) = (0, 1) --> points North
             double newX = points.get(i).x + (avgNx * offset); // newX = 5.0
             double newY = points.get(i).y + (avgNy * offset); // newY = 6.6
 
-            // add the new points to the shiftedLine
-            shiftedLine.add(new SumoPosition2D(newX, newY));
+            // add the new points to the leftParallelLine
+            leftParallelLine.add(new SumoPosition2D(newX, newY));
         }
-        return shiftedLine;
+        return leftParallelLine;
     }
 
     // Draws car with rotation
@@ -1142,31 +1163,39 @@ public class Controller {
         // draw car body (Centered at 0,0)
         // width is X, length is Y. We draw it pointing UP (-y) because in JavFX, the Y-axis starts at the top and increases as the car
         // moving down so the car must move (-y) if it is moving "up" in the screen.
-        // fill the car's color
-        //gc.setFill(Color.RED);
+
         // set the color for the outline
         gc.setStroke(Color.BLACK);
         // set the thickness of the outline
         gc.setLineWidth(1.0);
 
-        // Draw the main body rectangle (*)
+        // Draw the main body rectangle
+        // because the car is in the center of the grid but gc expects the drawing start position to be the top left
+        // so divide by 2 to get the coordinates of the top left corner of the car
+        // Ex: Width = 20, Length = 40 ==> for the center of the car to be (0, 0) then left side = -10, right side = +10
+        // top = -20 and bottom = +20
         gc.fillRoundRect(-width / 2, -length / 2, width, length, 3, 3);
         gc.strokeRoundRect(-width / 2, -length / 2, width, length, 3, 3);
 
         // draw windshield
         // draw a dark box near the "front" (which is up, -y)
         gc.setFill(WINDSHIELD_COLOR); // Semi-transparent black
-        // (*)
+        // same logic but +1 and +2 to visualize the "frame" of the windshield
         gc.fillRoundRect(-width / 2 + 1, -length / 2 + 2, width - 2, length / 4, 2, 2);
 
-        // headlights
+        // draw the headlight
         gc.setFill(Color.WHITE); // headlight color
+        // size of the light
         double lightSize = width / 4;
+
         gc.fillOval(-width / 2 + 1, -length / 2, lightSize, lightSize); // left headlight
+        // width / 2 = 10 --> width / 2 - 1 = 9 --> width/2 - 1 - lightSize(5) = 4 ==> start drawing from 4 to 9
         gc.fillOval(width / 2 - 1 - lightSize, -length / 2, lightSize, lightSize); // right headline
 
-        gc.restore(); // restore state so next car isn't messed up
+        // resest the gc
+        gc.restore();
     }
+
     // function to generate dashed lines and solid lines
     private void generateLaneSeparators() {
         // clear the old data
@@ -1308,7 +1337,7 @@ public class Controller {
             List<SumoPosition2D> leftmostLane = road.get(maxIndex);
 
             // calculate the parallel line to the left with offset 1.6m
-            List<SumoPosition2D> leftParallelLine = calculateLeftBorder(leftmostLane, 1.6);
+            List<SumoPosition2D> leftParallelLine = calculateLeftParallelLine(leftmostLane, 1.6);
 
             // check if a road has multiple lanes (e.g: highways)
             if (road.size() > 1)

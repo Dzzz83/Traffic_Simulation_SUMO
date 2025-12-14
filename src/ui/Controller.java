@@ -12,11 +12,15 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.shape.StrokeLineCap;
 
 import wrapperSUMO.ControlPanel;
+import wrapperSUMO.TrafficLightWrapper;
+import wrapperSUMO.TrafficConnectInfo;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
@@ -73,9 +77,11 @@ public class Controller {
     @FXML private Label labelRed;
     @FXML private Label labelGreen;
     @FXML private Label labelYellow;
-
+    private TrafficLightWrapper tlsWrapper;
+    private static final String NET_XML_PATH = "C:\\Users\\XUAN NGAN\\Downloads\\Traffic_Simulation_SUMO\\src\\map\\demo.net.xml";
     // logical variables
     private ControlPanel panel;
+    private TrafficLightWrapper traffic_control;
     private AnimationTimer simulationLoop;
     private Map<String, List<SumoPosition2D>> mapShapes = null;
     // SumoPosition2D represents a single point on the map (X, Y)
@@ -125,6 +131,9 @@ public class Controller {
         if (panel.startSimulation()) {
             connectionStatus.setText("Connection: Connected");
             connectionStatus.setStyle("-fx-text-fill: green");
+            tlsWrapper = panel.getTrafficLightWrapper();
+            tlsWrapper.isRunning = true;
+            tlsWrapper.loadConnectionDirections("C:\\Users\\XUAN NGAN\\Downloads\\Traffic_Simulation_SUMO\\src\\map\\demo.net.xml");
         }
         else {
             connectionStatus.setText("Connection: Disconnected");
@@ -682,48 +691,10 @@ public class Controller {
         }
 
         // draw traffic light
-        // draw traffic light
-        List<String> trafficLightId = panel.getTrafficLightIDs();
-        for (String trafficid : trafficLightId)
-        {
-            Map<String, List<SumoPosition2D>> position = panel.get_traffic_light_pos(trafficid);
-            String state = panel.getRedYellowGreenState(trafficid);
-            int laneIndex = 0;
-
-            for (Map.Entry<String, List<SumoPosition2D>> entry : position.entrySet())
-            {
-                List<SumoPosition2D> shape = entry.getValue();
-                if (shape == null || shape.isEmpty())
-                {
-                    continue;
-                }
-                SumoPosition2D position2D = shape.get(shape.size() - 1);
-                double x = (position2D.x * SCALE) + OFFSET_X;
-                double y = mapCanvas.getHeight() - ((position2D.y * SCALE) + OFFSET_Y);
-
-                Color color;
-
-                if (state != null && state.length() > laneIndex) {
-                    char s = state.charAt(laneIndex);
-                    switch (s) {
-                        case 'r': color = Color.RED; break;
-                        case 'y': color = Color.YELLOW; break;
-                        case 'g': color = Color.GREEN; break;
-                        default: color = Color.GRAY; break;
-                    }
-                }
-                else
-                {
-                    color = Color.GRAY;
-                }
-
-                double size = 10;
-                gc.setFill(color);
-                gc.fillOval(x - size/2, y - size/2, size, size);
-
-                laneIndex++;
-            }
+        if (tlsWrapper != null && panel.isRunning()) {
+            drawTrafficLights(gc);
         }
+
 
         // draw vehicles
         // check if simulation is running
@@ -781,6 +752,193 @@ public class Controller {
             }
         }
     }
+
+
+// main method for draw traffic lights based on its incoming edge
+    private void drawTrafficLights(GraphicsContext gc) {
+        if (tlsWrapper == null) return;
+
+        // Level of Detail (LOD) Check
+        // If map is zoomed out too far, don't draw anything to keep it clean.
+        if (SCALE < 0.2) return;
+
+        List<String> trafficLightIds = tlsWrapper.getTrafficLightIDs();
+
+        for (String trafficid : trafficLightIds) {
+            Map<String, List<TrafficConnectInfo>> connectionsByEdge = tlsWrapper.get_traffic_connections(trafficid);
+            Map<String, List<SumoPosition2D>> edgeGeometry = panel.get_traffic_light_pos(trafficid);
+            int secondsLeft = (int) tlsWrapper.getRemainingTimeForConnection(trafficid);
+
+            for (Map.Entry<String, List<TrafficConnectInfo>> edgeEntry : connectionsByEdge.entrySet()) {
+                String incomingEdgeID = edgeEntry.getKey();
+                List<TrafficConnectInfo> edgeConnections = edgeEntry.getValue();
+
+                if (edgeGeometry.containsKey(incomingEdgeID)) {
+                    List<SumoPosition2D> shape = edgeGeometry.get(incomingEdgeID);
+                    if (shape == null || shape.isEmpty() || shape.size() < 2) continue;
+
+                    // A. Calculate Position (Stop Line)
+                    SumoPosition2D stopPos = shape.get(shape.size() - 1);
+                    double drawX = (stopPos.x * SCALE) + OFFSET_X;
+                    double drawY = mapCanvas.getHeight() - ((stopPos.y * SCALE) + OFFSET_Y);
+
+                    // B. Calculate Rotation (Perpendicular to the road end)
+                    // We need the screen coordinates of the last two points to determine angle relative to screen
+                    SumoPosition2D prevPos = shape.get(shape.size() - 2);
+                    double prevX = (prevPos.x * SCALE) + OFFSET_X;
+                    double prevY = mapCanvas.getHeight() - ((prevPos.y * SCALE) + OFFSET_Y);
+
+                    // Angle of the road in degrees
+                    double angle = Math.toDegrees(Math.atan2(drawY - prevY, drawX - prevX));
+
+                    // We want the box perpendicular.
+                    // If road goes Right (0 deg), Box should be Vertical (90 deg).
+                    // So we rotate by (RoadAngle + 90).
+                    double rotation = angle + 90;
+
+                    // C. Draw with Transformation
+                    gc.save(); // Save current state (non-rotated)
+                    gc.translate(drawX, drawY); // Move origin to the stop line
+                    gc.rotate(rotation); // Rotate the entire context
+
+                    // Now draw at (0,0) because we shifted the origin
+                    drawDirectionalTrafficLight(gc, 0, 0, secondsLeft, edgeConnections, trafficid);
+
+                    gc.restore(); // Restore state for next iteration
+                }
+            }
+        }
+    }
+
+    // drawing box with arrow
+    private void drawDirectionalTrafficLight(GraphicsContext gc, double x, double y, int secondsLeft, List<TrafficConnectInfo> connections, String trafficId) {
+        if (connections.isEmpty()) return;
+
+        // --- LOD: Scale Adaptation ---
+        // If zoomed out (SCALE < 0.6), draw a smaller, simplified version
+        boolean isDetailed = SCALE > 0.6;
+
+        // 1. Organize Slots
+        Map<String, TrafficConnectInfo> slotMap = new HashMap<>();
+        for (TrafficConnectInfo info : connections) slotMap.putIfAbsent(info.getDirection().toLowerCase(), info);
+
+        // 2. Config (Minimalist Design)
+        // We scale the size slightly based on zoom, but clamp it so it doesn't get huge
+        double sizeFactor = Math.min(1.0, Math.max(0.6, SCALE)); // Clamp between 0.6x and 1.0x size
+
+        double lightRadius = (isDetailed ? 4 : 2.5) * sizeFactor;
+        double padding = 3 * sizeFactor;
+        double spacing = 2 * sizeFactor;
+        double slotSize = (lightRadius * 2);
+        double slotStep = slotSize + spacing;
+
+        String[] directions = {"t", "l", "s", "r"}; // The visual order
+
+        double boxWidth = (slotStep * 4) + padding;
+        double boxHeight = slotSize + (padding * 2);
+
+        // If detailed, add height for timer
+        if (isDetailed) boxHeight += (10 * sizeFactor);
+
+        // Draw centered on (x,y) - remember (x,y) is (0,0) relative to rotation
+        double startX = x - (boxWidth / 2);
+        double startY = y; // Draw "above" the stop line (relative to rotation)
+
+        // 3. Draw Housing (Matte Black Capsule)
+        gc.setFill(Color.web("#222222")); // Softer black
+        gc.setStroke(Color.web("#111111"));
+        gc.setLineWidth(0.5);
+        // Using a large corner radius creates a "Capsule" or "Pill" shape
+        gc.fillRoundRect(startX, startY, boxWidth, boxHeight, 10 * sizeFactor, 10 * sizeFactor);
+        gc.strokeRoundRect(startX, startY, boxWidth, boxHeight, 10 * sizeFactor, 10 * sizeFactor);
+
+        // 4. Draw Signals
+        double currentX = startX + padding + lightRadius;
+        double lightY = startY + padding + lightRadius;
+
+        for (String dir : directions) {
+            TrafficConnectInfo info = slotMap.get(dir);
+            Color arrowColor = Color.web("#444444"); // Default Inactive (Dark Grey)
+
+            if (info != null) {
+                char state = tlsWrapper.getStateForConnection(trafficId, info.getLinkIndex());
+                // Map State to Neon Colors
+                if (state == 'r' || state == 'R') arrowColor = Color.web("#FF3333"); // Neon Red
+                else if (state == 'y' || state == 'Y') arrowColor = Color.web("#FFCC00"); // Warm Yellow
+                else if (state == 'g' || state == 'G') arrowColor = Color.web("#00FF66"); // Neon Green
+            }
+
+            // Draw The Arrow
+            if (isDetailed) {
+                // Draw actual arrow shape
+                drawArrow(gc, currentX, lightY, lightRadius, dir, arrowColor);
+            } else {
+                // Zoomed out: Just draw a small dot
+                gc.setFill(arrowColor);
+                gc.fillOval(currentX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
+            }
+
+            // Draw Timer (Only in detailed mode)
+            if (isDetailed && secondsLeft >= 0 && info != null) {
+                gc.setFill(Color.web("#DDDDDD"));
+                gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8 * sizeFactor));
+                gc.setTextAlign(TextAlignment.CENTER);
+                gc.fillText(String.valueOf(secondsLeft), currentX, startY + boxHeight - padding);
+            }
+
+            currentX += slotStep;
+        }
+    }
+
+    //draw arrow in traffic signal
+    private void drawArrow(GraphicsContext gc, double cx, double cy, double r, String dir, Color color) {
+        gc.setFill(color);
+        gc.setStroke(color);
+        gc.setLineWidth(1.5);
+
+        // Simple geometric drawing based on direction
+        switch (dir) {
+            case "s": // Straight
+                gc.fillPolygon(
+                        new double[]{cx, cx - r, cx + r},
+                        new double[]{cy - r, cy + r, cy + r},
+                        3
+                );
+                break;
+            case "l": // Left
+                gc.fillPolygon(
+                        new double[]{cx - r, cx + r/2, cx + r/2},
+                        new double[]{cy, cy - r, cy + r},
+                        3
+                );
+                break;
+            case "r": // Right
+                gc.fillPolygon(
+                        new double[]{cx + r, cx - r/2, cx - r/2},
+                        new double[]{cy, cy - r, cy + r},
+                        3
+                );
+                break;
+            case "t":
+                // Turn around
+                gc.setFill(Color.TRANSPARENT); // Outline only for the hook
+                gc.beginPath();
+                gc.moveTo(cx + r/2, cy - r/2);
+                gc.arcTo(cx - r, cy - r/2, cx - r, cy + r, r); // The Curve
+                gc.stroke();
+                // Little tip
+                gc.setFill(color);
+                gc.fillPolygon(
+                        new double[]{cx + r/2, cx, cx + r},
+                        new double[]{cy + r/2, cy + r, cy + r},
+                        3
+                );
+                break;
+            default: // Fallback circle
+                gc.fillOval(cx - r, cy - r, r*2, r*2);
+        }
+    }
+
     // calculates a smooth parallel line on the left to draw a straight or curved line that is always parallel to the road
     // what this function does is take the center line of the leftmost lane of the current direction and calculate to help draw a line
     // which can be dashed line or solid line 1.6 meters to the left and it will always be parallel to the center line

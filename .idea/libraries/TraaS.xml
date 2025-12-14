@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="TraaS">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../sumo-1.25.0/bin/TraaS.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

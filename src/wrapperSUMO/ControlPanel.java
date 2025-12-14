@@ -22,6 +22,7 @@ public class ControlPanel
     // initialize the wrappers
     private VehicleWrapper vehicleWrapper;
     private TrafficLightWrapper trafficLightWrapper;
+    private TrafficConnectInfo trafficConnectInfo;
     private EdgeWrapper edgeWrapper;
     private RouteWrapper routeWrapper;
 
@@ -93,6 +94,9 @@ public class ControlPanel
         }
         return allShapes;
     }
+    public TrafficLightWrapper getTrafficLightWrapper() {
+        return this.trafficLightWrapper;
+    }
 
     public void stressTest(int vehicleCount)
     {
@@ -137,6 +141,21 @@ public class ControlPanel
             }
         }
 
+    }
+
+    // get the switching time between two signals
+    public double getNextSwitchTime(String tlsID) {
+        if (!isRunning) return -1.0;
+        try
+        {
+            return (double) connection.do_job_get(Trafficlight.getPhaseDuration(tlsID));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get next switch time for " + tlsID);
+            e.printStackTrace();
+        }
+        return -1.0;
     }
     // get the list of all routes
     public List<String> getRouteIDs()
@@ -706,6 +725,8 @@ public class ControlPanel
         return new HashMap<>();
     }
 
+
+
     // get the incomming controlled road for traffic light
     public Map<String, String> get_controlled_lanes(String trafficLightId)
     {
@@ -849,6 +870,9 @@ public class ControlPanel
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public SumoTraciConnection getConnection() {
+        return this.connection;
     }
 
     // create function isRunning()

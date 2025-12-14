@@ -562,25 +562,25 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount();
+        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount();
+        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
         numberOfEdges.setText("Edges: " + edgeCount);
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed();
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
         }
 
         if (panel.isRunning()) {
-            double currentSpeed = panel.getGlobalMeanSpeed();
-            currentSpeed *= 3.6;
+            double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
+            currentSpeed *= 3.6; // m/s to km/h
 
-            timeSeconds += 0.1;
-            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+            timeSeconds += 0.1; // X-axis to show the time
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
 
-            if (speedSeries.getData().size() > 50) {
+            if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
         }
@@ -605,7 +605,7 @@ public class Controller {
         updateStats();
         drawMap();
     }
-    // a function to take raw, geometric data from SUMO and transforms into drawable pixels on JavaFx
+    // a function to take raw, geometric data from SUMO and transforms into pixels on JavaFx
     // take in GraphicsContext gc which will handling all the drawing-related logic and points which is a collections of (X, Y) coordinates
     public void drawPolyLine(GraphicsContext gc, List<SumoPosition2D> points)
     {
@@ -617,8 +617,11 @@ public class Controller {
         for (int i = 0; i < points.size(); i++)
         {
             // take raw X and Y points and adjust with the current zoom level and shift the coordinates based on offset
-            xPoints[i] = (points.get(i).x * SCALE ) + OFFSET_X;
-            yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
+            // SUMO (X, Y) = (50, 0), SCALE = 2.0, OFFSET = (100, 50), Map Height: 600
+            xPoints[i] = (points.get(i).x * SCALE ) + OFFSET_X; // ==> 200
+            // in SUMO, y increases as go up in the screen, in JavaFx, y decreases as go up in the screen
+            yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y); // ==> 550
+
         }
         // take in (X, Y) and draw the line
         gc.strokePolyline(xPoints, yPoints, points.size());
@@ -732,8 +735,12 @@ public class Controller {
         // normal mode: draw the roads normally (border --> asphalt --> white lines)
         else {
             // calculate road width relative to zoom (SCALE)
-            double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
-            double visualWidth = baseRoadWidth * 1.2;
+            double baseRoadWidth = 4.5 * SCALE;
+            // ensure baseRoadWidth is at least 2 pixels
+            if (baseRoadWidth < 2.0)
+            {
+                baseRoadWidth = 2.0;
+            }
 
             // smooth line endings
             gc.setLineCap(StrokeLineCap.ROUND);
@@ -743,7 +750,7 @@ public class Controller {
             // draw the outline, border
             gc.setStroke(Color.LIGHTGRAY);
             // draw it a little bit wider than the asphalt
-            gc.setLineWidth(visualWidth + (0.5 * SCALE));
+            gc.setLineWidth(baseRoadWidth + (0.5 * SCALE));
 
             // loop through each point and draw the border
             for (List<SumoPosition2D> points : mapShapes.values())
@@ -753,7 +760,7 @@ public class Controller {
 
             // draw the asphalt road
             gc.setStroke(ASPHALT_COLOR);
-            gc.setLineWidth(visualWidth);
+            gc.setLineWidth(baseRoadWidth);
 
             // draw asphalt on top of the border
             for (List<SumoPosition2D> points: mapShapes.values())

@@ -13,8 +13,10 @@ public class ui_design extends Application {
         // loads the design from the FXML file
         Parent root = FXMLLoader.load(getClass().getResource("ControlPanel.fxml"));
 
+        // create a "Scene" which holds all the buttons, sliders, and the map
         Scene scene = new Scene(root);
         primaryStage.setTitle("Real-time Traffic Simulation");
+        // put the scene inside the main window (Stage)
         primaryStage.setScene(scene);
         primaryStage.show();
     }

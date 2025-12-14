@@ -1,5 +1,5 @@
 // this file serves as the central code that connects backend (ControlPanel.java) and frontend (ui_design.java & ControlPanel.fxml)
-package ui;
+package app;
 
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;

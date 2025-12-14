@@ -123,6 +123,10 @@ public class Controller {
 
     // variable remembers the route for the next click
     private int clickRouteIndex = 0;
+
+    //variable for stress test 2 button
+    private boolean isStressTest2Active = false;
+
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
@@ -352,19 +356,19 @@ public class Controller {
         if (sliderRed != null) {
             sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->{
                 redValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info(String.valueOf(newVal));
+                LOG.info("set Red Traffic Light to: " + String.valueOf(newVal));
             });
         }
         if (sliderGreen != null) {
             sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
                 greenValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info(String.valueOf(newVal));
+                LOG.info("set Green Traffic Light to: " + String.valueOf(newVal));
             });
         }
         if (sliderYellow != null) {
             sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
                 yellowValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info("Red duration set to: " + newVal.intValue());
+                LOG.info("set Yellow Traffic Light to: " + newVal.intValue());
             });
         }
 
@@ -517,6 +521,14 @@ public class Controller {
     }
 
     @FXML
+    // stress test 2 button function
+    public void onStressTest2Click() {
+        // toggle ON/OFF
+        isStressTest2Active = !isStressTest2Active;
+        System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
+    }
+
+    @FXML
     // restart button
     public void onRestartClick() {
         LOG.info("Restarting map...");
@@ -565,6 +577,19 @@ public class Controller {
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();
+        if (isStressTest2Active) {
+            // get a list of all vehicles currently present on the map
+            List<String> vehicles = panel.getVehicleIDs();
+            for (String id : vehicles) {
+                // generate random values for R, G, B
+                int r = (int) (Math.random() * 256);
+                int g = (int) (Math.random() * 256);
+                int b = (int) (Math.random() * 256);
+
+                // call ControlPanel function
+                panel.setColor(id, r, g, b, 255);
+            }
+        }
         updateStats();
         drawMap();
     }
@@ -787,6 +812,10 @@ public class Controller {
 
                 // get the angle of the vehicle
                 double angle = panel.getVehicleAngle(id);
+
+                // fetch the dynamic color from the Stress Test
+                Color vehColor = panel.getVehicleColor(id);
+                gc.setFill(vehColor);
 
                 // call draw car function
                 drawCar(gc, x, y, angle, carLength, carWidth);
@@ -1099,7 +1128,7 @@ public class Controller {
         // width is X, length is Y. We draw it pointing UP (-y) because in JavFX, the Y-axis starts at the top and increases as the car
         // moving down so the car must move (-y) if it is moving "up" in the screen.
         // fill the car's color
-        gc.setFill(Color.RED);
+        //gc.setFill(Color.RED);
         // set the color for the outline
         gc.setStroke(Color.BLACK);
         // set the thickness of the outline

@@ -38,7 +38,7 @@ A Java-based traffic simulation platform that connects to SUMO using the TraaS J
    - Apply changes
 3. Run `Main.java`
 
-## VI. How to Use (User Guide Draft)
+## VI. User Guide Draft
 1. **Start Simulation**: Click the `Start` button in the top left to begin the SUMO connection.
 2. **Navigation**:
    - **Zoom**: Use the mouse scroll wheel.

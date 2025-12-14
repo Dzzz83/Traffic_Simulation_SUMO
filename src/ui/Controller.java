@@ -78,7 +78,7 @@ public class Controller {
     @FXML private Label labelGreen;
     @FXML private Label labelYellow;
     private TrafficLightWrapper tlsWrapper;
-    private static final String NET_XML_PATH = "C:\\Users\\XUAN NGAN\\Downloads\\Traffic_Simulation_SUMO\\src\\map\\demo.net.xml";
+    private static final String NET_XML_PATH = "src/map/demo.net.xml";
     // logical variables
     private ControlPanel panel;
     private TrafficLightWrapper traffic_control;
@@ -133,7 +133,7 @@ public class Controller {
             connectionStatus.setStyle("-fx-text-fill: green");
             tlsWrapper = panel.getTrafficLightWrapper();
             tlsWrapper.isRunning = true;
-            tlsWrapper.loadConnectionDirections("C:\\Users\\XUAN NGAN\\Downloads\\Traffic_Simulation_SUMO\\src\\map\\demo.net.xml");
+            tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
         }
         else {
             connectionStatus.setText("Connection: Disconnected");

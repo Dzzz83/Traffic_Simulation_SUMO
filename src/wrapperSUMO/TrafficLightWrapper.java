@@ -27,7 +27,8 @@ import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,6 +45,7 @@ public class TrafficLightWrapper
             this.linkIndex = linkIndex;
         }
     }
+    private static final Logger logger = LogManager.getLogger(TrafficLightWrapper.class);
     // initialize the connection
     private final SumoTraciConnection connection;
     // Map key is "fromEdge_Lane->toEdge_Lane"
@@ -58,14 +60,17 @@ public class TrafficLightWrapper
     // get traffic light's IDs
     public List<String> getTrafficLightIDs()
     {
+        logger.debug("Attempting to retrieve all traffic light IDs.");
         try
         {
-            return (List<String>) connection.do_job_get(Trafficlight.getIDList());
+            List<String> ids = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+            logger.debug("Retrieved {} traffic lights.", ids != null ? ids.size() : 0);
+            return ids;
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get ID of Traffic Lights");
-            e.printStackTrace();
+            // Log the error, the context, and the stack trace (e)
+            logger.error("Failed to get ID list of Traffic Lights. Returning empty list.", e);
         }
         return new ArrayList<>();
     }
@@ -75,12 +80,13 @@ public class TrafficLightWrapper
     {
         try
         {
-            return (int) connection.do_job_get(Trafficlight.getIDCount());
+            int count = (int) connection.do_job_get(Trafficlight.getIDCount());
+            logger.info("Total Traffic Light count retrieved: {}", count);
+            return count;
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the number of Traffic Lights");
-            e.printStackTrace();
+            logger.error("Failed to get the number of Traffic Lights. Returning 0.", e);
         }
         return 0;
     }
@@ -94,26 +100,30 @@ public class TrafficLightWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the state of Traffic Lights" + trafficLightId);
-            e.printStackTrace();
+            logger.error("Failed to get state for Traffic Light ID: {}. Returning empty string.", trafficLightId, e);
         }
         return "";
     }
     // set automatic mode
     public void setautomaticmode(String trafficLightId)
     {
+        logger.info("Setting automatic mode (program '0') for Traffic Light: {}", trafficLightId);
         try
         {
             connection.do_job_set(Trafficlight.setProgram(trafficLightId, "0"));
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the program of Traffic Lights" + trafficLightId);
+            logger.error("Failed to set automatic mode for Traffic Light ID: {}.", trafficLightId, e);
         }
     }
 
     public Map<String, List<TrafficConnectInfo>> get_traffic_connections(String trafficLightId) {
-        if (!isRunning) return new HashMap<>();
+        if (!isRunning)
+        {
+            logger.warn("Attempted to get traffic connections for {} but simulation is not running.", trafficLightId);
+            return new HashMap<>();
+        }
         try {
             // 1. Cast the result directly to the expected List<SumoLink>
             @SuppressWarnings("unchecked")
@@ -143,7 +153,7 @@ public class TrafficLightWrapper
             }
             return connection_by_edge;
         } catch (Exception e) {
-            System.out.println("Failed to get the traffic connections " + trafficLightId);
+            logger.error("Failed to get the traffic connections " + trafficLightId);
             e.printStackTrace();
         }
         return new HashMap<>();
@@ -187,10 +197,10 @@ public class TrafficLightWrapper
                     staticConnectionData.put(key, new XmlConnectionData(dir, linkIdx));
                 }
             }
-            System.out.println("Loaded " + staticConnectionData.size() + " connections from XML.");
+            logger.error("Loaded " + staticConnectionData.size() + " connections from XML.");
 
         } catch (Exception e) {
-            System.out.println("Failed to load connection directions");
+            logger.error("Failed to load connection directions");
             e.printStackTrace();
         }
     }
@@ -221,7 +231,7 @@ public class TrafficLightWrapper
         try {
             return (double) connection.do_job_get(Trafficlight.getNextSwitch(tlsID));
         } catch (Exception e) {
-            System.out.println("Failed to get next switch time for " + tlsID);
+            logger.error("Failed to get next switch time for " + tlsID);
             e.printStackTrace();
         }
         return -1.0;
@@ -231,7 +241,7 @@ public class TrafficLightWrapper
         // check if running
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            logger.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -241,7 +251,7 @@ public class TrafficLightWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get current time");
+            logger.error("Failed to get current time");
             e.printStackTrace();
         }
         return 0.0;

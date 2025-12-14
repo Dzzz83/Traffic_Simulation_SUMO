@@ -104,6 +104,10 @@ public class Controller {
 
     // variable remembers the route for the next click
     private int clickRouteIndex = 0;
+
+    //variable for stress test 2 button
+    private boolean isStressTest2Active = false;
+
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
@@ -405,8 +409,7 @@ public class Controller {
     }
     // add vehicle button function
     @FXML
-    public void onAddVehicleClick()
-    {
+    public void onAddVehicleClick() {
         System.out.println("Adding Vehicle...");
         String vehId = "veh_" + System.currentTimeMillis();
 
@@ -438,19 +441,19 @@ public class Controller {
 
     @FXML
     public void onTurnAllOffClick() {
-        System.out.println("User requested: Turning ALL Lights OFF.");
+        System.out.println("User requested: Turning ALL Lights OFF");
         panel.turnOffAllLights();
     }
 
     // Action for the new button: Turn ALL Lights ON
     @FXML
     public void onTurnAllOnClick() {
-        System.out.println("User requested: Turning ALL Lights ON.");
+        System.out.println("User requested: Turning ALL Lights ON");
         panel.turnOnAllLights();
     }
     @FXML
     public void turn_all_lights_red() {
-        System.out.println("User requested: FORCING ALL LIGHTS TO RED.");
+        System.out.println("User requested: FORCING ALL LIGHTS TO RED");
         panel.turn_all_light_red();
         // Note: The UI drawing will update automatically on the next simulation step
         // because it calls panel.getRedYellowGreenState()
@@ -458,19 +461,18 @@ public class Controller {
 
     @FXML
     public void turn_all_lights_green() {
-        System.out.println("User requested: FORCING ALL LIGHTS TO GREEN.");
+        System.out.println("User requested: FORCING ALL LIGHTS TO GREEN");
         panel.turn_all_light_green();
     }
     @FXML
     public void onRestoreAutoClick() {
-        System.out.println("User requested: RESTORING AUTOMATIC PROGRAM.");
+        System.out.println("User requested: RESTORING AUTOMATIC PROGRAM");
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
     }
 
-    // add the stress test button
-    public void onStressTestClick()
-    {
+    // stress test button function
+    public void onStressTestClick() {
         System.out.println("Performing Stress Test");
         final int vehicleCount = 500;
         try
@@ -486,6 +488,14 @@ public class Controller {
             System.out.println("Failed to perform stress test");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    // stress test 2 button function
+    public void onStressTest2Click() {
+        // toggle ON/OFF
+        isStressTest2Active = !isStressTest2Active;
+        System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
     }
 
     @FXML
@@ -506,7 +516,7 @@ public class Controller {
         // update the UI buttons
         startBtn.setDisable(false);
         stopBtn.setDisable(true);
-        System.out.println("Map returned to beginning state. Press Start to begin.");
+        System.out.println("Map returned to beginning state. Press Start to begin");
     }
 
     private void updateStats() {
@@ -525,6 +535,19 @@ public class Controller {
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();
+        if (isStressTest2Active) {
+            // get a list of all vehicles currently present on the map
+            List<String> vehicles = panel.getVehicleIDs();
+            for (String id : vehicles) {
+                // generate random values for R, G, B
+                int r = (int) (Math.random() * 256);
+                int g = (int) (Math.random() * 256);
+                int b = (int) (Math.random() * 256);
+
+                // call ControlPanel function
+                panel.setColor(id, r, g, b, 255);
+            }
+        }
         updateStats();
         drawMap();
     }
@@ -786,6 +809,10 @@ public class Controller {
                 // get the angle of the vehicle
                 double angle = panel.getVehicleAngle(id);
 
+                // fetch the dynamic color from the Stress Test
+                Color vehColor = panel.getVehicleColor(id);
+                gc.setFill(vehColor);
+
                 // call draw car function
                 drawCar(gc, x, y, angle, carLength, carWidth);
 
@@ -910,7 +937,7 @@ public class Controller {
         // width is X, length is Y. We draw it pointing UP (-y) because in JavFX, the Y-axis starts at the top and increases as the car
         // moving down so the car must move (-y) if it is moving "up" in the screen.
         // fill the car's color
-        gc.setFill(Color.RED);
+        //gc.setFill(Color.RED);
         // set the color for the outline
         gc.setStroke(Color.BLACK);
         // set the thickness of the outline

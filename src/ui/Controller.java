@@ -79,6 +79,8 @@ public class Controller {
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
     @FXML private Label numberOfEdges;
+    @FXML private Label numOfTL;
+    @FXML private Label co2Emission;
 
     // chart
     @FXML private LineChart<Number, Number> avgSpeedChart;
@@ -579,6 +581,8 @@ public class Controller {
         numberVehicles.setText("Vehicles: " + count);
         int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
         numberOfEdges.setText("Edges: " + edgeCount);
+        int trafficLightCount = panel.getTrafficLightCount();
+        numOfTL.setText("Traffic Lights: " + trafficLightCount);
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
@@ -596,6 +600,19 @@ public class Controller {
             if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
+            double congestion = panel.getCongestionPercentage();
+            // Color to gain insight
+            String color = "green";
+            if (congestion > 30) color = "orange";
+            if (congestion > 60) color = "red";
+
+            congestionDensity.setText(String.format("Density: %.1f%%", congestion));
+            congestionDensity.setStyle("-fx-text-fill: " + color + ";");
+
+            // 5. Show CO2
+            double totalCO2 = panel.getTotalCO2();
+            // mg/s to grams/s
+            co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
         }
     }
 

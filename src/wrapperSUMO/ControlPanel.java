@@ -650,6 +650,44 @@ public class ControlPanel
         return 0.0;
     }
 
+    // Get the CO2 of every vehicle on the map
+    public double getTotalCO2() {
+        if (!isRunning) return 0.0;
+
+        double totalCO2 = 0.0;
+        try {
+            List<String> ids = getVehicleIDs(); // Get all the vehicle IDs
+            for (String id : ids) // Loop through and get all the CO2 emission by every vehicle
+            {
+                totalCO2 += vehicleWrapper.getCO2Emission(id);
+            }
+        } catch (Exception e) {
+            System.out.println("Error calculating CO2");
+        }
+        return totalCO2;
+    }
+
+    public double getCongestionPercentage() {
+        if (!isRunning) return 0.0;
+
+        try {
+            List<String> ids = getVehicleIDs();
+            if (ids.isEmpty()) return 0.0;
+
+            int stoppedCars = 0;
+            for (String id : ids) {
+                // If speed is less than 0.1 m/s, the car can be viewed as stopped
+                if (vehicleWrapper.getVehicleSpeed(id) < 0.1) {
+                    stoppedCars++;
+                }
+            }
+            // Return percentage (0.0 to 100.0)
+            return ((double) stoppedCars / ids.size()) * 100.0;
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
     public List<String> getTrafficLightIDs()
     {
         if (!isRunning)

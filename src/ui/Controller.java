@@ -293,7 +293,7 @@ public class Controller {
         startBtn.setOnAction(e -> onStartClick());
         stopBtn.setOnAction(e -> onStopClick());
 
-        // make the edge button function
+        // make the edgeID button function
         if (EdgeIDBtn != null) {
             EdgeIDBtn.setOnAction(e -> {
                 showEdgesID = !showEdgesID;
@@ -308,6 +308,7 @@ public class Controller {
             });
         }
 
+        // make the traffic light id button function
         if (TrafficLightIDBtn != null) {
             TrafficLightIDBtn.setOnAction(e -> {
                 showTrafficLightID= !showTrafficLightID;
@@ -372,6 +373,7 @@ public class Controller {
             });
         }
 
+        // make delay slider function
         if (delaySlider != null) {
             // Set initial value
             simulationDelay = (long) (delaySlider.getValue() * 1_000_000);
@@ -384,6 +386,7 @@ public class Controller {
             });
         }
 
+        // temporarily not function, next time.
         if (inFlowSlider != null) {
             inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 inFlowValue.setText(String.format("%.1f", newVal.doubleValue()));
@@ -391,6 +394,7 @@ public class Controller {
             });
         }
 
+        // make the maxSpeed slider function
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 double speed = newVal.doubleValue();
@@ -400,7 +404,7 @@ public class Controller {
             });
         }
 
-        // auto mode
+        // auto mode is currently for fun, does no real impact
         if (autoModeToggle != null) {
             autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal) {
@@ -435,34 +439,43 @@ public class Controller {
         startBtn.setDisable(false);
         stopBtn.setDisable(true);
     }
-    // add vehicle button function
+
     @FXML
+    // add vehicle button function
     public void onAddVehicleClick()
     {
         LOG.info("Adding Vehicle...");
+        // generate a unique ID for the vehicle using the current system time
         String vehId = "veh_" + System.currentTimeMillis();
 
         try
         {
+            // fetch all available route IDs from the SUMO map
             List <String> routeIDs = panel.getRouteIDs();
+            // stop if no routes exist in the map files
             if (routeIDs.isEmpty()) {
                 System.err.println("No routes found in the map file");
                 return;
             }
-            // pick the route based on counter
+            // select the specific route using counter (clickRouteIndex)
             String targetRoute = routeIDs.get(clickRouteIndex);
-            // get current time
+            // get the current simulation time so the car spawns immediately
             int departure_time = (int) panel.getCurrentTime();
-            // add vehicle
+
+            // send the command to SUMO to add the vehicle with specific parameters
+            // parameters: (ID, Type, Route, DepartTime, Position, Speed, LaneIndex)
             panel.addVehicle(vehId, "DEFAULT_VEHTYPE", targetRoute, departure_time, 50.0, 10.0, (byte) -2);
+
             System.out.println("Spawned " + vehId + " on route: " + targetRoute);
             // update the counter for the next click
+            // The modulo (%) ensures that after the last route, the index resets to 0
             clickRouteIndex = (clickRouteIndex + 1) % routeIDs.size();
-            // redraw map
+            // refresh the canvas to show the new vehicle immediately
             drawMap();
         }
         catch (Exception e)
         {
+            // log an error if the connection to SUMO fails or the ID is invalid
             System.err.println("Failed to add vehicle: " + e.getMessage());
             e.printStackTrace();
         }
@@ -500,7 +513,7 @@ public class Controller {
         panel.turnOnAllLights();
     }
 
-    // add the stress test button
+    // stress test button
     public void onStressTestClick()
     {
         LOG.info("Performing Stress Test");
@@ -521,40 +534,44 @@ public class Controller {
     }
 
     @FXML
-    // stress test 2 button function
+    // stress test 2 button
     public void onStressTest2Click() {
-        // toggle ON/OFF
+        // switch the state between true and false
         isStressTest2Active = !isStressTest2Active;
+        // print a message to the console
         System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
     }
 
     @FXML
     // restart button
     public void onRestartClick() {
+        // log a message to the console for debugging
         LOG.info("Restarting map...");
 
-        // stop the JavaFX drawing loop first!
+        // stop the animation timer so it doesn't try to draw while the map is reloading
         if (simulationLoop != null) {
             simulationLoop.stop();
         }
-        // call the restart logic in the backend
+        // tell the backend to close the current SUMO connection and start a new one
         panel.restartSimulation();
 
-        // Re-initializes the Traffic Light Wrapper
+        // re-link the traffic light logic to the new simulation connection
         tlsWrapper = panel.getTrafficLightWrapper();
         if (tlsWrapper != null) {
             tlsWrapper.isRunning = true;
+            // reload the traffic light directions from the map file
             tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
         }
 
-        // reset the UI variables
+        // reset the counter so the next car added starts back at the first route
         clickRouteIndex = 0;
-        // redraw the empty map
+        // clear the canvas and draw the original map road
         drawMap();
-        // update the UI buttons
+        // reset the buttons so the user can start the simulation again
         startBtn.setDisable(false);
         stopBtn.setDisable(true);
-        LOG.info("Map returned to beginning state. Press Start to begin.");
+        // log that the reset is complete
+        LOG.info("Map returned to beginning state. Press Start to begin");
     }
 
     private void updateStats() {
@@ -601,19 +618,23 @@ public class Controller {
     private void updateSimulation() {
         panel.step();
         if (isStressTest2Active) {
-            // get a list of all vehicles currently present on the map
+            // get a list of all vehicles currently active in the simulation
             List<String> vehicles = panel.getVehicleIDs();
+
+            // Loop through every vehicle found on the map
             for (String id : vehicles) {
-                // generate random values for R, G, B
+                // Generate a random number (0-255) for the Red, Green, and Blue channels
                 int r = (int) (Math.random() * 256);
                 int g = (int) (Math.random() * 256);
                 int b = (int) (Math.random() * 256);
 
-                // call ControlPanel function
+                // send the command to SUMO to change this specific vehicle's color
                 panel.setColor(id, r, g, b, 255);
             }
         }
+        // refresh the UI labels
         updateStats();
+        // redraw the entire map, including the new positions and colors of vehicles
         drawMap();
     }
     // a function to take raw, geometric data from SUMO and transforms into pixels on JavaFx

@@ -13,9 +13,12 @@ import de.tudresden.sumo.objects.SumoGeometry;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ControlPanel
 {
-
+    private static final Logger LOG = LogManager.getLogger(ControlPanel.class.getName());
     // create the connection
     private SumoTraciConnection connection;
 
@@ -32,7 +35,7 @@ public class ControlPanel
     // default Constructor
     public ControlPanel()
     {
-        System.out.println("ControlPanel created - call startSimulation() to begin");
+        LOG.info("ControlPanel created - call startSimulation() to begin");
     }
 
     // create function startSimulation
@@ -58,7 +61,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to run the simulation");
+            LOG.error("Failed to run the simulation");
             e.printStackTrace();
         }
         return true;
@@ -71,9 +74,9 @@ public class ControlPanel
             }
             Thread.sleep(500);
             startSimulation();
-            System.out.println("Simulation restarted successfully");
+            LOG.info("Simulation restarted successfully");
         } catch (Exception e) {
-            System.err.println("Failed to restart simulation: " + e.getMessage());
+            LOG.error("Failed to restart simulation: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -104,7 +107,7 @@ public class ControlPanel
                 allShapes.put(laneId, points);
             }
         } catch (Exception e) {
-            System.out.println("Failed to get the shapes of all lanes in map");
+            LOG.error("Failed to get the shapes of all lanes in map");
             e.printStackTrace();
         }
         return allShapes;
@@ -120,7 +123,7 @@ public class ControlPanel
             // check if the simulation is running
             if (!isRunning)
             {
-                System.out.println("The simulation is not running");
+                LOG.error("The simulation is not running");
                 return;
             }
             // generate a unique batch id
@@ -132,7 +135,7 @@ public class ControlPanel
                 int currentTime = (int) getCurrentTime();
                 if (routeIDs.isEmpty())
                 {
-                    System.out.println("Can't find any routes on the map");
+                    LOG.error("Can't find any routes on the map");
                     return;
                 }
 
@@ -147,11 +150,11 @@ public class ControlPanel
                     vehicleWrapper.addVehicle(vehicleId, "DEFAULT_VEHTYPE", routeId, currentTime, 0.0, 0.0, (byte)-2);
                     routeIndex = (routeIndex+1) % routeIDs.size();
                 }
-                System.out.println("Strees Testing successfully");
+                LOG.info("Strees Testing successfully");
             }
             catch (Exception e)
             {
-                System.out.println("Failed to perform stress test");
+                LOG.error("Failed to perform stress test");
                 // e.printStackTrace();
             }
         }
@@ -177,7 +180,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return new ArrayList<>();
         }
         try
@@ -186,7 +189,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get lists of route ids");
+            LOG.error("Failed to get lists of route ids");
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -206,7 +209,7 @@ public class ControlPanel
         // check if the simulation is running
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+           LOG.error("The simulation is not running");
             return;
         }
         try
@@ -215,11 +218,11 @@ public class ControlPanel
             connection.do_timestep();
             // get current time
             double time = getCurrentTime();
-            System.out.println("Step to: " + time);
+            LOG.info("Step to: " + time);
         }
         catch (Exception e)
         {
-            System.out.println("Failed to time step the simulation");
+            LOG.error("Failed to time step the simulation");
             e.printStackTrace();
         }
     }
@@ -230,7 +233,7 @@ public class ControlPanel
         // check if running
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -240,7 +243,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get current time");
+            LOG.error("Failed to get current time");
             e.printStackTrace();
         }
         return 0.0;
@@ -251,7 +254,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         try
@@ -260,7 +263,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the number of vehicles");
+            LOG.error("Failed to get the number of vehicles");
             e.printStackTrace();
         }
         return 0;
@@ -271,7 +274,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -280,7 +283,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the color");
+            LOG.error("Failed to set the color");
             e.printStackTrace();
         }
     }
@@ -290,7 +293,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -299,7 +302,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to change lane for vehicle: " + vehicleId);
+            LOG.error("Failed to change lane for vehicle: " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -309,7 +312,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -318,7 +321,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to slow down vehicle: " + vehicleId);
+            LOG.error("Failed to slow down vehicle: " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -328,7 +331,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return new ArrayList<>();
         }
         try
@@ -337,7 +340,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get lists of vehicle ids");
+            LOG.error("Failed to get lists of vehicle ids");
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -347,7 +350,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -356,7 +359,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the speed");
+            LOG.error("Failed to get the speed");
             e.printStackTrace();
         }
         return 0.0;
@@ -367,7 +370,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return new SumoPosition2D(0.0, 0.0);
         }
         try
@@ -376,7 +379,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the position of the vehicle " + vehicleId);
+            LOG.error("Failed to get the position of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return new SumoPosition2D(0.0, 0.0);
@@ -387,7 +390,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return "";
         }
         try
@@ -396,7 +399,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the laneID of the vehicle " + vehicleId);
+            LOG.error("Failed to get the laneID of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return "";
@@ -407,7 +410,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return "";
         }
         try
@@ -416,7 +419,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the roadId of the vehicle " + vehicleId);
+            LOG.error("Failed to get the roadId of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return "";
@@ -427,7 +430,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -436,7 +439,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to add the vehicle " + vehicleId);
+            LOG.error("Failed to add the vehicle " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -446,7 +449,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -455,7 +458,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the route of the vehicle:  " + vehicleId);
+            LOG.error("Failed to set the route of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -465,7 +468,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -474,7 +477,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to remove the vehicle:  " + vehicleId);
+            LOG.error("Failed to remove the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -484,7 +487,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -493,7 +496,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the speed of the vehicle:  " + vehicleId);
+            LOG.error("Failed to set the speed of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -501,7 +504,7 @@ public class ControlPanel
     public int setMaxSpeed(String edgeID, double speed) {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         try
@@ -510,7 +513,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set max speed");
+            LOG.error("Failed to set max speed");
             e.printStackTrace();
         }
         return 0;
@@ -519,7 +522,7 @@ public class ControlPanel
     public double getMeanSpeed(String edgeID) {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -528,7 +531,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get mean speed");
+            LOG.error("Failed to get mean speed");
             e.printStackTrace();
         }
         return 0.0;
@@ -537,7 +540,7 @@ public class ControlPanel
     public int setGlobalMaxSpeed(double speed) {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         return edgeWrapper.setGlobalMaxSpeed(speed);
@@ -545,7 +548,7 @@ public class ControlPanel
 
     public double getGlobalMeanSpeed() {
         if (!isRunning) {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
 
@@ -563,7 +566,7 @@ public class ControlPanel
 
             return (totalSpeed / allVehicles.size());
         } catch (Exception e) {
-            System.out.println("Failed to calculate global mean speed");
+            LOG.error("Failed to calculate global mean speed");
             e.printStackTrace();
         }
         return 0.0;
@@ -574,7 +577,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -583,7 +586,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the distance of the vehicle:  " + vehicleId);
+            LOG.error("Failed to get the distance of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -594,7 +597,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -603,7 +606,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the CO2 Emission:  " + vehicleId);
+            LOG.error("Failed to get the CO2 Emission:  " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -613,7 +616,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return new ArrayList<>();
         }
         try
@@ -622,7 +625,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get traffic light IDs");
+            LOG.error("Failed to get traffic light IDs");
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -632,7 +635,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         try
@@ -641,7 +644,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get number of traffic lights");
+            LOG.error("Failed to get number of traffic lights");
             e.printStackTrace();
         }
         return 0;
@@ -651,7 +654,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return "";
         }
         try
@@ -660,7 +663,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get traffic light state");
+            LOG.error("Failed to get traffic light state");
             e.printStackTrace();
         }
         return "";
@@ -670,7 +673,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         try
@@ -679,7 +682,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get number of edges");
+            LOG.error("Failed to get number of edges");
             e.printStackTrace();
         }
         return 0;
@@ -689,7 +692,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return new ArrayList<>();
         }
         try
@@ -698,7 +701,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get edge IDs");
+            LOG.error("Failed to get edge IDs");
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -708,7 +711,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0;
         }
         try
@@ -717,7 +720,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get lane number");
+            LOG.error("Failed to get lane number");
             e.printStackTrace();
         }
         return 0;
@@ -727,7 +730,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
         try
@@ -736,7 +739,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to change the destination of that vehicle");
+            LOG.error("Failed to change the destination of that vehicle");
             e.printStackTrace();
         }
     }
@@ -746,7 +749,7 @@ public class ControlPanel
     {
         if (connection == null)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return;
         }
 
@@ -758,7 +761,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Can't stop the simulation");
+            LOG.error("Can't stop the simulation");
             e.printStackTrace();
         }
     }
@@ -768,7 +771,7 @@ public class ControlPanel
     {
         if (!isRunning)
         {
-            System.out.println("The simulation is not running");
+            LOG.error("The simulation is not running");
             return 0.0;
         }
         try
@@ -777,7 +780,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the angle of the vehicle " + vehicleId);
+            LOG.error("Failed to get the angle of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -805,7 +808,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the traffic light pos in map");
+            LOG.error("Failed to get the traffic light pos in map");
             e.printStackTrace();
         }
         return new HashMap<>();
@@ -835,7 +838,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the controlled lanes in map");
+            LOG.error("Failed to get the controlled lanes in map");
             e.printStackTrace();
         }
         return new HashMap<>();
@@ -855,7 +858,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set auto traffic light");
+            LOG.error("Failed to set auto traffic light");
         }
         return;
     }
@@ -865,7 +868,7 @@ public class ControlPanel
     {
         try {
             connection.do_job_set(Trafficlight.setProgram(tlsID, "0"));
-            System.out.println("Traffic Light " + tlsID + " set to ON (Program 0)");
+            LOG.error("Traffic Light " + tlsID + " set to ON (Program 0)");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -875,7 +878,7 @@ public class ControlPanel
     {
         try {
             connection.do_job_set(Trafficlight.setProgram(tlsID, "off"));
-            System.out.println("Traffic Light " + tlsID + " set to OFF");
+            LOG.error("Traffic Light " + tlsID + " set to OFF");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -890,7 +893,7 @@ public class ControlPanel
             for (String id : tlIDs) {
                 connection.do_job_set(Trafficlight.setProgram(id, "off"));
             }
-            System.out.println("All traffic lights turned OFF.");
+            LOG.error("All traffic lights turned OFF.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -952,7 +955,7 @@ public class ControlPanel
             for (String id : tlIDs) {
                 connection.do_job_set(Trafficlight.setProgram(id, "0"));
             }
-            System.out.println("All traffic lights turned ON.");
+            LOG.error("All traffic lights turned ON.");
         } catch (Exception e) {
             e.printStackTrace();
         }

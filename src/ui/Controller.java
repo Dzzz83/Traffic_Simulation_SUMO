@@ -34,8 +34,11 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager; // use for logging
+import org.apache.logging.log4j.Logger;
 
 public class Controller {
+    private static final Logger LOG = LogManager.getLogger(Controller.class.getName());
 
     // initialize variables
     // @FXML is a special tag that tells Java to look into fxml file and link the correct object this file
@@ -135,13 +138,13 @@ public class Controller {
     @FXML
     // initialize the GUI function
     public void initialize() {
-        System.out.println("Starting the GUI ...");
+        LOG.info("Starting the GUI ...");
 
         // initialize Control Panel
         panel = new ControlPanel();
 
         // connect to SUMO and load Map
-        System.out.println("Connecting to SUMO to fetch map...");
+        LOG.info("Connecting to SUMO to fetch map...");
         if (panel.startSimulation()) {
             connectionStatus.setText("Connection: Connected");
             connectionStatus.setStyle("-fx-text-fill: green");
@@ -349,19 +352,19 @@ public class Controller {
         if (sliderRed != null) {
             sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->{
                 redValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                System.out.println(String.valueOf(newVal));
+                LOG.info(String.valueOf(newVal));
             });
         }
         if (sliderGreen != null) {
             sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
                 greenValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                System.out.println(String.valueOf(newVal));
+                LOG.info(String.valueOf(newVal));
             });
         }
         if (sliderYellow != null) {
             sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
                 yellowValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                System.out.println("Red duration set to: " + newVal.intValue());
+                LOG.info("Red duration set to: " + newVal.intValue());
             });
         }
 
@@ -373,14 +376,14 @@ public class Controller {
                 // Convert ms to nanoseconds
                 simulationDelay = (long) (newVal.doubleValue() * 1_000_000);
                 delayValue.setText(String.format("%.0f", newVal.doubleValue()));
-                System.out.println("Delay set to: " + newVal.intValue() + "ms");
+                LOG.info("Delay set to: " + newVal.intValue() + "ms");
             });
         }
 
         if (inFlowSlider != null) {
             inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 inFlowValue.setText(String.format("%.1f", newVal.doubleValue()));
-                System.out.println("In Flow: " + newVal);
+                LOG.info("In Flow: " + newVal);
             });
         }
 
@@ -389,7 +392,7 @@ public class Controller {
                 double speed = newVal.doubleValue();
                 maxSpeedValue.setText(String.format("%.1f m/s", speed));
                 panel.setGlobalMaxSpeed(speed);
-                System.out.println("Max Speed: " + speed);
+                LOG.info("Max Speed: " + speed);
             });
         }
 
@@ -399,12 +402,12 @@ public class Controller {
                 if (newVal) {
                     autoModeToggle.setText("OFF");
                     autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
-                    System.out.println("Auto mode: OFF");
+                    LOG.info("Auto mode: OFF");
                 }
                 else {
                     autoModeToggle.setText("ON");
                     autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-                    System.out.println("Auto mode: ON");
+                    LOG.info("Auto mode: ON");
                 }
             });
         }
@@ -415,7 +418,7 @@ public class Controller {
     // startButton
     @FXML
     public void onStartClick() {
-        System.out.println("Resuming Simulation Loop...");
+        LOG.info("Resuming Simulation Loop...");
         simulationLoop.start();
         startBtn.setDisable(true);
         stopBtn.setDisable(false);
@@ -423,7 +426,7 @@ public class Controller {
     // stop button
     @FXML
     public void onStopClick() {
-        System.out.println("Stopping Simulation...");
+        LOG.info("Stopping Simulation...");
         simulationLoop.stop();
         startBtn.setDisable(false);
         stopBtn.setDisable(true);
@@ -432,7 +435,7 @@ public class Controller {
     @FXML
     public void onAddVehicleClick()
     {
-        System.out.println("Adding Vehicle...");
+        LOG.info("Adding Vehicle...");
         String vehId = "veh_" + System.currentTimeMillis();
 
         try
@@ -463,19 +466,19 @@ public class Controller {
 
     @FXML
     public void onTurnAllOffClick() {
-        System.out.println("User requested: Turning ALL Lights OFF.");
+        LOG.info("User requested: Turning ALL Lights OFF.");
         panel.turnOffAllLights();
     }
 
     // Action for the new button: Turn ALL Lights ON
     @FXML
     public void onTurnAllOnClick() {
-        System.out.println("User requested: Turning ALL Lights ON.");
+        LOG.info("User requested: Turning ALL Lights ON.");
         panel.turnOnAllLights();
     }
     @FXML
     public void turn_all_lights_red() {
-        System.out.println("User requested: FORCING ALL LIGHTS TO RED.");
+        LOG.info("User requested: FORCING ALL LIGHTS TO RED.");
         panel.turn_all_light_red();
         // Note: The UI drawing will update automatically on the next simulation step
         // because it calls panel.getRedYellowGreenState()
@@ -483,12 +486,12 @@ public class Controller {
 
     @FXML
     public void turn_all_lights_green() {
-        System.out.println("User requested: FORCING ALL LIGHTS TO GREEN.");
+        LOG.info("User requested: FORCING ALL LIGHTS TO GREEN.");
         panel.turn_all_light_green();
     }
     @FXML
     public void onRestoreAutoClick() {
-        System.out.println("User requested: RESTORING AUTOMATIC PROGRAM.");
+        LOG.info("User requested: RESTORING AUTOMATIC PROGRAM.");
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
     }
@@ -496,7 +499,7 @@ public class Controller {
     // add the stress test button
     public void onStressTestClick()
     {
-        System.out.println("Performing Stress Test");
+        LOG.info("Performing Stress Test");
         final int vehicleCount = 500;
         try
         {
@@ -504,11 +507,11 @@ public class Controller {
             panel.stressTest(vehicleCount);
             // redraw map
             drawMap();
-            System.out.println("Adding " + vehicleCount + " to the simulation");
+            LOG.info("Adding " + vehicleCount + " to the simulation");
         }
         catch (Exception e)
         {
-            System.out.println("Failed to perform stress test");
+            LOG.error("Failed to perform stress test");
             e.printStackTrace();
         }
     }
@@ -516,7 +519,7 @@ public class Controller {
     @FXML
     // restart button
     public void onRestartClick() {
-        System.out.println("Restarting map...");
+        LOG.info("Restarting map...");
 
         // stop the JavaFX drawing loop first!
         if (simulationLoop != null) {
@@ -531,7 +534,7 @@ public class Controller {
         // update the UI buttons
         startBtn.setDisable(false);
         stopBtn.setDisable(true);
-        System.out.println("Map returned to beginning state. Press Start to begin.");
+        LOG.info("Map returned to beginning state. Press Start to begin.");
     }
 
     private void updateStats() {
@@ -1197,7 +1200,7 @@ public class Controller {
                 }
                 catch (NumberFormatException e)
                 {
-                    System.out.println("Something went wrong");
+                    LOG.error("Something went wrong");
                 }
             }
         }

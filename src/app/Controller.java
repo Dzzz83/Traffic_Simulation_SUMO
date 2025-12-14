@@ -88,7 +88,7 @@ public class Controller {
     @FXML private Label labelGreen;
     @FXML private Label labelYellow;
     private TrafficLightWrapper tlsWrapper;
-    private static final String NET_XML_PATH = "src/map/demo.net.xml";
+    private static final String NET_XML_PATH = "src/SumoConfig/demo.net.xml";
     // logical variables
     private ControlPanel panel;
     private TrafficLightWrapper traffic_control;
@@ -154,7 +154,7 @@ public class Controller {
             connectionStatus.setStyle("-fx-text-fill: green");
             tlsWrapper = panel.getTrafficLightWrapper();
             tlsWrapper.isRunning = true;
-            tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
+            tlsWrapper.loadConnectionDirections(NET_XML_PATH);
         }
         else {
             connectionStatus.setText("Connection: Disconnected");
@@ -560,7 +560,7 @@ public class Controller {
         if (tlsWrapper != null) {
             tlsWrapper.isRunning = true;
             // reload the traffic light directions from the map file
-            tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
+            tlsWrapper.loadConnectionDirections(NET_XML_PATH);
         }
 
         // reset the counter so the next car added starts back at the first route

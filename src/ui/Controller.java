@@ -293,7 +293,7 @@ public class Controller {
         startBtn.setOnAction(e -> onStartClick());
         stopBtn.setOnAction(e -> onStopClick());
 
-        // make the edge button function
+        // make the edgeID button function
         if (EdgeIDBtn != null) {
             EdgeIDBtn.setOnAction(e -> {
                 showEdgesID = !showEdgesID;
@@ -308,6 +308,7 @@ public class Controller {
             });
         }
 
+        // make the traffic light id button function
         if (TrafficLightIDBtn != null) {
             TrafficLightIDBtn.setOnAction(e -> {
                 showTrafficLightID= !showTrafficLightID;
@@ -372,6 +373,7 @@ public class Controller {
             });
         }
 
+        // make delay slider function
         if (delaySlider != null) {
             // Set initial value
             simulationDelay = (long) (delaySlider.getValue() * 1_000_000);
@@ -384,6 +386,7 @@ public class Controller {
             });
         }
 
+        // temporarily not function, next time.
         if (inFlowSlider != null) {
             inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 inFlowValue.setText(String.format("%.1f", newVal.doubleValue()));
@@ -391,6 +394,7 @@ public class Controller {
             });
         }
 
+        // make the maxSpeed slider function
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 double speed = newVal.doubleValue();
@@ -400,7 +404,7 @@ public class Controller {
             });
         }
 
-        // auto mode
+        // auto mode is currently for fun, does no real impact
         if (autoModeToggle != null) {
             autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal) {

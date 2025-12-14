@@ -62,6 +62,21 @@ public class ControlPanel
         }
         return true;
     }
+
+    public void restartSimulation() {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+            Thread.sleep(500);
+            startSimulation();
+            System.out.println("Simulation restarted successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to restart simulation: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // Retrieves the shape (list of X,Y points) for EVERY lane in your map
     public Map<String, List<SumoPosition2D>> getMapShape()
     {

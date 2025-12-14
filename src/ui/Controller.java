@@ -112,6 +112,8 @@ public class Controller {
     // variables to store the position of the mouse in the past to implement click and drag feature
     private double lastMouseX, lastMouseY; // for dragging calculation
 
+    // variable remembers the route for the next click
+    private int clickRouteIndex = 0;
     // logic variables to show/hide to sidebar
     private boolean isSidebarVisible = true;
 
@@ -426,12 +428,20 @@ public class Controller {
 
         try
         {
+            List <String> routeIDs = panel.getRouteIDs();
+            if (routeIDs.isEmpty()) {
+                System.err.println("No routes found in the map file");
+                return;
+            }
+            // pick the route based on counter
+            String targetRoute = routeIDs.get(clickRouteIndex);
             // get current time
             int departure_time = (int) panel.getCurrentTime();
             // add vehicle
-            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", "r_0", departure_time, 50.0, 10.0, (byte) -2);
-            // iterate
-            panel.step();
+            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", targetRoute, departure_time, 50.0, 10.0, (byte) -2);
+            System.out.println("Spawned " + vehId + " on route: " + targetRoute);
+            // update the counter for the next click
+            clickRouteIndex = (clickRouteIndex + 1) % routeIDs.size();
             // redraw map
             drawMap();
         }
@@ -492,6 +502,27 @@ public class Controller {
             System.out.println("Failed to perform stress test");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    // restart button
+    public void onRestartClick() {
+        System.out.println("Restarting map...");
+
+        // stop the JavaFX drawing loop first!
+        if (simulationLoop != null) {
+            simulationLoop.stop();
+        }
+        // call the restart logic in the backend
+        panel.restartSimulation();
+        // reset the UI variables
+        clickRouteIndex = 0;
+        // redraw the empty map
+        drawMap();
+        // update the UI buttons
+        startBtn.setDisable(false);
+        stopBtn.setDisable(true);
+        System.out.println("Map returned to beginning state. Press Start to begin.");
     }
 
     private void updateStats() {

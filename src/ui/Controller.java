@@ -558,25 +558,25 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount();
+        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount();
+        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
         numberOfEdges.setText("Edges: " + edgeCount);
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed();
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
         }
 
         if (panel.isRunning()) {
-            double currentSpeed = panel.getGlobalMeanSpeed();
-            currentSpeed *= 3.6;
+            double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
+            currentSpeed *= 3.6; // m/s to km/h
 
-            timeSeconds += 0.1;
-            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+            timeSeconds += 0.1; // X-axis to show the time
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
 
-            if (speedSeries.getData().size() > 50) {
+            if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
         }

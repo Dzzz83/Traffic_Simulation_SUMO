@@ -77,6 +77,8 @@ public class Controller {
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
     @FXML private Label numberOfEdges;
+    @FXML private Label numOfTL;
+    @FXML private Label co2Emission;
 
     // chart
     @FXML private LineChart<Number, Number> avgSpeedChart;
@@ -556,27 +558,42 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount();
+        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount();
+        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
         numberOfEdges.setText("Edges: " + edgeCount);
+        int trafficLightCount = panel.getTrafficLightCount();
+        numOfTL.setText("Traffic Lights: " + trafficLightCount);
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed();
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
         }
 
         if (panel.isRunning()) {
-            double currentSpeed = panel.getGlobalMeanSpeed();
-            currentSpeed *= 3.6;
+            double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
+            currentSpeed *= 3.6; // m/s to km/h
 
-            timeSeconds += 0.1;
-            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+            timeSeconds += 0.1; // X-axis to show the time
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
 
-            if (speedSeries.getData().size() > 50) {
+            if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
+            double congestion = panel.getCongestionPercentage();
+            // Color to gain insight
+            String color = "green";
+            if (congestion > 30) color = "orange";
+            if (congestion > 60) color = "red";
+
+            congestionDensity.setText(String.format("Density: %.1f%%", congestion));
+            congestionDensity.setStyle("-fx-text-fill: " + color + ";");
+
+            // 5. Show CO2
+            double totalCO2 = panel.getTotalCO2();
+            // mg/s to grams/s
+            co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
         }
     }
 

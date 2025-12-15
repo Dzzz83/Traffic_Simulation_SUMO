@@ -12,6 +12,7 @@ conn.do_job_set(Command.setSomething(parameter1, parameter2, ...));
 
 package wrapperSUMO;
 
+import de.tudresden.sumo.cmd.Lane;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.cmd.Trafficlight;
 import de.tudresden.sumo.objects.SumoLink;
@@ -19,10 +20,7 @@ import de.tudresden.sumo.objects.SumoTLSController;
 import it.polito.appeal.traci.SumoTraciConnection;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -123,7 +121,6 @@ public class TrafficLightWrapper
 
             Map<String, List<TrafficConnectInfo>> connection_by_edge = new HashMap<>();
 
-            // 2. The standard for-each loop will now work on the List<SumoLink>
             for (SumoLink link : links) {
                 String fromlane = link.from;
                 String tolane = link.to;
@@ -135,9 +132,9 @@ public class TrafficLightWrapper
 
                 String direction = (data != null) ? data.dir : "s";
                 // Use the accurate linkIndex from the XML
-                int accurateLinkIndex = (data != null) ? data.linkIndex : 0;
+                int link_index = (data != null) ? data.linkIndex : 0;
 
-                TrafficConnectInfo info = new TrafficConnectInfo(fromedge, toedge, direction, accurateLinkIndex, fromlane, tolane);
+                TrafficConnectInfo info = new TrafficConnectInfo(fromedge, toedge, direction, link_index, fromlane, tolane);
 
                 connection_by_edge
                         .computeIfAbsent(fromedge, k -> new ArrayList<>())
@@ -152,12 +149,7 @@ public class TrafficLightWrapper
     }
 
     private XmlConnectionData getConnectionData(String fromLane, String toLane) {
-        String fromEdge = fromLane.split("_")[0];
-        String toEdge = toLane.split("_")[0];
-        String fromLaneNum = fromLane.split("_")[1];
-        String toLaneNum = toLane.split("_")[1];
-
-        String key = fromEdge + "_" + fromLaneNum + "->" + toEdge + "_" + toLaneNum;
+        String key = fromLane + "->" + toLane;
         return staticConnectionData.get(key);
     }
     public void loadConnectionDirections(String netFilePath) {
@@ -196,8 +188,8 @@ public class TrafficLightWrapper
             e.printStackTrace();
         }
     }
-    public double getRemainingTimeForConnection(String trafficLightId) {
-        // Note: Connections usually switch together, so we query the TLS ID
+    public double getRemainingTimeForConnection(String trafficLightId)
+    {
         double nextSwitch = getNextSwitchTime(trafficLightId);
         double currentTime = getCurrentTime();
         if (nextSwitch == -1) return 0;
@@ -213,11 +205,7 @@ public class TrafficLightWrapper
 
         return fullState.charAt(linkIndex);
     }
-    public double getRemainingTimeForConnection(String trafficLightId, int linkIndex) {
-        double nextSwitch = getNextSwitchTime(trafficLightId);
-        double currentTime = getCurrentTime();
-        return Math.max(0, nextSwitch - currentTime);
-    }
+
     public double getNextSwitchTime(String tlsID) {
         if (!isRunning) return -1.0;
         try {
@@ -248,6 +236,193 @@ public class TrafficLightWrapper
         }
         return 0.0;
     }
-}
 
+    // get the current phase
+    public int getCurrentPhaseIndex(String trafficLightId) {
+        try {
+            return (int) connection.do_job_get(Trafficlight.getPhase(trafficLightId));
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+    // query the connection belong to the "green state" from a trafficId
+    public List<Integer> query_connection(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return Collections.emptyList();
+        }
+        try
+        {
+            String state = this.getRedYellowGreenState(trafficLightId);
+            if (state == null || state.isEmpty())
+            {
+                LOG.error("Traffic light state is empty for " + trafficLightId);
+                return Collections.emptyList();
+            }
+            List<Integer> green_index = new ArrayList<>();
+            int index = 0;
+            for (char color: state.toCharArray())
+            {
+                if (color =='g' || color == 'G')
+                {
+                    green_index.add(index);
+                }
+                index++;
+            }
+            return green_index;
+        }
+        catch (Exception e) {
+            LOG.error("Failed to query connection for " + trafficLightId);
+            e.printStackTrace();
+        }
+        return Collections.emptyList();
+    }
+
+    public Map<String, List<String>> get_green_connection_edge(String trafficLightId) {
+        if (!isRunning) return new HashMap<>();
+
+        Map<String, List<String>> green_connection_edge = new HashMap<>();
+
+        // 1. Get Indices
+        List<Integer> green_index = this.query_connection(trafficLightId);
+        if (green_index == null || green_index.isEmpty()) {
+            return green_connection_edge;
+        }
+
+        try {
+            // Fetch Topology as a Generic List first
+            Object response = connection.do_job_get(Trafficlight.getControlledLinks(trafficLightId));
+
+            if (response == null || !(response instanceof List)) {
+                return green_connection_edge;
+            }
+
+            List<?> allLinks = (List<?>) response;
+
+            // 3. Iterate through the Green Indices
+            for (int index : green_index) {
+                // Safety check for bounds
+                if (index >= 0 && index < allLinks.size()) {
+
+                    // Get the object at this index
+                    Object item = allLinks.get(index);
+
+                    if (item == null) continue;
+
+                    // Create a temporary list to unify logic
+                    List<SumoLink> linksToProcess = new ArrayList<>();
+
+                    // if a List (Standard behavior)
+                    if (item instanceof List) {
+                        linksToProcess.addAll((List<SumoLink>) item);
+                    }
+                    // if it is single SumoLink
+                    else if (item instanceof SumoLink) {
+                        linksToProcess.add((SumoLink) item);
+                    }
+
+                    // 4. Process the links
+                    for (SumoLink link : linksToProcess) {
+                        String lane_id = link.from;
+                        if (lane_id != null && !lane_id.isEmpty()) {
+
+                            // Robust Edge ID extraction
+                            String edge_id = lane_id;
+                            int lastUnderscore = lane_id.lastIndexOf('_');
+                            if (lastUnderscore != -1) {
+                                edge_id = lane_id.substring(0, lastUnderscore);
+                            }
+
+                            green_connection_edge
+                                    .computeIfAbsent(edge_id, k -> new ArrayList<>())
+                                    .add(lane_id);
+                        }
+                    }
+                }
+            }
+            return green_connection_edge;
+        } catch (Exception e) {
+            LOG.error("Error in get_green_connection_edge for " + trafficLightId);
+            e.printStackTrace();
+        }
+        return green_connection_edge;
+    }
+    // get the largest number of vehicles among edges
+    public int get_largest_no_vehicles(String trafficLightId)
+    {
+        if (!isRunning) return 0;
+
+        Map<String, List<String>> green_connection_edge = get_green_connection_edge(trafficLightId);
+
+        if (green_connection_edge.isEmpty()) {
+            return 0;
+        }
+
+        int max_vehicles = 0;
+
+        for (Map.Entry<String, List<String>> entry : green_connection_edge.entrySet())
+        {
+            List<String> laneid = entry.getValue();
+            int current_edge_nov = 0;
+            try {
+                for (String lane: laneid)
+                {
+                    // Ensure 'lane' is valid
+                    if (lane != null) {
+                        int count = (int) connection.do_job_get(Lane.getLastStepVehicleNumber(lane));
+                        current_edge_nov += count;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // CHANGED ERROR MESSAGE to identify this specific method
+                LOG.error("Error in get_largest_no_vehicles counting lane: " + trafficLightId);
+                e.printStackTrace(); // PRINT THE REASON
+            }
+
+            if (current_edge_nov > max_vehicles) {
+                max_vehicles = current_edge_nov;
+            }
+        }
+        return max_vehicles;
+    }
+
+    // set phase duration based on traffic level
+    public void update_phase_based_traffic_level(String trafficLightId)
+    {
+        int max_vehicles = this.get_largest_no_vehicles(trafficLightId);
+        String logicType = "";
+        double new_duration = 0;
+        if (max_vehicles >= 15)
+        {
+            new_duration = 60.0;
+            logicType = "HIGH Demand";
+        }
+        else if (max_vehicles >= 10)
+        {
+            new_duration = 45.0;
+            logicType = "MODERATE Demand";
+        }
+        else
+        {
+            new_duration = 20.0;
+            logicType = "LOW Demand";
+        }
+        try
+        {
+            connection.do_job_set(Trafficlight.setPhaseDuration(trafficLightId, new_duration));
+            LOG.info(String.format(">>> OPTIMIZED %s: Found %d vehicles (%s). Set Duration to %.1fs",
+                    trafficLightId, max_vehicles, logicType, new_duration));
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to update phase duration for " + trafficLightId);
+        }
+    }
+
+
+}
 

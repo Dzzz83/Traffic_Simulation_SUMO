@@ -53,6 +53,7 @@ public class Controller {
     @FXML private Button RouteIDBtn;
     @FXML private Button VehicleIDBtn;
     @FXML private Button TrafficLightIDBtn;
+    @FXML private Button optimize_traffic;
 
     @FXML private ComboBox<String> trafficIdCombo;
     @FXML private ToggleButton autoModeToggle;
@@ -139,6 +140,11 @@ public class Controller {
     private static final Color ASPHALT_COLOR = Color.web("#404040");
     private static final Color GRASS_COLOR = Color.web("#2E7D32");
 
+    // Traffic light optimization
+    private boolean isOptimizationActive = false;
+    private int lastPhaseIndex = -1;
+    private int lastOptimizedPhase = -1;
+    private String lastSelectedId = "";
     @FXML
     // initialize the GUI function
     public void initialize() {
@@ -499,7 +505,25 @@ public class Controller {
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
     }
+    @FXML
+    public void onOptimizeClick() {
+        isOptimizationActive = !isOptimizationActive;
 
+        if (isOptimizationActive) {
+            // State: ACTIVE
+            LOG.info("Auto-Optimization: ENABLED");
+            optimize_traffic.setText("DISABLE OPTIMIZATION");
+            optimize_traffic.setStyle("-fx-background-color: #FFC107; -fx-text-fill: black; -fx-font-weight: bold;"); // Amber color for "Working"
+        } else {
+            // State: INACTIVE
+            LOG.info("Auto-Optimization: DISABLED");
+            optimize_traffic.setText("ENABLE OPTIMIZATION");
+            optimize_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;"); // Back to Purple
+
+            // Optional: Reset last phase so it triggers immediately if re-enabled
+            lastPhaseIndex = -1;
+        }
+    }
     // add the stress test button
     public void onStressTestClick()
     {
@@ -539,6 +563,12 @@ public class Controller {
         }
         // call the restart logic in the backend
         panel.restartSimulation();
+        tlsWrapper = panel.getTrafficLightWrapper();
+        if (tlsWrapper != null) {
+            tlsWrapper.isRunning = true;
+            // reload the traffic light directions from the map file
+            tlsWrapper.loadConnectionDirections(NET_XML_PATH);
+        }
         // reset the UI variables
         clickRouteIndex = 0;
         // redraw the empty map
@@ -577,6 +607,40 @@ public class Controller {
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();
+        if (isOptimizationActive && tlsWrapper != null) {
+            try {
+                // Get the ID directly from the Dropdown Menu
+                String selectedId = trafficIdCombo.getValue();
+
+                // process only if a valid ID is selected
+                if (selectedId != null && !selectedId.isEmpty()) {
+
+                    if (!selectedId.equals(lastSelectedId)) {
+                        lastOptimizedPhase = -1;
+                        lastSelectedId = selectedId;
+                    }
+
+                    // 2. Get the current phase index
+                    int currentPhase = tlsWrapper.getCurrentPhaseIndex(selectedId);
+
+                    // check whether this is new phase
+                    if (currentPhase != lastOptimizedPhase) {
+
+                        String state = tlsWrapper.getRedYellowGreenState(selectedId);
+
+                        if (state != null && (state.contains("G") || state.contains("g"))) {
+                            LOG.info("Phase Change Detected on " + selectedId + " (Phase " + currentPhase + "). Optimizing...");
+                            tlsWrapper.update_phase_based_traffic_level(selectedId);
+                        }
+
+                        // update our memory
+                        lastOptimizedPhase = currentPhase;
+                    }
+                }
+            } catch (Exception e) {
+                LOG.error("Error in optimization loop: " + e.getMessage());
+            }
+        }
         if (isStressTest2Active) {
             // get a list of all vehicles currently present on the map
             List<String> vehicles = panel.getVehicleIDs();
@@ -854,9 +918,7 @@ public class Controller {
 
 // main method for draw traffic lights based on its incoming edge
     private void drawTrafficLights(GraphicsContext gc) {
-        if (tlsWrapper == null) return;
-
-        // Level of Detail (LOD) Check
+        if (tlsWrapper == null || !panel.isRunning) return;
         // If map is zoomed out too far, don't draw anything to keep it clean.
         if (SCALE < 0.2) return;
 
@@ -881,7 +943,6 @@ public class Controller {
                     double drawY = mapCanvas.getHeight() - ((stopPos.y * SCALE) + OFFSET_Y);
 
                     // B. Calculate Rotation (Perpendicular to the road end)
-                    // We need the screen coordinates of the last two points to determine angle relative to screen
                     SumoPosition2D prevPos = shape.get(shape.size() - 2);
                     double prevX = (prevPos.x * SCALE) + OFFSET_X;
                     double prevY = mapCanvas.getHeight() - ((prevPos.y * SCALE) + OFFSET_Y);
@@ -899,7 +960,7 @@ public class Controller {
                     gc.translate(drawX, drawY); // Move origin to the stop line
                     gc.rotate(rotation); // Rotate the entire context
 
-                    // Now draw at (0,0) because we shifted the origin
+                    // draw at (0,0)
                     drawDirectionalTrafficLight(gc, 0, 0, secondsLeft, edgeConnections, trafficid);
 
                     gc.restore(); // Restore state for next iteration
@@ -912,16 +973,13 @@ public class Controller {
     private void drawDirectionalTrafficLight(GraphicsContext gc, double x, double y, int secondsLeft, List<TrafficConnectInfo> connections, String trafficId) {
         if (connections.isEmpty()) return;
 
-        // --- LOD: Scale Adaptation ---
-        // If zoomed out (SCALE < 0.6), draw a smaller, simplified version
+        // If zoomed out (SCALE < 0.6), draw a smaller
         boolean isDetailed = SCALE > 0.6;
 
         // 1. Organize Slots
         Map<String, TrafficConnectInfo> slotMap = new HashMap<>();
         for (TrafficConnectInfo info : connections) slotMap.putIfAbsent(info.getDirection().toLowerCase(), info);
 
-        // 2. Config (Minimalist Design)
-        // We scale the size slightly based on zoom, but clamp it so it doesn't get huge
         double sizeFactor = Math.min(1.0, Math.max(0.6, SCALE)); // Clamp between 0.6x and 1.0x size
 
         double lightRadius = (isDetailed ? 4 : 2.5) * sizeFactor;
@@ -935,14 +993,13 @@ public class Controller {
         double boxWidth = (slotStep * 4) + padding;
         double boxHeight = slotSize + (padding * 2);
 
-        // If detailed, add height for timer
         if (isDetailed) boxHeight += (10 * sizeFactor);
 
         // Draw centered on (x,y) - remember (x,y) is (0,0) relative to rotation
         double startX = x - (boxWidth / 2);
         double startY = y; // Draw "above" the stop line (relative to rotation)
 
-        // 3. Draw Housing (Matte Black Capsule)
+        // 3. Draw Housing
         gc.setFill(Color.web("#222222")); // Softer black
         gc.setStroke(Color.web("#111111"));
         gc.setLineWidth(0.5);
@@ -971,12 +1028,12 @@ public class Controller {
                 // Draw actual arrow shape
                 drawArrow(gc, currentX, lightY, lightRadius, dir, arrowColor);
             } else {
-                // Zoomed out: Just draw a small dot
+                // Zoomed out: draw a small dot
                 gc.setFill(arrowColor);
                 gc.fillOval(currentX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
             }
 
-            // Draw Timer (Only in detailed mode)
+            // Draw Timer
             if (isDetailed && secondsLeft >= 0 && info != null) {
                 gc.setFill(Color.web("#DDDDDD"));
                 gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8 * sizeFactor));

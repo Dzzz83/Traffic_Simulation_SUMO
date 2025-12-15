@@ -168,6 +168,9 @@
                                                                 <Button maxWidth="Infinity" onAction="#turn_all_lights_red" style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL RED" />
                                                                 <Button maxWidth="Infinity" onAction="#turn_all_lights_green" style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL GREEN" />
                                                                 <Button maxWidth="Infinity" onAction="#onRestoreAutoClick" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="RESTORE AUTO" />
+                                                                <Button fx:id="btnOptimize" maxWidth="Infinity" onAction="#onOptimizeClick"
+                                                                        style="-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;"
+                                                                        text="ENABLE OPTIMIZATION" />
                                                                 </VBox> <Separator />
 
                                                                 <GridPane hgap="10.0" vgap="10.0">

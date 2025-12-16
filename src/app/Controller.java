@@ -98,7 +98,7 @@ public class Controller {
     // List<SumoPosition2D> represents a stroke which is a collection of points that make up a continuous line (X, Y), (X1, Y1), (X2, Y2)
     // List<List .... is a collections of lines on the map
     // initialize laneSeperators to temporary hold the dashed lines coordinates on the map
-    private List<List<SumoPosition2D>> laneSeperators = new ArrayList<>();
+    private List<List<SumoPosition2D>> dashedWhiteLines = new ArrayList<>();
     // initialize solidCenterLines to temporary hold all the solid lines on the map
     private List<List<SumoPosition2D>> solidCenterLines = new ArrayList<>();
 
@@ -639,6 +639,12 @@ public class Controller {
     }
     // a function to take raw, geometric data from SUMO and transforms into pixels on JavaFx
     // take in GraphicsContext gc which will handling all the drawing-related logic and points which is a collections of (X, Y) coordinates
+    // List = [
+    //    {x: 0.0,  y: 0.0},
+    //    {x: 5.0,  y: 2.0},
+    //    {x: 12.0, y: 8.0},
+    //    {x: 20.0, y: 20.0}
+    //]
     public void drawPolyLine(GraphicsContext gc, List<SumoPosition2D> points)
     {
         if (points.isEmpty()) return;
@@ -820,7 +826,7 @@ public class Controller {
                 gc.setLineDashes(2.0 * SCALE, 3.0 * SCALE);
 
                 // draw the dashed line
-                for (List<SumoPosition2D> points : laneSeperators) {
+                for (List<SumoPosition2D> points : dashedWhiteLines) {
                     drawPolyLine(gc, points);
                 }
 
@@ -1237,7 +1243,7 @@ public class Controller {
     // function to generate dashed lines and solid lines
     private void generateLaneSeparators() {
         // clear the old data
-        laneSeperators.clear();
+        dashedWhiteLines.clear();
         solidCenterLines.clear();
 
         // check mapShapes
@@ -1249,6 +1255,31 @@ public class Controller {
         // create a multi-level hash map that contains the outer map key: <string> edgeID (Ex: edge0, edge1)
         // Inner map: <Integer> lane index (Ex: 0, 1, 2)
         // Innermost value : List<SumoPosition2D> which is the center line coordinates for a specific lane
+        // Hashmap store in key-value pair and it allows fast access 0(1)
+        // {
+        //  "edge0": {
+        //    0: [
+        //        {x: 0.0, y: 0.0},
+        //        {x: 10.0, y: 0.0},
+        //        {x: 20.0, y: 0.0}
+        //    ],
+        //
+        //
+        //    1: [
+        //        {x: 0.0, y: 3.2},
+        //        {x: 10.0, y: 3.2},
+        //        {x: 20.0, y: 3.2}
+        //    ]
+        //  },
+        //
+        //
+        //  "edge1": {
+        //    0: [
+        //        {x: 100.0, y: 50.0},
+        //        {x: 100.0, y: 60.0}
+        //    ]
+        //  }
+        //}
         Map<String, Map<Integer, List<SumoPosition2D>>> edgeGroups = new HashMap<>();
 
         // Group lanes by Edge ID
@@ -1284,6 +1315,7 @@ public class Controller {
                     if (innerMap == null)
                     {
                         // create a tree map for this edge
+                        // tree map stores as key-value pair in order
                         innerMap = new TreeMap<>();
 
                         // put the empty inner map with the tag "edgeID"
@@ -1309,6 +1341,7 @@ public class Controller {
                     innerMap.put(index, data.getValue());
 
                 }
+                // if "edge_one" then catchs the error
                 catch (NumberFormatException e)
                 {
                     LOG.error("Something went wrong");
@@ -1318,21 +1351,28 @@ public class Controller {
 
         // prevents drawing two overlapping dashed lines for 2-way roads
         // create a set to saves the already drawn line
+        // hash set store unique values
+        // [
+        //  "502_200",   // Key for Road A
+        //  "100_50",    // Key for Road B
+        //  "999_888"    // Key for Road C
+        // ]
+
         Set<String> alreadyDrawDashed = new HashSet<>();
 
         // loop over every single lanes one by one
-        for (Map<Integer, List<SumoPosition2D>> road : edgeGroups.values()) {
-            // check if road has data
-            if (road.isEmpty())
+        for (Map<Integer, List<SumoPosition2D>> lane : edgeGroups.values()) {
+            // check if lane has data
+            if (lane.isEmpty())
             {
                 continue;
             }
 
             // 1. Internal Separators (Between lanes of the same direction)
-            // only do this code if road has 2 or more lane
-            if (road.size() >= 2) {
+            // only do this code if lane has 2 or more lane
+            if (lane.size() >= 2) {
                 // get the set of keys (0, 1, 2)
-                Set<Integer> keys = road.keySet();
+                Set<Integer> keys = lane.keySet();
 
                 // create an empty array of the right size
                 Integer[] idxs = new Integer[keys.size()];
@@ -1347,11 +1387,12 @@ public class Controller {
                 // loop over each gap in the lane
                 for (i = 0; i < idxs.length - 1; i++) {
                     // get the raw list of coordinates for the left lane
-                    List<SumoPosition2D> laneA = road.get(idxs[i]);
+                    List<SumoPosition2D> laneA = lane.get(idxs[i]);
                     // get the raw list of coordinates for the right lane
-                    List<SumoPosition2D> laneB = road.get(idxs[i+1]);
+                    List<SumoPosition2D> laneB = lane.get(idxs[i+1]);
 
                     // initialize an array list to store the dashlines
+                    // the array list stores in order as data is added and dynamically change size
                     List<SumoPosition2D> separator = new ArrayList<>();
 
                     // lanes in the same roads should have the same number of points but sometimes there is error so get the minimum
@@ -1361,31 +1402,31 @@ public class Controller {
                     for (i = 0; i < numPoints; i++) {
                         double midX = (laneA.get(i).x + laneB.get(i).x) / 2.0;
                         double midY = (laneA.get(i).y + laneB.get(i).y) / 2.0;
-                        // add the calculated points into the list
+                        // add the calculated points of a road into the list
                         separator.add(new SumoPosition2D(midX, midY));
                     }
-                    // add the list into laneSeparator
-                    laneSeperators.add(separator);
+                    // add the road middle points into laneSeparator list
+                    dashedWhiteLines.add(separator);
                 }
             }
 
             // find the highest index
-            int maxIndex = ((TreeMap<Integer, List<SumoPosition2D>>) road).lastKey();
+            int maxIndex = ((TreeMap<Integer, List<SumoPosition2D>>) lane).lastKey();
             // the lane with the highest index is the leftmost lane
-            List<SumoPosition2D> leftmostLane = road.get(maxIndex);
+            List<SumoPosition2D> leftmostLane = lane.get(maxIndex);
 
             // calculate the parallel line to the left with offset 1.6m
             List<SumoPosition2D> leftParallelLine = calculateLeftParallelLine(leftmostLane, 1.6);
 
             // check if a road has multiple lanes (e.g: highways)
-            if (road.size() > 1)
+            if (lane.size() > 1)
             {
                 // draw the continuous white line
                 solidCenterLines.add(leftParallelLine);
             }
             else
             {
-                // 2 lanes road
+                // draw lane
                 // check if there is data in leftParalleLine
                 if (!leftParallelLine.isEmpty()) {
                     // picks the middle point of the leftParalleLine
@@ -1398,9 +1439,9 @@ public class Controller {
                     // round ==> 502_200
                     String key = Math.round(mid.x) + "_" + Math.round(mid.y);
 
-                    // add the key into the list
+                    // add the key into the list if it hasn't been added before
                     if (alreadyDrawDashed.add(key)) {
-                        laneSeperators.add(leftParallelLine);
+                        dashedWhiteLines.add(leftParallelLine);
                     }
                 }
             }

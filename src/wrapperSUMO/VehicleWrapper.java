@@ -66,6 +66,16 @@ public class VehicleWrapper
         return new ArrayList<>();
     }
 
+    public String getRouteID(String vehicleId) {
+        try {
+            return (String) connection.do_job_get(Vehicle.getRouteID(vehicleId));
+        } catch (Exception e) {
+            System.out.println("Failed to get Route ID for vehicle: " + vehicleId);
+            e.printStackTrace();
+        }
+        return "";
+    }
+
     // get the vehicle's speed
     public double getVehicleSpeed(String vehicleId)
     {
@@ -270,6 +280,20 @@ public class VehicleWrapper
             System.out.println("Failed to change the target");
             e.printStackTrace();
         }
+    }
+    // get the angle of the vehicle
+    public double getAngle(String vehicleID)
+    {
+        try
+        {
+            return (Double) connection.do_job_get(Vehicle.getAngle(vehicleID));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Can't get the angle of the vehicle");
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 
 

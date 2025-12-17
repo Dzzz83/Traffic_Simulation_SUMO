@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.Controller">
+
+    <fx:define>
+        <Font name="System Bold" size="12.0" fx:id="x1" />
+    </fx:define>
+
+    <children>
+        <Canvas fx:id="mapCanvas" height="800.0" width="1200.0" />
+
+        <AnchorPane pickOnBounds="false">
+            <children>
+
+                <Label fx:id="menuIcon" style="-fx-cursor: hand;" text="☰" textFill="WHITE" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="10.0">
+                    <font>
+                        <Font size="30.0" />
+                    </font>
+                </Label>
+
+                <VBox fx:id="sidebar" maxHeight="700.0" prefWidth="420.0" spacing="10.0" style="-fx-background-color: rgba(240, 240, 240, 0.9); -fx-background-radius: 10;" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="110.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                    <children>
+
+                        <Label text="Control Panel" textFill="#333333">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="10.0" top="10.0" />
+                            </VBox.margin>
+                        </Label>
+
+                        <Accordion>
+                            <panes>
+                                <TitledPane animated="true" text="Simulation Controls">
+                                    <content>
+                                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="450.0" style="-fx-background-color: transparent;">
+                                            <content>
+                                                <VBox spacing="15.0">
+                                                    <children>
+                                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                            <children>
+                                                                <Button fx:id="startBtn" mnemonicParsing="false" onAction="#onStartClick" prefWidth="80.0" style="-fx-background-color: #009933;" text="Start" textFill="WHITE"><font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                                <Button fx:id="stopBtn" mnemonicParsing="false" onAction="#onStopClick" prefWidth="80.0" style="-fx-background-color: #ff0000;" text="Stop" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                                <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                            </children>
+                                                        </HBox>
+
+                                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                            <children>
+                                                                <Button fx:id="addVehicleBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onAddVehicleClick" style="-fx-background-color: #2196F3;" text="Add Vehicle" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                                <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                                <Button fx:id="stressTest2Btn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTest2Click" style="-fx-background-color: #FF9800;" text="Run Stress Test 2" textFill="WHITE">
+                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                </Button>
+                                                            </children>
+                                                        </HBox>
+
+                                                        <VBox spacing="8.0">
+                                                            <children>
+                                                                <Label text="Toggle View IDs:" />
+                                                                <HBox spacing="10.0">
+                                                                    <children>
+                                                                        <Button fx:id="EdgeIDBtn" mnemonicParsing="false" text="Edge ID" />
+                                                                        <Button fx:id="RouteIDBtn" mnemonicParsing="false" text="Route ID" />
+                                                                        <Button fx:id="VehicleIDBtn" mnemonicParsing="false" text="Vehicle ID" />
+                                                                        <Button fx:id="TrafficLightIDBtn" mnemonicParsing="false" text="TL ID" />
+                                                                    </children>
+                                                                </HBox>
+                                                            </children>
+                                                        </VBox>
+                                                        <Separator prefWidth="200.0" />
+
+                                                        <VBox spacing="5.0">
+                                                            <children>
+                                                                <HBox alignment="CENTER_LEFT">
+                                                                    <children>
+                                                                        <Label text="Delay (ms)" textFill="black" />
+                                                                        <Region HBox.hgrow="ALWAYS" />
+                                                                        <Label fx:id="delayValue" text="100" textFill="black" />
+                                                                    </children>
+                                                                </HBox>
+                                                                <Slider fx:id="delaySlider" majorTickUnit="200" max="1000" min="0" showTickMarks="true" value="100" />
+                                                            </children>
+                                                        </VBox>
+
+                                                        <VBox spacing="5.0">
+                                                            <children>
+                                                                <HBox alignment="CENTER_LEFT">
+                                                                    <children>
+                                                                        <Label text="Inflow" textFill="black" />
+                                                                        <Region HBox.hgrow="ALWAYS" />
+                                                                        <Label fx:id="inFlowValue" text="0.0" textFill="black" />
+                                                                    </children>
+                                                                </HBox>
+                                                                <Slider fx:id="inFlowSlider" blockIncrement="0.1" max="5.0" showTickMarks="true" />
+                                                            </children>
+                                                        </VBox>
+
+                                                        <VBox spacing="5.0">
+                                                            <children>
+                                                                <HBox alignment="CENTER_LEFT">
+                                                                    <children>
+                                                                        <Label font="$x1" text="Max Speed" textFill="black"/>
+                                                                        <Region HBox.hgrow="ALWAYS"/>
+                                                                        <Label fx:id="maxSpeedValue" text="20.0" textFill="black"/>
+                                                                    </children>
+                                                                </HBox>
+                                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="50.0" value="20" showTickMarks="true" />
+                                                            </children>
+                                                        </VBox>
+
+                                                        <Separator prefWidth="200.0" />
+
+                                                        <Label text="Traffic Light Controls" textFill="#333333">
+                                                            <font><Font name="System Bold" size="16.0" /></font>
+                                                        </Label>
+
+                                                        <VBox spacing="10.0">
+                                                            <children>
+                                                                <Label text="Select Junction:" />
+                                                                <ComboBox fx:id="trafficIdCombo" maxWidth="Infinity" />
+
+                                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                                    <children>
+                                                                        <Label text="Auto Mode:" />
+                                                                        <ToggleButton fx:id="autoModeToggle" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="ON" />
+                                                                    </children>
+                                                                </HBox>
+
+                                                                <Separator /> <VBox spacing="5.0">
+                                                                <Label style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" text="Global Control (Force State):" />
+                                                                <Button maxWidth="Infinity" onAction="#turn_all_lights_red" style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL RED" />
+                                                                <Button maxWidth="Infinity" onAction="#turn_all_lights_green" style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL GREEN" />
+                                                                <Button maxWidth="Infinity" onAction="#onRestoreAutoClick" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="RESTORE AUTO" />
+                                                                </VBox> <Separator />
+
+                                                                <GridPane hgap="10.0" vgap="10.0">
+                                                                    <columnConstraints>
+                                                                        <ColumnConstraints minWidth="60.0" />
+                                                                        <ColumnConstraints hgrow="ALWAYS" />
+                                                                        <ColumnConstraints minWidth="30.0" />
+                                                                    </columnConstraints>
+                                                                    <children>
+                                                                        <Label text="RED" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                                                        <Slider fx:id="sliderRed" max="60.0" min="1.0" value="40.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                                                        <Label fx:id="redValue" text="40s" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                                                                        <Label text="GREEN" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                                                        <Slider fx:id="sliderGreen" max="60.0" min="1.0" value="40.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                                        <Label fx:id="greenValue" text="40s" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+                                                                        <Label text="YELLOW" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                                                        <Slider fx:id="sliderYellow" max="10.0" min="1.0" value="2.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                                        <Label fx:id="yellowValue" text="2s" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                                                    </children>
+                                                   <rowConstraints>
+                                                      <RowConstraints />
+                                                      <RowConstraints />
+                                                      <RowConstraints />
+                                                   </rowConstraints>
+                                                                </GridPane>
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                    <padding>
+                                                        <Insets right="10.0" top="10.0" />
+                                                    </padding>
+                                                </VBox>
+                                            </content>
+                                        </ScrollPane>
+                                    </content>
+                                </TitledPane>
+
+                                <TitledPane animated="true" text="Statistics">
+                                    <content>
+                                        <VBox spacing="10.0">
+                                            <children>
+                                                <Label fx:id="connectionStatus" text="Connection: Disconnected" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                                <Separator />
+                                                <Label fx:id="numberVehicles" text="Vehicles: 0" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                                <Label fx:id="numberOfEdges" text="Number of Edges: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                                <Label fx:id="numOfTL" text="Number of Traffic Lights: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                                <Label fx:id="averageSpeed" text="Avg Speed: 0 km/h" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                    <LineChart fx:id="avgSpeedChart" createSymbols="false" prefHeight="174.0" prefWidth="378.0">
+                                      <xAxis>
+                                        <NumberAxis forceZeroInRange="false" label="Time (s)" side="BOTTOM" />
+                                      </xAxis>
+                                      <yAxis>
+                                          <NumberAxis label="Speed (km/h)" side="LEFT"
+                                                      autoRanging="false"
+                                                      lowerBound="0"
+                                                      upperBound="100"
+                                                      tickUnit="20" />
+                                      </yAxis>
+                                    </LineChart>
+                                                <Label fx:id="co2Emission" text="CO2 Emission: ??" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                                <Label fx:id="congestionDensity" text="Density: 0%" textFill="#555555">
+                                                    <font><Font name="Arial" size="13.0" /></font>
+                                                </Label>
+                                            </children>
+                                        </VBox>
+                                    </content>
+                                </TitledPane>
+                            </panes>
+                        </Accordion>
+
+                    </children>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>

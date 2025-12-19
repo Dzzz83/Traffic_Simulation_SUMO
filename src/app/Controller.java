@@ -211,7 +211,6 @@ public class Controller {
         // setup chart
 
         speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
         avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions

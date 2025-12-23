@@ -26,6 +26,8 @@ public class MapDraw3D
     // map the vehicle id with its box
     private Map<String, Box> vehicleWithNames = new HashMap<>();
 
+    public ControlPanel panel;
+
     public MapDraw3D(double width, double height)
     {
         root3D = new Group();
@@ -67,5 +69,29 @@ public class MapDraw3D
         vehicles.clear();
 
         vehicleWithNames.clear();
+    }
+
+    private Box createVehicleBox()
+    {
+        // width, height, depth
+        Box vehicleBox = new Box(4.0, 2.0, 4.0);
+
+        // color the car
+        PhongMaterial mat = new PhongMaterial();
+        mat.setDiffuseColor(Color.RED);
+        vehicleBox.setMaterial(mat);
+
+        return vehicleBox;
+    }
+
+    public void updateVehicles()
+    {
+        if (panel == null)
+        {
+            return;
+        }
+
+        List<String> vehicleIDs = panel.getVehicleIDs();
+        
     }
 }

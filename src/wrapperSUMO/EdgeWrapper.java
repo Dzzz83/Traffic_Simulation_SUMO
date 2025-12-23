@@ -37,7 +37,7 @@ public class EdgeWrapper {
             return visibleEdges.size();
         } catch (Exception e) {
             System.out.println("Failed to get number of edges");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -56,7 +56,7 @@ public class EdgeWrapper {
             return filterIds;
         } catch (Exception e) {
             System.out.println("Failed to get the list of edge IDs");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
     }
@@ -67,7 +67,7 @@ public class EdgeWrapper {
             return (Integer) connection.do_job_get(Edge.getLaneNumber(edgeId));
         } catch (Exception e) {
             System.out.println("Failed to get the number of lanes");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -88,7 +88,7 @@ public class EdgeWrapper {
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to set max speed");
-            e.printStackTrace();
+            
             return 1;
         }
     }
@@ -99,7 +99,7 @@ public class EdgeWrapper {
             return (Double) connection.do_job_get(Edge.getLastStepMeanSpeed(edgeID));
         } catch (Exception e) {
             System.out.println("Failed to get mean speed");
-            e.printStackTrace();
+            
             return -1.0;
         }
     }
@@ -121,7 +121,7 @@ public class EdgeWrapper {
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to set the global max speed");
-            e.printStackTrace();
+            
             return -1;
         }
     }

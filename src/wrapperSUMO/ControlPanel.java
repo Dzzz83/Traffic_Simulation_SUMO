@@ -72,7 +72,6 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to run the simulation");
-            e.printStackTrace();
         }
         return true;
     }
@@ -95,7 +94,6 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Can't stop the simulation");
-            e.printStackTrace();
         }
     }
 
@@ -115,7 +113,7 @@ public class ControlPanel
         } catch (Exception e) {
             // if the restart fails, log the error and print details for debugging
             LOG.error("Failed to restart simulation: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
@@ -139,7 +137,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to time step the simulation");
-            e.printStackTrace();
+
         }
     }
 
@@ -172,7 +170,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to add the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -191,7 +189,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to remove the vehicle:  " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
     // stress test method
@@ -234,7 +232,7 @@ public class ControlPanel
             catch (Exception e)
             {
                 LOG.error("Failed to perform stress test");
-                // e.printStackTrace();
+                // 
             }
         }
 
@@ -255,7 +253,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set the color");
-            e.printStackTrace();
+            
         }
     }
 
@@ -303,7 +301,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to change lane for vehicle: " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -322,7 +320,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to slow down vehicle: " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -340,7 +338,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to change the destination of that vehicle");
-            e.printStackTrace();
+            
         }
     }
 
@@ -359,7 +357,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set the route of the vehicle:  " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -378,7 +376,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set the speed of the vehicle:  " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -396,7 +394,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get lists of vehicle ids");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
     }
@@ -415,7 +413,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the number of vehicles");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -434,7 +432,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the speed");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -454,7 +452,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the position of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return new SumoPosition2D(0.0, 0.0);
     }
@@ -474,7 +472,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the angle of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -494,7 +492,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the laneID of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return "";
     }
@@ -514,7 +512,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the roadId of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return "";
     }
@@ -542,7 +540,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the distance of the vehicle:  " + vehicleId);
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -562,7 +560,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the CO2 Emission:  " + vehicleId);
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -589,7 +587,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get traffic light IDs");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
     }
@@ -608,7 +606,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get number of traffic lights");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -623,7 +621,7 @@ public class ControlPanel
         catch (Exception e)
         {
             System.out.println("Failed to get next switch time for " + tlsID);
-            e.printStackTrace();
+            
         }
         return -1.0;
     }
@@ -642,7 +640,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get traffic light state");
-            e.printStackTrace();
+            
         }
         return "";
     }
@@ -671,7 +669,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the traffic light pos in map");
-            e.printStackTrace();
+            
         }
         return new HashMap<>();
     }
@@ -699,7 +697,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the controlled lanes in map");
-            e.printStackTrace();
+            
         }
         return new HashMap<>();
     }
@@ -728,8 +726,10 @@ public class ControlPanel
         try {
             connection.do_job_set(Trafficlight.setProgram(tlsID, "0"));
             LOG.error("Traffic Light " + tlsID + " set to ON (Program 0)");
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to turn on the traffic lights");
         }
     }
 
@@ -740,7 +740,7 @@ public class ControlPanel
             connection.do_job_set(Trafficlight.setProgram(tlsID, "off"));
             LOG.error("Traffic Light " + tlsID + " set to OFF");
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -755,7 +755,7 @@ public class ControlPanel
             }
             LOG.error("All traffic lights turned OFF.");
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -770,7 +770,7 @@ public class ControlPanel
             }
             LOG.error("All traffic lights turned ON.");
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -793,7 +793,7 @@ public class ControlPanel
         catch (Exception e)
         {
             System.err.println("Error forcing all lights to RED: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
@@ -813,7 +813,7 @@ public class ControlPanel
         catch (Exception e)
         {
             System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
@@ -853,7 +853,7 @@ public class ControlPanel
             }
         } catch (Exception e) {
             LOG.error("Failed to get the shapes of all lanes in map");
-            e.printStackTrace();
+            
         }
         return allShapes;
     }
@@ -873,7 +873,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get lists of route ids");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
     }
@@ -892,7 +892,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get number of edges");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -911,7 +911,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get edge IDs");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
     }
@@ -930,7 +930,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get lane number");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -948,7 +948,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set max speed");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -966,7 +966,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get mean speed");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -1001,7 +1001,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get current time");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -1027,7 +1027,7 @@ public class ControlPanel
             return (totalSpeed / allVehicles.size());
         } catch (Exception e) {
             LOG.error("Failed to calculate global mean speed");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }

@@ -452,7 +452,7 @@ public class Controller {
         {
             // log an error if the connection to SUMO fails or the ID is invalid
             System.err.println("Failed to add vehicle: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
@@ -504,7 +504,7 @@ public class Controller {
         catch (Exception e)
         {
             LOG.error("Failed to perform stress test");
-            e.printStackTrace();
+            
         }
     }
 

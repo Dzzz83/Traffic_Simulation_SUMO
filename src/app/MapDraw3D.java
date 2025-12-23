@@ -6,10 +6,11 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
-import javafx.scene.transform.Translate;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import wrapperSUMO.ControlPanel;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -92,6 +93,47 @@ public class MapDraw3D
         }
 
         List<String> vehicleIDs = panel.getVehicleIDs();
-        
+        for (String id : vehicleIDs)
+        {
+            // check if the car exists
+            if (!vehicleWithNames.containsKey(id))
+            {
+                // create the car
+                Box vehicleBox = createVehicleBox();
+                // add in the hash map
+                vehicleWithNames.put(id, vehicleBox);
+                // add in the vehicleGroup
+                ObservableList<Node> vehicle = vehicleGroup.getChildren();
+                vehicle.add(vehicleBox);
+            }
+            // get the current car
+            Box currentCarBox = vehicleWithNames.get(id);
+            // get the SUMOPosition2D
+            SumoPosition2D pos = panel.getPosition(id);
+            // assign SUMO X to the car's X
+            currentCarBox.setTranslateX(pos.x);
+            // move the car up by 1 meter
+            currentCarBox.setTranslateY(-1.0);
+            // assign SUMO Y to the car's Z
+            currentCarBox.setTranslateZ(pos.y);
+        }
+
+        vehicleWithNames.entrySet().removeIf(entry -> {
+            // check if the car exists
+            boolean check = vehicleIDs.contains(entry.getKey());
+            // if not exist
+            if (!check)
+            {
+                // get the car's data
+                Box currentCarBox = entry.getValue();
+                ObservableList<Node> vehicle = vehicleGroup.getChildren();
+                // remove the box data from vehicleGroup
+                vehicle.remove(currentCarBox);
+                // removeIf(true) --> delete from vehicleWithNames
+                return true;
+            }
+            // removeIf(false) --> don't delete
+            return false;
+        });
     }
 }

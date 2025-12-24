@@ -38,6 +38,7 @@ public class ControlPanel
     private TrafficConnectInfo trafficConnectInfo;
     private EdgeWrapper edgeWrapper;
     private RouteWrapper routeWrapper;
+    private LaneWrapper laneWrapper;
 
     // initialize the boolean value isRunning
     public boolean isRunning = false;
@@ -65,6 +66,7 @@ public class ControlPanel
             trafficLightWrapper = new TrafficLightWrapper(connection);
             edgeWrapper = new EdgeWrapper(connection);
             routeWrapper = new RouteWrapper(connection);
+            laneWrapper = new LaneWrapper(connection);
 
             // set the isRunning to true
             isRunning = true;
@@ -826,7 +828,44 @@ public class ControlPanel
     // MAP, ROUTES & EDGES
     // -------------------------------------------
 
-    // Retrieves the shape (list of X,Y points) for EVERY lane in your map
+    // get the lane id list
+    public List<String> getLaneIDList()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return laneWrapper.getLaneIDList();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get lists of lane ids");
+        }
+        return new ArrayList<>();
+    }
+
+    // get the lane shape
+    public List<SumoPosition2D> getLaneShape(String laneId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return laneWrapper.getLaneShape(laneId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get lists of lane shapes");
+        }
+        return new ArrayList<>();
+    }
+
     public Map<String, List<SumoPosition2D>> getMapShape()
     {
         Map<String, List<SumoPosition2D>> allShapes = new HashMap<>();
@@ -838,26 +877,19 @@ public class ControlPanel
 
         try {
             // get the list of ALL lane IDs in the simulation
-            List<String> laneIDs = (List<String>) connection.do_job_get(Lane.getIDList());
+            List<String> laneIDs = laneWrapper.getLaneIDList();
 
             // loop through each lane and retrieve all the lane shapes from SUMO
             for (String laneId : laneIDs) {
-                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneId));
-
-                // convert SumoGeometry to a simple Java List
-                List<SumoPosition2D> points = new ArrayList<>();
-                for (SumoPosition2D p : geometry.coords) {
-                    points.add(p);
-                }
+                List<SumoPosition2D> points = laneWrapper.getLaneShape(laneId);
                 allShapes.put(laneId, points);
             }
         } catch (Exception e) {
             LOG.error("Failed to get the shapes of all lanes in map");
-            
+            e.printStackTrace();
         }
         return allShapes;
     }
-
     // get the list of all routes
     public List<String> getRouteIDs()
     {

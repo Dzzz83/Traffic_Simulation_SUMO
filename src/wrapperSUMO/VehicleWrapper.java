@@ -20,11 +20,6 @@ import java.util.List;
 import java.util.ArrayList;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
-// TO DO:
-// get number of vehicles
-// get all the vehicle's ids
-// get the vehicle speed
-
 public class VehicleWrapper
 {
     // initialize the connection

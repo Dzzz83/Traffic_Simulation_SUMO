@@ -26,6 +26,7 @@ public class MapDraw3D
 
     // map the vehicle id with its box
     private Map<String, Box> vehicleWithNames = new HashMap<>();
+    private Map<String, Box> roadWithNames = new HashMap<>();
 
     public ControlPanel panel;
 
@@ -135,5 +136,26 @@ public class MapDraw3D
             // removeIf(false) --> don't delete
             return false;
         });
+    }
+
+    private Box createRoadBox(double width, double length)
+    {
+        // width, height, depth
+        Box roadBox = new Box(length, 0.1, width);
+
+        // color the road
+        PhongMaterial mat = new PhongMaterial();
+        mat.setDiffuseColor(Color.BLACK);
+        roadBox.setMaterial(mat);
+
+        return roadBox;
+    }
+
+    public void drawRoad()
+    {
+        if (panel == null)
+        {
+            return;
+        }
     }
 }

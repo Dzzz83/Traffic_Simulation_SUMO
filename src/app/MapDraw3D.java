@@ -7,10 +7,10 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import wrapperSUMO.ControlPanel;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -29,6 +29,10 @@ public class MapDraw3D
     private Map<String, Box> roadWithNames = new HashMap<>();
 
     public ControlPanel panel;
+
+    public Map<String, List<SumoPosition2D>> mapShapes;
+    List<Box> allRoadBoxes = new ArrayList<>();
+
 
     public MapDraw3D(double width, double height)
     {
@@ -141,7 +145,7 @@ public class MapDraw3D
     private Box createRoadBox(double width, double length)
     {
         // width, height, depth
-        Box roadBox = new Box(length, 0.1, width);
+        Box roadBox = new Box(width, 0.1, length);
 
         // color the road
         PhongMaterial mat = new PhongMaterial();
@@ -157,5 +161,44 @@ public class MapDraw3D
         {
             return;
         }
+        allRoadBoxes.clear();
+        for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
+        {
+            // get the points
+            List<SumoPosition2D> points = data.getValue();
+            for (int i = 0; i < points.size() - 1; i++)
+            {
+
+                SumoPosition2D startPoint = points.get(i);
+                SumoPosition2D endPoint = points.get(i+1);
+
+                // calculate length
+                double dx = endPoint.x - startPoint.x;
+                double dz = endPoint.y - startPoint.y;
+                double roadLength = Math.sqrt(dx*dx + dz*dz);
+
+                // calculate midPoint
+                double midPointX = (startPoint.x + endPoint.x) / 2;
+                double midPointY = (startPoint.y + endPoint.y) / 2;
+                SumoPosition2D midPoint = new SumoPosition2D(midPointX, midPointY);
+
+                // calculate the angle of the road(*)
+                double angle_rad = Math.atan2(dx, dz);
+                double angle_deg = Math.toDegrees(angle_rad);
+
+                // create the roadBox
+                Box roadBox = createRoadBox(3.2, roadLength);
+
+                roadBox.setTranslateX(midPoint.x);
+                roadBox.setTranslateZ(midPoint.y);
+
+                roadBox.setRotationAxis(Rotate.Y_AXIS);
+                roadBox.setRotate(angle_deg);
+
+                allRoadBoxes.add(roadBox);
+            }
+        }
+        ObservableList<Node> roadList = roadGroup.getChildren();
+        roadList.addAll(allRoadBoxes);
     }
 }

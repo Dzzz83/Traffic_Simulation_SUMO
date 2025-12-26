@@ -2,21 +2,26 @@
 package app;
 
 import javafx.animation.AnimationTimer;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 
+import javafx.scene.shape.Box;
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager; // use for logging
@@ -28,6 +33,7 @@ public class Controller {
     // initialize variables
     // @FXML is a special tag that tells Java to look into fxml file and link the correct object this file
     @FXML private Canvas mapCanvas;
+    @FXML private StackPane rootPane;
     @FXML private Button startBtn;
     @FXML private Button stopBtn;
     @FXML private Label menuIcon;
@@ -82,6 +88,7 @@ public class Controller {
     private Map<String, List<SumoPosition2D>> mapShapes = null;
 
     private MapDraw mapDraw;
+    private MapDraw3D mapDraw3D;
 
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
@@ -92,6 +99,15 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+
+    private Group root3D;
+    private Group roadGroup = new Group();
+    private Group vehicleGroup = new Group();
+    private SubScene subScene;
+    private PerspectiveCamera camera;
+    List<Box> allRoadBoxes = new ArrayList<>();
+
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -124,6 +140,11 @@ public class Controller {
         panel = new ControlPanel();
 
         mapDraw = new MapDraw(mapCanvas);
+        mapDraw3D = new MapDraw3D(1200.0, 800);
+        subScene = mapDraw3D.getSubScene();
+        ObservableList<Node> childern = rootPane.getChildren();
+        childern.add(subScene);
+        subScene.setVisible(false);
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -515,6 +536,29 @@ public class Controller {
         isStressTest2Active = !isStressTest2Active;
         // print a message to the console
         System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
+    }
+    @FXML
+    // 3D button
+    public void on3DClick()
+    {
+        if (mapCanvas.isVisible())
+        {
+            mapCanvas.setVisible(false);
+            subScene.setVisible(true);
+        }
+        else
+        {
+            mapCanvas.setVisible(true);
+            subScene.setVisible(false);
+        }
+        ObservableList<Node> roadList = roadGroup.getChildren();
+        boolean check = (roadList.isEmpty());
+        if (check)
+        {
+            mapDraw3D.mapShapes = this.mapShapes;
+            mapDraw3D.drawRoad();
+        }
+
     }
 
     @FXML

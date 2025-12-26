@@ -41,16 +41,16 @@ public class MapDraw3D
         camera = new PerspectiveCamera(true);
         // camera's range of sight
         camera.setNearClip(0.1);
-        camera.setFarClip(10000.0);
+        camera.setFarClip(100000.0);
 
         // move the camera up and back
-        camera.setTranslateX(0);
-        camera.setTranslateY(-500);
-        camera.setTranslateZ(-800);
+        camera.setTranslateX(70);
+        camera.setTranslateY(-900);
+        camera.setTranslateZ(-600);
 
         // rotate the camera to look down
         camera.setRotationAxis(Rotate.X_AXIS);
-        camera.setRotate(-45);
+        camera.setRotate(55);
 
         // initialize subScene
         subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
@@ -63,6 +63,11 @@ public class MapDraw3D
         // observablelist detects the new groups and notify javafx to render the new items
         ObservableList<Node> children = root3D.getChildren();
         children.addAll(vehicleGroup, roadGroup);
+    }
+
+    public SubScene getSubScene()
+    {
+        return this.subScene;
     }
 
     public void clearAll()
@@ -157,10 +162,6 @@ public class MapDraw3D
 
     public void drawRoad()
     {
-        if (panel == null)
-        {
-            return;
-        }
         allRoadBoxes.clear();
         for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
         {
@@ -197,8 +198,10 @@ public class MapDraw3D
 
                 allRoadBoxes.add(roadBox);
             }
+
         }
         ObservableList<Node> roadList = roadGroup.getChildren();
         roadList.addAll(allRoadBoxes);
+
     }
 }

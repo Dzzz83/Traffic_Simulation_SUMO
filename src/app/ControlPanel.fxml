@@ -74,6 +74,11 @@
                                                                 <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
+                                                <Button fx:id="3DBtn" layoutX="191.0" layoutY="10.0" mnemonicParsing="false" onAction="#on3DClick" prefWidth="80.0" style="-fx-background-color: #0000FF;" text="3D" textFill="WHITE">
+                                                   <font>
+                                                      <Font name="System Bold" size="14.0" />
+                                                   </font>
+                                                </Button>
                                                             </children>
                                                         </HBox>
 
@@ -136,12 +141,12 @@
                                                             <children>
                                                                 <HBox alignment="CENTER_LEFT">
                                                                     <children>
-                                                                        <Label font="$x1" text="Max Speed" textFill="black"/>
-                                                                        <Region HBox.hgrow="ALWAYS"/>
-                                                                        <Label fx:id="maxSpeedValue" text="20.0" textFill="black"/>
+                                                                        <Label text="Max Speed" textFill="black" />
+                                                                        <Region HBox.hgrow="ALWAYS" />
+                                                                        <Label fx:id="maxSpeedValue" text="20.0" textFill="black" />
                                                                     </children>
                                                                 </HBox>
-                                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="50.0" value="20" showTickMarks="true" />
+                                                                <Slider fx:id="maxSpeedSlider" blockIncrement="0.1" max="50.0" showTickMarks="true" value="20" />
                                                             </children>
                                                         </VBox>
 
@@ -232,11 +237,7 @@
                                         <NumberAxis forceZeroInRange="false" label="Time (s)" side="BOTTOM" />
                                       </xAxis>
                                       <yAxis>
-                                          <NumberAxis label="Speed (km/h)" side="LEFT"
-                                                      autoRanging="false"
-                                                      lowerBound="0"
-                                                      upperBound="100"
-                                                      tickUnit="20" />
+                                          <NumberAxis autoRanging="false" label="Speed (km/h)" lowerBound="0" side="LEFT" tickUnit="20" upperBound="100" />
                                       </yAxis>
                                     </LineChart>
                                                 <Label fx:id="co2Emission" text="CO2 Emission: ??" textFill="#555555">

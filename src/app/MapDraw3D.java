@@ -20,9 +20,12 @@ public class MapDraw3D
     private Group root3D;
     private SubScene subScene;
     private PerspectiveCamera camera;
+    private AmbientLight ambientLight;
+    private PointLight pointLight;
 
     private Group roadGroup = new Group();
     private Group vehicleGroup = new Group();
+    private Group lightGroup = new Group();
 
     // map the vehicle id with its box
     private Map<String, Box> vehicleWithNames = new HashMap<>();
@@ -50,7 +53,7 @@ public class MapDraw3D
 
         // rotate the camera to look down
         camera.setRotationAxis(Rotate.X_AXIS);
-        camera.setRotate(55);
+        camera.setRotate(-45);
 
         // initialize subScene
         subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
@@ -59,10 +62,23 @@ public class MapDraw3D
         // set the background color
         subScene.setFill(Color.SKYBLUE);
 
+        createLight();
+
         // add the road and vehicle groups
         // observablelist detects the new groups and notify javafx to render the new items
         ObservableList<Node> children = root3D.getChildren();
-        children.addAll(vehicleGroup, roadGroup);
+        children.addAll(vehicleGroup, roadGroup, lightGroup);
+
+    }
+    public void createLight()
+    {
+        ambientLight = new AmbientLight(Color.WHITE);
+
+        pointLight = new PointLight(Color.LIGHTYELLOW);
+        pointLight.setTranslateY(-500);
+
+        ObservableList<Node> lightList = lightGroup.getChildren();
+        lightList.addAll(ambientLight, pointLight);
     }
 
     public SubScene getSubScene()
@@ -202,6 +218,6 @@ public class MapDraw3D
         }
         ObservableList<Node> roadList = roadGroup.getChildren();
         roadList.addAll(allRoadBoxes);
-
     }
+
 }

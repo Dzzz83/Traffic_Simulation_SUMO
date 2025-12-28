@@ -139,7 +139,7 @@ public class MapDraw3D
             // assign SUMO X to the car's X
             currentCarBox.setTranslateX(pos.x);
             // move the car up by 1 meter
-            currentCarBox.setTranslateY(-1.0);
+            currentCarBox.setTranslateY(-1.1);
             // assign SUMO Y to the car's Z
             currentCarBox.setTranslateZ(pos.y);
         }

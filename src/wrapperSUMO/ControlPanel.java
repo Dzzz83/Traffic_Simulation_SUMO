@@ -39,6 +39,7 @@ public class ControlPanel
     private EdgeWrapper edgeWrapper;
     private RouteWrapper routeWrapper;
     private LaneWrapper laneWrapper;
+    private SimulationWrapper simulationWrapper;
 
     // initialize the boolean value isRunning
     public boolean isRunning = false;
@@ -67,6 +68,7 @@ public class ControlPanel
             edgeWrapper = new EdgeWrapper(connection);
             routeWrapper = new RouteWrapper(connection);
             laneWrapper = new LaneWrapper(connection);
+            simulationWrapper = new SimulationWrapper(connection);
 
             // set the isRunning to true
             isRunning = true;
@@ -1101,4 +1103,28 @@ public class ControlPanel
             return 0.0;
         }
     }
+
+    // ------------------------------------------
+    // SIMULATION
+    // -------------------------------------------
+
+    // get the map boundary's coordinates
+    public List<SumoPosition2D> getNetBoundary()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return simulationWrapper.getNetBoundary();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the map boundary");
+        }
+        return new ArrayList<>();
+    }
+
 }

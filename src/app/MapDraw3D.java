@@ -15,8 +15,14 @@ import java.util.Map;
 import wrapperSUMO.ControlPanel;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
 public class MapDraw3D
 {
+    private static final Logger LOG = LogManager.getLogger(MapDraw3D.class.getName());
+
     private Group root3D;
     private SubScene subScene;
     private PerspectiveCamera camera;
@@ -220,4 +226,34 @@ public class MapDraw3D
         roadList.addAll(allRoadBoxes);
     }
 
+    public SumoPosition2D getMapCenter()
+    {
+        try
+        {
+            if (panel != null)
+            {
+                List<SumoPosition2D> mapCenterCoords = panel.getNetBoundary();
+                if (mapCenterCoords.size() == 2)
+                {
+                    SumoPosition2D bottomLeftCoord = mapCenterCoords.get(0);
+                    SumoPosition2D topRightCoord = mapCenterCoords.get(1);
+
+                    double x = bottomLeftCoord.x;
+                    double z = bottomLeftCoord.y;
+                    double x1 = topRightCoord.x;
+                    double z1 = topRightCoord.y;
+
+                    double mapCenterX = (x + x1) / 2;
+                    double mapCenterZ = (z + z1) / 2;
+
+                    return new SumoPosition2D(mapCenterX, mapCenterZ);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the center coordinates of the map");
+        }
+        return new SumoPosition2D(0, 0);
+    }
 }

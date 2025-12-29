@@ -232,17 +232,21 @@ public class MapDraw3D
         {
             if (panel != null)
             {
+                // get the coords
                 List<SumoPosition2D> mapCenterCoords = panel.getNetBoundary();
                 if (mapCenterCoords.size() == 2)
                 {
+                    // get 2 coords
                     SumoPosition2D bottomLeftCoord = mapCenterCoords.get(0);
                     SumoPosition2D topRightCoord = mapCenterCoords.get(1);
 
+                    // assign variable
                     double x = bottomLeftCoord.x;
                     double z = bottomLeftCoord.y;
                     double x1 = topRightCoord.x;
                     double z1 = topRightCoord.y;
 
+                    // find the center
                     double mapCenterX = (x + x1) / 2;
                     double mapCenterZ = (z + z1) / 2;
 

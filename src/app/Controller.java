@@ -24,6 +24,7 @@ import javafx.scene.control.Label;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.logging.log4j.LogManager; // use for logging
 import org.apache.logging.log4j.Logger;
 
@@ -32,54 +33,89 @@ public class Controller {
 
     // initialize variables
     // @FXML is a special tag that tells Java to look into fxml file and link the correct object this file
-    @FXML private Canvas mapCanvas;
-    @FXML private StackPane rootPane;
-    @FXML private Button startBtn;
-    @FXML private Button stopBtn;
-    @FXML private Label menuIcon;
-    @FXML private VBox sidebar;
+    @FXML
+    private Canvas mapCanvas;
+    @FXML
+    private StackPane rootPane;
+    @FXML
+    private Button startBtn;
+    @FXML
+    private Button stopBtn;
+    @FXML
+    private Label menuIcon;
+    @FXML
+    private VBox sidebar;
 
     // buttons
-    @FXML private Button EdgeIDBtn;
-    @FXML private Button RouteIDBtn;
-    @FXML private Button VehicleIDBtn;
-    @FXML private Button TrafficLightIDBtn;
+    @FXML
+    private Button EdgeIDBtn;
+    @FXML
+    private Button RouteIDBtn;
+    @FXML
+    private Button VehicleIDBtn;
+    @FXML
+    private Button TrafficLightIDBtn;
 
-    @FXML private ComboBox<String> trafficIdCombo;
-    @FXML private ToggleButton autoModeToggle;
+    @FXML
+    private ComboBox<String> trafficIdCombo;
+    @FXML
+    private ToggleButton autoModeToggle;
 
     // sliders
-    @FXML private Slider delaySlider;
-    @FXML private Slider inFlowSlider;
-    @FXML private Slider maxSpeedSlider;
-    @FXML private Slider sliderRed;
-    @FXML private Slider sliderGreen;
-    @FXML private Slider sliderYellow;
+    @FXML
+    private Slider delaySlider;
+    @FXML
+    private Slider inFlowSlider;
+    @FXML
+    private Slider maxSpeedSlider;
+    @FXML
+    private Slider sliderRed;
+    @FXML
+    private Slider sliderGreen;
+    @FXML
+    private Slider sliderYellow;
 
     // sliders values
-    @FXML private Label delayValue;
-    @FXML private Label inFlowValue;
-    @FXML private Label maxSpeedValue;
-    @FXML private Label redValue;
-    @FXML private Label greenValue;
-    @FXML private Label yellowValue;
+    @FXML
+    private Label delayValue;
+    @FXML
+    private Label inFlowValue;
+    @FXML
+    private Label maxSpeedValue;
+    @FXML
+    private Label redValue;
+    @FXML
+    private Label greenValue;
+    @FXML
+    private Label yellowValue;
 
     // stats
-    @FXML private Label connectionStatus;
-    @FXML private Label numberVehicles;
-    @FXML private Label averageSpeed;
-    @FXML private Label congestionDensity;
-    @FXML private Label numberOfEdges;
-    @FXML private Label numOfTL;
-    @FXML private Label co2Emission;
+    @FXML
+    private Label connectionStatus;
+    @FXML
+    private Label numberVehicles;
+    @FXML
+    private Label averageSpeed;
+    @FXML
+    private Label congestionDensity;
+    @FXML
+    private Label numberOfEdges;
+    @FXML
+    private Label numOfTL;
+    @FXML
+    private Label co2Emission;
 
     // chart
-    @FXML private LineChart<Number, Number> avgSpeedChart;
+    @FXML
+    private LineChart<Number, Number> avgSpeedChart;
 
     // traffic light
-    @FXML private Label labelRed;
-    @FXML private Label labelGreen;
-    @FXML private Label labelYellow;
+    @FXML
+    private Label labelRed;
+    @FXML
+    private Label labelGreen;
+    @FXML
+    private Label labelYellow;
     private TrafficLightWrapper tlsWrapper;
     private static final String NET_XML_PATH = "src/SumoConfig/demo.net.xml";
     // logical variables
@@ -99,15 +135,6 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
-
-
-    private Group root3D;
-    private Group roadGroup = new Group();
-    private Group vehicleGroup = new Group();
-    private SubScene subScene;
-    private PerspectiveCamera camera;
-    List<Box> allRoadBoxes = new ArrayList<>();
-
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -140,11 +167,7 @@ public class Controller {
         panel = new ControlPanel();
 
         mapDraw = new MapDraw(mapCanvas);
-        mapDraw3D = new MapDraw3D(1200.0, 800);
-        subScene = mapDraw3D.getSubScene();
-        ObservableList<Node> childern = rootPane.getChildren();
-        childern.add(subScene);
-        subScene.setVisible(false);
+        mapDraw3D = new MapDraw3D();
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -154,17 +177,18 @@ public class Controller {
             tlsWrapper = panel.getTrafficLightWrapper();
             tlsWrapper.isRunning = true;
             tlsWrapper.loadConnectionDirections(NET_XML_PATH);
-        }
-        else {
+        } else {
             connectionStatus.setText("Connection: Disconnected");
             connectionStatus.setStyle("-fx-text-fill: red");
         }
         mapShapes = panel.getMapShape();
+
+        initialize3D();
+
         // traffic light
         List<String> tlsIds = panel.getTrafficLightIDs();
         trafficIdCombo.getItems().clear();
-        if (tlsIds != null && !tlsIds.isEmpty())
-        {
+        if (tlsIds != null && !tlsIds.isEmpty()) {
             trafficIdCombo.getItems().addAll(tlsIds);
             trafficIdCombo.getSelectionModel().selectFirst();
         }
@@ -296,8 +320,7 @@ public class Controller {
 
                 if (showEdgesID) {
                     EdgeIDBtn.setStyle("-fx-background-color: #add8e6;");
-                }
-                else {
+                } else {
                     EdgeIDBtn.setStyle("");
                 }
                 drawMap();
@@ -307,12 +330,11 @@ public class Controller {
         // make the traffic light id button function
         if (TrafficLightIDBtn != null) {
             TrafficLightIDBtn.setOnAction(e -> {
-                showTrafficLightID= !showTrafficLightID;
+                showTrafficLightID = !showTrafficLightID;
 
                 if (showTrafficLightID) {
                     TrafficLightIDBtn.setStyle("-fx-background-color: #add8e6;");
-                }
-                else {
+                } else {
                     TrafficLightIDBtn.setStyle("");
                 }
                 drawMap();
@@ -326,8 +348,7 @@ public class Controller {
 
                 if (showRouteID) {
                     RouteIDBtn.setStyle("-fx-background-color: #add8e6;");
-                }
-                else {
+                } else {
                     RouteIDBtn.setStyle("");
                 }
                 drawMap();
@@ -337,12 +358,11 @@ public class Controller {
         // toggle view VehicleID button
         if (VehicleIDBtn != null) {
             VehicleIDBtn.setOnAction(e -> {
-                showVehicleID= !showVehicleID;
+                showVehicleID = !showVehicleID;
 
                 if (showVehicleID) {
                     VehicleIDBtn.setStyle("-fx-background-color: #add8e6;");
-                }
-                else {
+                } else {
                     VehicleIDBtn.setStyle("");
                 }
                 drawMap();
@@ -351,7 +371,7 @@ public class Controller {
 
         // slider traffic lights status
         if (sliderRed != null) {
-            sliderRed.valueProperty().addListener((obs, oldVal, newVal) ->{
+            sliderRed.valueProperty().addListener((obs, oldVal, newVal) -> {
                 redValue.setText(String.format("%.2fs", newVal.doubleValue()));
                 LOG.info("set Red Traffic Light to: " + String.valueOf(newVal));
             });
@@ -407,8 +427,7 @@ public class Controller {
                     autoModeToggle.setText("OFF");
                     autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
                     LOG.info("Auto mode: OFF");
-                }
-                else {
+                } else {
                     autoModeToggle.setText("ON");
                     autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
                     LOG.info("Auto mode: ON");
@@ -427,6 +446,7 @@ public class Controller {
         startBtn.setDisable(true);
         stopBtn.setDisable(false);
     }
+
     // stop button
     @FXML
     public void onStopClick() {
@@ -438,16 +458,14 @@ public class Controller {
 
     @FXML
     // add vehicle button function
-    public void onAddVehicleClick()
-    {
+    public void onAddVehicleClick() {
         LOG.info("Adding Vehicle...");
         // generate a unique ID for the vehicle using the current system time
         String vehId = "veh_" + System.currentTimeMillis();
 
-        try
-        {
+        try {
             // fetch all available route IDs from the SUMO map
-            List <String> routeIDs = panel.getRouteIDs();
+            List<String> routeIDs = panel.getRouteIDs();
             // stop if no routes exist in the map files
             if (routeIDs.isEmpty()) {
                 System.err.println("No routes found in the map file");
@@ -468,12 +486,10 @@ public class Controller {
             clickRouteIndex = (clickRouteIndex + 1) % routeIDs.size();
             // refresh the canvas to show the new vehicle immediately
             drawMap();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             // log an error if the connection to SUMO fails or the ID is invalid
             System.err.println("Failed to add vehicle: " + e.getMessage());
-            
+
         }
     }
 
@@ -489,6 +505,7 @@ public class Controller {
         LOG.info("User requested: Turning ALL Lights ON.");
         panel.turnOnAllLights();
     }
+
     @FXML
     public void turn_all_lights_red() {
         LOG.info("User requested: FORCING ALL LIGHTS TO RED.");
@@ -502,6 +519,7 @@ public class Controller {
         LOG.info("User requested: FORCING ALL LIGHTS TO GREEN.");
         panel.turn_all_light_green();
     }
+
     @FXML
     public void onRestoreAutoClick() {
         LOG.info("User requested: RESTORING AUTOMATIC PROGRAM.");
@@ -510,22 +528,18 @@ public class Controller {
     }
 
     // stress test button
-    public void onStressTestClick()
-    {
+    public void onStressTestClick() {
         LOG.info("Performing Stress Test");
         final int vehicleCount = 500;
-        try
-        {
+        try {
             // call the function stressTest
             panel.stressTest(vehicleCount);
             // redraw map
             drawMap();
             LOG.info("Adding " + vehicleCount + " to the simulation");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LOG.error("Failed to perform stress test");
-            
+
         }
     }
 
@@ -537,28 +551,30 @@ public class Controller {
         // print a message to the console
         System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
     }
+
     @FXML
     // 3D button
-    public void on3DClick()
-    {
-        if (mapCanvas.isVisible())
-        {
+    public void on3DClick() {
+        SubScene subScene = mapDraw3D.getSubScene();
+        if (subScene == null) {
+            LOG.error("The subscene is not initialized yet");
+            return;
+        }
+        if (mapCanvas.isVisible()) {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
-        }
-        else
-        {
+        } else {
             mapCanvas.setVisible(true);
             subScene.setVisible(false);
         }
-        ObservableList<Node> roadList = roadGroup.getChildren();
-        boolean check = (roadList.isEmpty());
-        if (check)
-        {
+
+        Group roadGroup = mapDraw3D.getRoadGroup();
+        boolean check = (roadGroup.getChildren().isEmpty());
+
+        if (check) {
             mapDraw3D.mapShapes = this.mapShapes;
             mapDraw3D.drawRoad();
         }
-
     }
 
     @FXML
@@ -655,11 +671,11 @@ public class Controller {
         updateStats();
         // redraw the entire map, including the new positions and colors of vehicles
         drawMap();
+        updateVehicle3D();
     }
 
     private void drawMap() {
-        if (mapDraw == null)
-        {
+        if (mapDraw == null) {
             return;
         }
 
@@ -676,5 +692,35 @@ public class Controller {
         mapDraw.showRouteID = this.showRouteID;
 
         mapDraw.drawAll();
+    }
+
+    private void initialize3D()
+    {
+        if (mapDraw3D == null) {
+            return;
+        }
+
+        mapDraw3D.panel = this.panel;
+        mapDraw3D.mapShapes = this.mapShapes;
+
+        boolean check1 = (mapDraw3D.getSubScene() == null);
+
+        if (check1)
+        {
+            mapDraw3D.setup();
+            SubScene subScene = mapDraw3D.getSubScene();
+            subScene.setVisible(false);
+            rootPane.getChildren().add(subScene);
+        }
+        boolean check = mapDraw3D.allRoadBoxes.isEmpty();
+        if (check)
+        {
+            mapDraw3D.drawRoad();
+        }
+    }
+
+    private void updateVehicle3D()
+    {
+        mapDraw3D.updateVehicles();
     }
 }

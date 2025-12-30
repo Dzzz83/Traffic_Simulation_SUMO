@@ -42,10 +42,29 @@ public class MapDraw3D
     public Map<String, List<SumoPosition2D>> mapShapes;
     List<Box> allRoadBoxes = new ArrayList<>();
 
-
-    public MapDraw3D(double width, double height)
+    public MapDraw3D()
     {
         root3D = new Group();
+
+        // add the road and vehicle groups
+        // observablelist detects the new groups and notify javafx to render the new items
+        ObservableList<Node> children = root3D.getChildren();
+        children.addAll(vehicleGroup, roadGroup, lightGroup);
+    }
+
+    public void setSubScene(double width, double height)
+    {
+        // initialize subScene
+        subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
+        subScene.setCamera(camera);
+
+        // set the background color
+        subScene.setFill(Color.SKYBLUE);
+    }
+
+    public void setCamera(SumoPosition2D mapCenterCoord)
+    {
+
         // "true" means the car will get smaller the farther it moves
         camera = new PerspectiveCamera(true);
         // camera's range of sight
@@ -53,30 +72,30 @@ public class MapDraw3D
         camera.setFarClip(100000.0);
 
         // move the camera up and back
-        camera.setTranslateX(70);
+        camera.setTranslateX(mapCenterCoord.x);
         camera.setTranslateY(-900);
-        camera.setTranslateZ(-600);
+        camera.setTranslateZ(mapCenterCoord.y - 600);
 
         // rotate the camera to look down
         camera.setRotationAxis(Rotate.X_AXIS);
         camera.setRotate(-45);
-
-        // initialize subScene
-        subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
-        subScene.setCamera(camera);
-
-        // set the background color
-        subScene.setFill(Color.SKYBLUE);
-
-        createLight();
-
-        // add the road and vehicle groups
-        // observablelist detects the new groups and notify javafx to render the new items
-        ObservableList<Node> children = root3D.getChildren();
-        children.addAll(vehicleGroup, roadGroup, lightGroup);
-
     }
-    public void createLight()
+
+    public void setup()
+    {
+        SumoPosition2D mapCenterCoord = getMapCenter();
+
+        // set the camera
+        setCamera(mapCenterCoord);
+
+        // set the sub scene
+        setSubScene(1200.0, 800);
+
+        // create light at the center
+        createLight(mapCenterCoord);
+    }
+
+    public void createLight(SumoPosition2D mapCenterCoord)
     {
         ambientLight = new AmbientLight(Color.WHITE);
 
@@ -85,11 +104,19 @@ public class MapDraw3D
 
         ObservableList<Node> lightList = lightGroup.getChildren();
         lightList.addAll(ambientLight, pointLight);
+
+        pointLight.setTranslateX(mapCenterCoord.x);
+        pointLight.setTranslateZ(mapCenterCoord.y);
     }
 
     public SubScene getSubScene()
     {
         return this.subScene;
+    }
+
+    public Group getRoadGroup()
+    {
+        return this.roadGroup;
     }
 
     public void clearAll()
@@ -176,7 +203,7 @@ public class MapDraw3D
 
         // color the road
         PhongMaterial mat = new PhongMaterial();
-        mat.setDiffuseColor(Color.BLACK);
+        mat.setDiffuseColor(Color.GREEN);
         roadBox.setMaterial(mat);
 
         return roadBox;

@@ -28,6 +28,7 @@ public class MapDraw3D
     private PerspectiveCamera camera;
     private AmbientLight ambientLight;
     private PointLight pointLight;
+    private Rotate rotateY;
 
     private Group roadGroup = new Group();
     private Group vehicleGroup = new Group();
@@ -79,6 +80,9 @@ public class MapDraw3D
         // rotate the camera to look down
         camera.setRotationAxis(Rotate.X_AXIS);
         camera.setRotate(-45);
+
+        rotateY = new Rotate(0, Rotate.Y_AXIS);
+        camera.getTransforms().add(rotateY);
     }
 
     public void setup()
@@ -286,5 +290,186 @@ public class MapDraw3D
             LOG.error("Failed to get the center coordinates of the map");
         }
         return new SumoPosition2D(0, 0);
+    }
+
+    // fly up and fly down method
+    public void upDownMovement(boolean isSpacePressed, boolean isCtrlPressed, double speed)
+    {
+        // variable to store current Y-Axis
+        double currentPosY;
+
+        // variable to store the change in Y-Axis
+        double deltaY = 1 * speed;
+
+        try
+        {
+            // get the current y
+            currentPosY = camera.getTranslateY();
+
+            // fly up when "space"
+            if (isSpacePressed)
+            {
+                // subtract deltaY
+                camera.setTranslateY(currentPosY - deltaY);
+            }
+            // fly down when "Ctrl"
+            else if (isCtrlPressed)
+            {
+                // add deltaY
+                camera.setTranslateY(currentPosY + deltaY);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to move the camera up and down");
+        }
+    }
+
+    // get angle and convert to radiance helper function
+    public double getRadianAngle()
+    {
+        double angle = rotateY.getAngle();
+        return Math.toRadians(angle);
+    }
+
+
+    // move left move right method
+    public void leftRightMovement(boolean isAPressed, boolean isDPressed, double speed)
+    {
+        // get the camera's angle
+        double cameraAngle = getRadianAngle();
+
+        // variable to store distance traveled
+        double movingDistance = 1 * speed;
+
+        // variables to store X-Axis and Z-Axis
+        double currentPosX;
+        double currentPosZ;
+
+        // variables to store changes in X-axis and Y-axis
+        // use Trigonometry to find deltaX and deltaZ
+        double deltaX = Math.cos(cameraAngle) * movingDistance;
+        double deltaZ = Math.sin(cameraAngle) * movingDistance;
+
+        try
+        {
+            // get the current position
+            currentPosX = camera.getTranslateX();
+            currentPosZ = camera.getTranslateZ();
+
+            // move to the left if "A"
+            if (isAPressed)
+            {
+                // subtract deltaX
+                camera.setTranslateX(currentPosX - deltaX);
+                // add deltaY
+                camera.setTranslateZ(currentPosZ + deltaZ);
+            }
+            // move the right if "D"
+            else if (isDPressed)
+            {
+                // add deltaX
+                camera.setTranslateX(currentPosX + deltaX);
+                // subtract deltaZ
+                camera.setTranslateZ(currentPosZ - deltaZ);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to move the camera left and right");
+        }
+    }
+
+    // move foward and backward method
+    public void fowardBackwardMovement(boolean isWPressed, boolean isSPressed, double speed)
+    {
+        // get the camera's angle
+        double cameraAngle = getRadianAngle();
+
+        // variable to store distance moved
+        double movingDistance = 1 * speed;
+
+        // variables to store changes in X-axis and Y-axis
+        // use Trigonometry to find deltaX and deltaZ
+        double deltaX = Math.sin(cameraAngle) * movingDistance;
+        double deltaZ = Math.cos(cameraAngle) * movingDistance;
+
+        // variable to store the current position
+        double currentPosZ;
+        double currentPosX;
+
+        try
+        {
+            // find the current position
+            currentPosZ = camera.getTranslateZ();
+            currentPosX = camera.getTranslateX();
+
+            // move foward if "W"
+            if (isWPressed)
+            {
+                // add deltaZ
+                camera.setTranslateZ(currentPosZ + deltaZ);
+                // add deltaX
+                camera.setTranslateX(currentPosX + deltaX);
+            }
+            else if (isSPressed)
+            {
+                // subtract deltaZ
+                camera.setTranslateZ(currentPosZ - deltaZ);
+                // subtract deltaX
+                camera.setTranslateX(currentPosX - deltaX);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to move the camera left and right");
+        }
+    }
+
+    public void controlCameraEye(double x, double z, double sensitivity)
+    {
+
+    }
+    public void updateCamera()
+    {
+        double speed = 5.0;
+
+        boolean isSpacePressed = false;
+        boolean isCtrlPressed = false;
+        boolean isAPressed = false;
+        boolean isDPressed = false;
+        boolean isWPressed = false;
+        boolean isSPressed = false;
+
+        String keyboardListener = "";
+        if (keyboardListener.toUpperCase().contains("W"))
+        {
+            isWPressed = true;
+        }
+        if (keyboardListener.toUpperCase().contains("S"))
+        {
+            isSPressed = true;
+        }
+        if (keyboardListener.toUpperCase().contains("A"))
+        {
+            isAPressed = true;
+        }
+        if (keyboardListener.toUpperCase().contains("D"))
+        {
+            isDPressed = true;
+        }
+        if (keyboardListener.toUpperCase().contains(" "))
+        {
+            isSpacePressed = true;
+        }
+        if (keyboardListener.toUpperCase().contains("CTRL"))
+        {
+            isCtrlPressed = true;
+        }
+
+
+        upDownMovement(isSpacePressed, isCtrlPressed, speed);
+        leftRightMovement(isAPressed, isDPressed, speed);
+        fowardBackwardMovement(isWPressed, isSPressed, speed);
     }
 }

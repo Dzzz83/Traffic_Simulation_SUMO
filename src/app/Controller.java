@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
@@ -22,6 +23,7 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -158,6 +160,9 @@ public class Controller {
     private long lastUpdate = 0;
     private long simulationDelay = 100_000_000; // Default 100ms in nanoseconds
 
+
+    private HashSet<KeyCode> keyInputSet = new HashSet<KeyCode>();
+
     @FXML
     // initialize the GUI function
     public void initialize() {
@@ -249,6 +254,9 @@ public class Controller {
             @Override
             public void handle(long now) {
                 if (panel.isRunning()) {
+
+                    mapDraw3D.updateCamera(keyInputSet);
+
                     // only update if enough time has passed
                     if (now - lastUpdate >= simulationDelay) {
                         updateSimulation();
@@ -575,6 +583,10 @@ public class Controller {
             mapDraw3D.mapShapes = this.mapShapes;
             mapDraw3D.drawRoad();
         }
+        // make the subScene focus on the keyboard
+        if (subScene.isVisible()) {
+            subScene.requestFocus();
+        }
     }
 
     @FXML
@@ -711,6 +723,17 @@ public class Controller {
             SubScene subScene = mapDraw3D.getSubScene();
             subScene.setVisible(false);
             rootPane.getChildren().add(subScene);
+
+            subScene.setOnKeyPressed(event ->{
+                KeyCode keyInput = event.getCode();
+                keyInputSet.add(keyInput);
+            });
+
+            subScene.setOnKeyReleased(event ->{
+                KeyCode keyInput = event.getCode();
+                keyInputSet.remove(keyInput);
+            });
+
         }
         boolean check = mapDraw3D.allRoadBoxes.isEmpty();
         if (check)

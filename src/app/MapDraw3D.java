@@ -2,15 +2,13 @@ package app;
 
 import javafx.collections.ObservableList;
 import javafx.scene.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import wrapperSUMO.ControlPanel;
 import de.tudresden.sumo.objects.SumoPosition2D;
@@ -26,9 +24,12 @@ public class MapDraw3D
     private Group root3D;
     private SubScene subScene;
     private PerspectiveCamera camera;
+
     private AmbientLight ambientLight;
     private PointLight pointLight;
+
     private Rotate rotateY;
+    private Rotate rotateX;
 
     private Group roadGroup = new Group();
     private Group vehicleGroup = new Group();
@@ -80,9 +81,13 @@ public class MapDraw3D
         // rotate the camera to look down
         camera.setRotationAxis(Rotate.X_AXIS);
         camera.setRotate(-45);
-
+        // (*)
         rotateY = new Rotate(0, Rotate.Y_AXIS);
         camera.getTransforms().add(rotateY);
+
+        // (*)
+        rotateX = new Rotate(0, Rotate.X_AXIS);
+        camera.getTransforms().add(rotateX);
     }
 
     public void setup()
@@ -243,12 +248,15 @@ public class MapDraw3D
                 // create the roadBox
                 Box roadBox = createRoadBox(3.2, roadLength);
 
+                // set the position of the road box
                 roadBox.setTranslateX(midPoint.x);
                 roadBox.setTranslateZ(midPoint.y);
 
+                // set the rotation axis of the road box
                 roadBox.setRotationAxis(Rotate.Y_AXIS);
                 roadBox.setRotate(angle_deg);
 
+                // add in the list
                 allRoadBoxes.add(roadBox);
             }
 
@@ -426,43 +434,66 @@ public class MapDraw3D
         }
     }
 
-    public void controlCameraEye(double x, double z, double sensitivity)
-    {
+        // control camera eye method
+        public void controlCameraEye(double x, double y, double sensitivity)
+        {
+            // get the current angle
+            double currentAngleX = rotateX.getAngle();
+            double currentAngleY = rotateY.getAngle();
 
-    }
-    public void updateCamera()
+            // variables to store the change in mouse movement
+            double deltaX = x * sensitivity;
+            double deltaY = y * sensitivity;
+
+            // calculate the new angle
+            double deltaAngleX = deltaY + currentAngleX;
+            double deltaAngleY = deltaX + currentAngleY;
+
+            // set the vertical movement limit
+            deltaAngleX = Math.max(deltaAngleX, -90);
+            deltaAngleX = Math.min(deltaAngleX, 90);
+
+            // update the angle
+            rotateY.setAngle(deltaAngleY);
+            rotateX.setAngle(deltaAngleX);
+
+        }
+    public void updateCamera(HashSet<KeyCode> keyInputSet)
     {
         double speed = 5.0;
 
-        boolean isSpacePressed = false;
-        boolean isCtrlPressed = false;
-        boolean isAPressed = false;
-        boolean isDPressed = false;
         boolean isWPressed = false;
-        boolean isSPressed = false;
-
-        String keyboardListener = "";
-        if (keyboardListener.toUpperCase().contains("W"))
+        if (keyInputSet.contains(KeyCode.W))
         {
             isWPressed = true;
         }
-        if (keyboardListener.toUpperCase().contains("S"))
+        
+        boolean isSPressed = false;
+        if (keyInputSet.contains(KeyCode.S))
         {
             isSPressed = true;
         }
-        if (keyboardListener.toUpperCase().contains("A"))
+        
+        boolean isAPressed = false;
+        if (keyInputSet.contains(KeyCode.A))
         {
             isAPressed = true;
         }
-        if (keyboardListener.toUpperCase().contains("D"))
+        
+        boolean isDPressed = false;
+        if (keyInputSet.contains(KeyCode.D))
         {
             isDPressed = true;
         }
-        if (keyboardListener.toUpperCase().contains(" "))
+        
+        boolean isSpacePressed = false;
+        if (keyInputSet.contains(KeyCode.SPACE))
         {
             isSpacePressed = true;
         }
-        if (keyboardListener.toUpperCase().contains("CTRL"))
+        
+        boolean isCtrlPressed = false;
+        if (keyInputSet.contains(KeyCode.CONTROL))
         {
             isCtrlPressed = true;
         }

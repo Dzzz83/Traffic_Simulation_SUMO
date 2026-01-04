@@ -75,7 +75,7 @@ public class MapDraw3D
 
         // move the camera up and back
         cameraGroup.setTranslateX(mapCenterCoord.x);
-        cameraGroup.setTranslateY(-900);
+        cameraGroup.setTranslateY(-100);
         cameraGroup.setTranslateZ(mapCenterCoord.y - 600);
 
         cameraGroup.getChildren().add(camera);
@@ -84,7 +84,7 @@ public class MapDraw3D
         cameraGroup.getTransforms().add(rotateY);
 
         // (*)
-        rotateX = new Rotate(-45, Rotate.X_AXIS);
+        rotateX = new Rotate(0, Rotate.X_AXIS);
         camera.getTransforms().add(rotateX);
     }
 
@@ -141,7 +141,7 @@ public class MapDraw3D
     private Box createVehicleBox()
     {
         // width, height, depth
-        Box vehicleBox = new Box(4.0, 2.0, 4.0);
+        Box vehicleBox = new Box(4.0, 2.0, 2.0);
 
         // color the car
         PhongMaterial mat = new PhongMaterial();
@@ -203,65 +203,81 @@ public class MapDraw3D
         });
     }
 
+    private Box createGrassBox(double width, double length)
+    {
+        Box grassBox = new Box(width, 1, length);
+
+        PhongMaterial mat = new PhongMaterial();
+        mat.setDiffuseColor(Color.rgb(40, 80, 40));
+        mat.setSpecularColor(Color.rgb(10, 10, 10));
+        grassBox.setMaterial(mat);
+
+        grassBox.setTranslateY(3);
+        return grassBox;
+    }
+
     private Box createRoadBox(double width, double length)
     {
         // width, height, depth
-        Box roadBox = new Box(width, 0.1, length);
+        Box roadBox = new Box(width, 1, length);
 
         // color the road
         PhongMaterial mat = new PhongMaterial();
-        mat.setDiffuseColor(Color.GREEN);
+        mat.setDiffuseColor(Color.rgb(40, 40, 40));
+        mat.setSpecularColor(Color.rgb(30, 30, 30));
         roadBox.setMaterial(mat);
 
         return roadBox;
     }
 
-    public void drawRoad()
-    {
-        allRoadBoxes.clear();
-        for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
+        public void drawRoad()
         {
-            // get the points
-            List<SumoPosition2D> points = data.getValue();
-            for (int i = 0; i < points.size() - 1; i++)
+            allRoadBoxes.clear();
+            Box grassBox = createGrassBox(2000, 2000);
+            for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
             {
+                // get the points
+                List<SumoPosition2D> points = data.getValue();
+                for (int i = 0; i < points.size() - 1; i++)
+                {
 
-                SumoPosition2D startPoint = points.get(i);
-                SumoPosition2D endPoint = points.get(i+1);
+                    SumoPosition2D startPoint = points.get(i);
+                    SumoPosition2D endPoint = points.get(i+1);
 
-                // calculate length
-                double dx = endPoint.x - startPoint.x;
-                double dz = endPoint.y - startPoint.y;
-                double roadLength = Math.sqrt(dx*dx + dz*dz);
+                    // calculate length
+                    double dx = endPoint.x - startPoint.x;
+                    double dz = endPoint.y - startPoint.y;
+                    double roadLength = Math.sqrt(dx*dx + dz*dz);
 
-                // calculate midPoint
-                double midPointX = (startPoint.x + endPoint.x) / 2;
-                double midPointY = (startPoint.y + endPoint.y) / 2;
-                SumoPosition2D midPoint = new SumoPosition2D(midPointX, midPointY);
+                    // calculate midPoint
+                    double midPointX = (startPoint.x + endPoint.x) / 2;
+                    double midPointY = (startPoint.y + endPoint.y) / 2;
+                    SumoPosition2D midPoint = new SumoPosition2D(midPointX, midPointY);
 
-                // calculate the angle of the road(*)
-                double angle_rad = Math.atan2(dx, dz);
-                double angle_deg = Math.toDegrees(angle_rad);
+                    // calculate the angle of the road(*)
+                    double angle_rad = Math.atan2(dx, dz);
+                    double angle_deg = Math.toDegrees(angle_rad);
 
-                // create the roadBox
-                Box roadBox = createRoadBox(3.2, roadLength);
+                    // create the roadBox
+                    Box roadBox = createRoadBox(3.2, roadLength);
 
-                // set the position of the road box
-                roadBox.setTranslateX(midPoint.x);
-                roadBox.setTranslateZ(midPoint.y);
+                    // set the position of the road box
+                    roadBox.setTranslateX(midPoint.x);
+                    roadBox.setTranslateZ(midPoint.y);
 
-                // set the rotation axis of the road box
-                roadBox.setRotationAxis(Rotate.Y_AXIS);
-                roadBox.setRotate(angle_deg);
+                    // set the rotation axis of the road box
+                    roadBox.setRotationAxis(Rotate.Y_AXIS);
+                    roadBox.setRotate(angle_deg);
 
-                // add in the list
-                allRoadBoxes.add(roadBox);
+                    // add in the list
+                    allRoadBoxes.add(roadBox);
+                }
+
             }
-
+            ObservableList<Node> roadList = roadGroup.getChildren();
+            roadList.addAll(allRoadBoxes);
+            roadList.add(grassBox);
         }
-        ObservableList<Node> roadList = roadGroup.getChildren();
-        roadList.addAll(allRoadBoxes);
-    }
 
     public SumoPosition2D getMapCenter()
     {

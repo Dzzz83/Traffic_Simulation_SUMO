@@ -502,4 +502,37 @@ public class MapDraw3D
         leftRightMovement(isAPressed, isDPressed, speed);
         fowardBackwardMovement(isWPressed, isSPressed, speed);
     }
+
+    // get the camera coordinates
+    public List<Double> getCameraCoords()
+    {
+        try
+        {
+            // get the coords
+            double x = camera.getTranslateX();
+            double y = camera.getTranslateY();
+            double z = camera.getTranslateZ();
+
+            // round the coords
+            x = Math.round(x);
+            y = Math.round(y);
+            z = Math.round(z);
+
+            // create a list to store them
+            List<Double> cameraCoords = new ArrayList<>();
+
+            // add the coords to the list
+            cameraCoords.add(x);
+            cameraCoords.add(y);
+            cameraCoords.add(z);
+
+            return cameraCoords;
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the coordinates of the camera");
+        }
+        return new ArrayList<>();
+    }
+
 }

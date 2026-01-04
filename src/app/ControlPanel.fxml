@@ -35,6 +35,7 @@
         <AnchorPane pickOnBounds="false">
             <children>
 
+                <Label fx:id="XYZCoord" textFill="black" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="10.0" />
                 <Label fx:id="menuIcon" style="-fx-cursor: hand;" text="☰" textFill="WHITE" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="10.0">
                     <font>
                         <Font size="30.0" />
@@ -74,7 +75,7 @@
                                                                 <Button fx:id="restartBtn" mnemonicParsing="false" onAction="#onRestartClick" prefWidth="80.0" style="-fx-background-color: #607D8B;" text="Restart" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
-                                                <Button fx:id="3DBtn" layoutX="191.0" layoutY="10.0" mnemonicParsing="false" onAction="#on3DClick" prefWidth="80.0" style="-fx-background-color: #0000FF;" text="3D" textFill="WHITE">
+                                                <Button fx:id="3DBtn" layoutX="191.0" layoutY="10.0" mnemonicParsing="false" onAction="#on3DClick" prefWidth="80.0" style="-fx-background-color: #0000FF;" text="2D&amp;3D" textFill="WHITE">
                                                    <font>
                                                       <Font name="System Bold" size="14.0" />
                                                    </font>

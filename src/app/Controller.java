@@ -24,6 +24,7 @@ import wrapperSUMO.TrafficLightWrapper;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -120,6 +121,10 @@ public class Controller {
     private Label labelGreen;
     @FXML
     private Label labelYellow;
+
+    @FXML
+    private Label XYZCoord;
+
     private TrafficLightWrapper tlsWrapper;
     private static final String NET_XML_PATH = "src/SumoConfig/demo.net.xml";
     // logical variables
@@ -164,6 +169,8 @@ public class Controller {
 
 
     private HashSet<KeyCode> keyInputSet = new HashSet<KeyCode>();
+
+    private List<Double> cameraCoords = new ArrayList<>();
 
     @FXML
     // initialize the GUI function
@@ -257,7 +264,11 @@ public class Controller {
             public void handle(long now) {
                 if (panel.isRunning()) {
 
+                    // control the camera
                     mapDraw3D.updateCamera(keyInputSet);
+
+                    // display the coords
+                    displayCoords();
 
                     // only update if enough time has passed
                     if (now - lastUpdate >= simulationDelay) {
@@ -663,6 +674,24 @@ public class Controller {
         }
     }
 
+    private void displayCoords()
+    {
+        // get the coords
+        cameraCoords = mapDraw3D.getCameraCoords();
+        try
+        {
+            if (cameraCoords.isEmpty()) {
+                LOG.error("Failed to get the camera coordinates");
+            } else {
+                String coords = "X: " + cameraCoords.get(0) + " Y: " + cameraCoords.get(1) + " Z: " + cameraCoords.get(2);
+                XYZCoord.setText(coords);
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to set the coords");
+        }
+    }
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();

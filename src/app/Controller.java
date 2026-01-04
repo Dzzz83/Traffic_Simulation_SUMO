@@ -11,6 +11,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
@@ -719,22 +721,62 @@ public class Controller {
 
         if (check1)
         {
+            // set up the 3D
             mapDraw3D.setup();
+            // get the subscene
             SubScene subScene = mapDraw3D.getSubScene();
+            // set its visibility to 0
             subScene.setVisible(false);
-            rootPane.getChildren().add(subScene);
 
+            // add subScene first to not cover the control panel
+            rootPane.getChildren().addFirst(subScene);
+
+            // do "event" if detects key pressed
             subScene.setOnKeyPressed(event ->{
+                // get the key input
                 KeyCode keyInput = event.getCode();
+                // add to the set
                 keyInputSet.add(keyInput);
             });
 
+            // do "event" if detects key released
             subScene.setOnKeyReleased(event ->{
+                // get the keyInput
                 KeyCode keyInput = event.getCode();
+                // remove from the set
                 keyInputSet.remove(keyInput);
             });
 
+            // do "event" if detects mouse pressed
+            subScene.setOnMousePressed(event ->{
+                // get the mouse position
+                lastMouseX = event.getX();
+                lastMouseY = event.getY();
+            });
+
+            // do "event" if detects mouse dragged
+            subScene.setOnMouseDragged(event ->{
+                // calculate the change in mouse position
+                double deltaMouseX = event.getX() - lastMouseX;
+                double deltaMouseY = event.getY() - lastMouseY;
+
+                // assign the lastMousePosition to the current position
+                lastMouseX = event.getX();
+                lastMouseY = event.getY();
+
+                // call the function
+                mapDraw3D.controlCameraEye(deltaMouseX, deltaMouseY, 0.1);
+            });
+
+            // add a special case for the escape by using the eventFilter
+           rootPane.addEventFilter(KeyEvent.KEY_PRESSED, event->{
+               if (event.getCode() == KeyCode.ESCAPE)
+               {
+                   subScene.requestFocus();
+               }
+           });
         }
+        // check roads if empty then draw roads
         boolean check = mapDraw3D.allRoadBoxes.isEmpty();
         if (check)
         {

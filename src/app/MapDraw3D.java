@@ -301,7 +301,7 @@ public class MapDraw3D
     }
 
     // fly up and fly down method
-    public void upDownMovement(boolean isSpacePressed, boolean isCtrlPressed, double speed)
+    public void upDownMovement(boolean isSpacePressed, boolean isShiftPressed, double speed)
     {
         // variable to store current Y-Axis
         double currentPosY;
@@ -321,7 +321,7 @@ public class MapDraw3D
                 camera.setTranslateY(currentPosY - deltaY);
             }
             // fly down when "Ctrl"
-            else if (isCtrlPressed)
+            else if (isShiftPressed)
             {
                 // add deltaY
                 camera.setTranslateY(currentPosY + deltaY);
@@ -446,8 +446,8 @@ public class MapDraw3D
             double deltaY = y * sensitivity;
 
             // calculate the new angle
-            double deltaAngleX = deltaY + currentAngleX;
-            double deltaAngleY = deltaX + currentAngleY;
+            double deltaAngleX = currentAngleX - deltaY;
+            double deltaAngleY = currentAngleY - deltaX;
 
             // set the vertical movement limit
             deltaAngleX = Math.max(deltaAngleX, -90);
@@ -456,7 +456,6 @@ public class MapDraw3D
             // update the angle
             rotateY.setAngle(deltaAngleY);
             rotateX.setAngle(deltaAngleX);
-
         }
     public void updateCamera(HashSet<KeyCode> keyInputSet)
     {
@@ -492,14 +491,14 @@ public class MapDraw3D
             isSpacePressed = true;
         }
         
-        boolean isCtrlPressed = false;
-        if (keyInputSet.contains(KeyCode.CONTROL))
+        boolean isShiftPressed = false;
+        if (keyInputSet.contains(KeyCode.SHIFT))
         {
-            isCtrlPressed = true;
+            isShiftPressed = true;
         }
 
 
-        upDownMovement(isSpacePressed, isCtrlPressed, speed);
+        upDownMovement(isSpacePressed, isShiftPressed, speed);
         leftRightMovement(isAPressed, isDPressed, speed);
         fowardBackwardMovement(isWPressed, isSPressed, speed);
     }

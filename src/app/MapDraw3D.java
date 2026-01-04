@@ -34,6 +34,7 @@ public class MapDraw3D
     private Group roadGroup = new Group();
     private Group vehicleGroup = new Group();
     private Group lightGroup = new Group();
+    private Group cameraGroup = new Group();
 
     // map the vehicle id with its box
     private Map<String, Box> vehicleWithNames = new HashMap<>();
@@ -51,7 +52,7 @@ public class MapDraw3D
         // add the road and vehicle groups
         // observablelist detects the new groups and notify javafx to render the new items
         ObservableList<Node> children = root3D.getChildren();
-        children.addAll(vehicleGroup, roadGroup, lightGroup);
+        children.addAll(vehicleGroup, roadGroup, lightGroup, cameraGroup);
     }
 
     public void setSubScene(double width, double height)
@@ -66,7 +67,6 @@ public class MapDraw3D
 
     public void setCamera(SumoPosition2D mapCenterCoord)
     {
-
         // "true" means the car will get smaller the farther it moves
         camera = new PerspectiveCamera(true);
         // camera's range of sight
@@ -74,19 +74,17 @@ public class MapDraw3D
         camera.setFarClip(100000.0);
 
         // move the camera up and back
-        camera.setTranslateX(mapCenterCoord.x);
-        camera.setTranslateY(-900);
-        camera.setTranslateZ(mapCenterCoord.y - 600);
+        cameraGroup.setTranslateX(mapCenterCoord.x);
+        cameraGroup.setTranslateY(-900);
+        cameraGroup.setTranslateZ(mapCenterCoord.y - 600);
 
-        // rotate the camera to look down
-        camera.setRotationAxis(Rotate.X_AXIS);
-        camera.setRotate(-45);
+        cameraGroup.getChildren().add(camera);
         // (*)
         rotateY = new Rotate(0, Rotate.Y_AXIS);
-        camera.getTransforms().add(rotateY);
+        cameraGroup.getTransforms().add(rotateY);
 
         // (*)
-        rotateX = new Rotate(0, Rotate.X_AXIS);
+        rotateX = new Rotate(-45, Rotate.X_AXIS);
         camera.getTransforms().add(rotateX);
     }
 
@@ -312,19 +310,19 @@ public class MapDraw3D
         try
         {
             // get the current y
-            currentPosY = camera.getTranslateY();
+            currentPosY = cameraGroup.getTranslateY();
 
             // fly up when "space"
             if (isSpacePressed)
             {
                 // subtract deltaY
-                camera.setTranslateY(currentPosY - deltaY);
+                cameraGroup.setTranslateY(currentPosY - deltaY);
             }
             // fly down when "Ctrl"
             else if (isShiftPressed)
             {
                 // add deltaY
-                camera.setTranslateY(currentPosY + deltaY);
+                cameraGroup.setTranslateY(currentPosY + deltaY);
             }
         }
         catch (Exception e)
@@ -362,24 +360,24 @@ public class MapDraw3D
         try
         {
             // get the current position
-            currentPosX = camera.getTranslateX();
-            currentPosZ = camera.getTranslateZ();
+            currentPosX = cameraGroup.getTranslateX();
+            currentPosZ = cameraGroup.getTranslateZ();
 
             // move to the left if "A"
             if (isAPressed)
             {
                 // subtract deltaX
-                camera.setTranslateX(currentPosX - deltaX);
+                cameraGroup.setTranslateX(currentPosX - deltaX);
                 // add deltaY
-                camera.setTranslateZ(currentPosZ + deltaZ);
+                cameraGroup.setTranslateZ(currentPosZ + deltaZ);
             }
             // move the right if "D"
             else if (isDPressed)
             {
                 // add deltaX
-                camera.setTranslateX(currentPosX + deltaX);
+                cameraGroup.setTranslateX(currentPosX + deltaX);
                 // subtract deltaZ
-                camera.setTranslateZ(currentPosZ - deltaZ);
+                cameraGroup.setTranslateZ(currentPosZ - deltaZ);
             }
         }
         catch (Exception e)
@@ -409,23 +407,23 @@ public class MapDraw3D
         try
         {
             // find the current position
-            currentPosZ = camera.getTranslateZ();
-            currentPosX = camera.getTranslateX();
+            currentPosZ = cameraGroup.getTranslateZ();
+            currentPosX = cameraGroup.getTranslateX();
 
             // move foward if "W"
             if (isWPressed)
             {
                 // add deltaZ
-                camera.setTranslateZ(currentPosZ + deltaZ);
+                cameraGroup.setTranslateZ(currentPosZ + deltaZ);
                 // add deltaX
-                camera.setTranslateX(currentPosX + deltaX);
+                cameraGroup.setTranslateX(currentPosX + deltaX);
             }
             else if (isSPressed)
             {
                 // subtract deltaZ
-                camera.setTranslateZ(currentPosZ - deltaZ);
+                cameraGroup.setTranslateZ(currentPosZ - deltaZ);
                 // subtract deltaX
-                camera.setTranslateX(currentPosX - deltaX);
+                cameraGroup.setTranslateX(currentPosX - deltaX);
             }
         }
         catch (Exception e)
@@ -509,9 +507,9 @@ public class MapDraw3D
         try
         {
             // get the coords
-            double x = camera.getTranslateX();
-            double y = camera.getTranslateY();
-            double z = camera.getTranslateZ();
+            double x = cameraGroup.getTranslateX();
+            double y = cameraGroup.getTranslateY();
+            double z = cameraGroup.getTranslateZ();
 
             // round the coords
             x = Math.round(x);

@@ -778,7 +778,9 @@ public class Controller {
 
             // do "event" if detects mouse pressed
             subScene.setOnMousePressed(event ->{
+                subScene.requestFocus();
                 // get the mouse position
+
                 lastMouseX = event.getX();
                 lastMouseY = event.getY();
             });
@@ -796,14 +798,6 @@ public class Controller {
                 // call the function
                 mapDraw3D.controlCameraEye(deltaMouseX, deltaMouseY, 0.1);
             });
-
-            // add a special case for the escape by using the eventFilter
-           rootPane.addEventFilter(KeyEvent.KEY_PRESSED, event->{
-               if (event.getCode() == KeyCode.ESCAPE)
-               {
-                   subScene.requestFocus();
-               }
-           });
         }
         // check roads if empty then draw roads
         boolean check = mapDraw3D.allRoadBoxes.isEmpty();

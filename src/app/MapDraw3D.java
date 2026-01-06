@@ -197,22 +197,22 @@ public class MapDraw3D
 
         Cylinder leftFrontTire = (Cylinder) carTireGroup.getChildren().get(0);
         leftFrontTire.setTranslateX(-2);
-        leftFrontTire.setTranslateY(2.5);
+        leftFrontTire.setTranslateY(-0.5);
         leftFrontTire.setTranslateZ(-2);
 
         Cylinder rightFrontTire = (Cylinder) carTireGroup.getChildren().get(1);
         rightFrontTire.setTranslateX(2);
-        rightFrontTire.setTranslateY(2.5);
+        rightFrontTire.setTranslateY(-0.5);
         rightFrontTire.setTranslateZ(-2);
 
         Cylinder leftBackTire = (Cylinder) carTireGroup.getChildren().get(2);
         leftBackTire.setTranslateX(-2);
-        leftBackTire.setTranslateY(2.5);
+        leftBackTire.setTranslateY(-0.5);
         leftBackTire.setTranslateZ(2);
 
         Cylinder rightBackTire = (Cylinder) carTireGroup.getChildren().get(3);
         rightBackTire.setTranslateX(2);
-        rightBackTire.setTranslateY(2.5);
+        rightBackTire.setTranslateY(-0.5);
         rightBackTire.setTranslateZ(2);
 
         return carTireGroup;
@@ -227,7 +227,7 @@ public class MapDraw3D
 
         Box windShieldBox = createWindshieldBox(4.0, 1.0, 2.0);
 
-        Group tireGroup =  createVehicleTires(0.5, 1);
+        Group tireGroup =  createVehicleTires(1.0, 1.0);
 
 
         Group carGroup = new Group();

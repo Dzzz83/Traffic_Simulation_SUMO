@@ -148,7 +148,7 @@ public class MapDraw3D
         mat.setDiffuseColor(Color.RED);
         centralVehicleBox.setMaterial(mat);
 
-        centralVehicleBox.setTranslateY(-2);
+        centralVehicleBox.setTranslateY(-0.7);
 
         return centralVehicleBox;
     }
@@ -160,8 +160,8 @@ public class MapDraw3D
         mat1.setDiffuseColor(Color.BLUE);
         engineBox.setMaterial(mat1);
 
-        engineBox.setTranslateZ(-3);
-        engineBox.setTranslateY(-1);
+        engineBox.setTranslateZ(-1.75);
+        engineBox.setTranslateY(-0.45);
 
         return engineBox;
     }
@@ -173,8 +173,8 @@ public class MapDraw3D
         mat2.setDiffuseColor(Color.BLACK);
         windShieldBox.setMaterial(mat2);
 
-        windShieldBox.setTranslateY(-2);
-        windShieldBox.setTranslateZ(-3);
+        windShieldBox.setTranslateY(-0.95);
+        windShieldBox.setTranslateZ(-1.75);
 
         return windShieldBox;
     }
@@ -196,24 +196,24 @@ public class MapDraw3D
         }
 
         Cylinder leftFrontTire = (Cylinder) carTireGroup.getChildren().get(0);
-        leftFrontTire.setTranslateX(-2);
-        leftFrontTire.setTranslateY(-0.5);
-        leftFrontTire.setTranslateZ(-2);
+        leftFrontTire.setTranslateX(-1.1);
+        leftFrontTire.setTranslateY(0);
+        leftFrontTire.setTranslateZ(-2.0);
 
         Cylinder rightFrontTire = (Cylinder) carTireGroup.getChildren().get(1);
-        rightFrontTire.setTranslateX(2);
-        rightFrontTire.setTranslateY(-0.5);
-        rightFrontTire.setTranslateZ(-2);
+        rightFrontTire.setTranslateX(1.1);
+        rightFrontTire.setTranslateY(0);
+        rightFrontTire.setTranslateZ(-2.0);
 
         Cylinder leftBackTire = (Cylinder) carTireGroup.getChildren().get(2);
-        leftBackTire.setTranslateX(-2);
-        leftBackTire.setTranslateY(-0.5);
-        leftBackTire.setTranslateZ(2);
+        leftBackTire.setTranslateX(-1.1);
+        leftBackTire.setTranslateY(0);
+        leftBackTire.setTranslateZ(0.5);
 
         Cylinder rightBackTire = (Cylinder) carTireGroup.getChildren().get(3);
-        rightBackTire.setTranslateX(2);
-        rightBackTire.setTranslateY(-0.5);
-        rightBackTire.setTranslateZ(2);
+        rightBackTire.setTranslateX(1.1);
+        rightBackTire.setTranslateY(0);
+        rightBackTire.setTranslateZ(0.5);
 
         return carTireGroup;
     }
@@ -221,13 +221,13 @@ public class MapDraw3D
     private Group createVehicle()
     {
         // width, height, depth
-        Box centralVehicleBox = createCentralVehicleBox(4.0, 3.0, 4.0);
+        Box centralVehicleBox = createCentralVehicleBox(2.0, 1.0, 2.0);
 
-        Box engineBox = createEngineBox(4.0, 1.0, 3.0);
+        Box engineBox = createEngineBox(2.0, 0.5, 1.5);
 
-        Box windShieldBox = createWindshieldBox(4.0, 1.0, 2.0);
+        Box windShieldBox = createWindshieldBox(2.0, 0.5, 1.5);
 
-        Group tireGroup =  createVehicleTires(1.0, 1.0);
+        Group tireGroup =  createVehicleTires(0.5, 0.5);
 
 
         Group carGroup = new Group();
@@ -235,57 +235,67 @@ public class MapDraw3D
         return carGroup;
     }
 
-        public void updateVehicles()
+    private void rotateVehicle(String vehicleId, Group vehicle)
+    {
+        double vehAngle = panel.getVehicleAngle(vehicleId);
+        vehicle.setRotationAxis(Rotate.Y_AXIS);
+        vehicle.setRotate(vehAngle+180);
+    }
+
+    public void updateVehicles()
+    {
+        if (panel == null)
         {
-            if (panel == null)
-            {
-                return;
-            }
-
-            List<String> vehicleIDs = panel.getVehicleIDs();
-            for (String id : vehicleIDs)
-            {
-                // check if the car exists
-                if (!vehicleWithNames.containsKey(id))
-                {
-                    // create the car
-                    Group aCar = createVehicle();
-                    // add in the hash map
-                    vehicleWithNames.put(id, aCar);
-                    // add in the vehicleGroup
-                    ObservableList<Node> vehicle = vehicleGroup.getChildren();
-                    vehicle.add(aCar);
-                }
-                // get the current car
-                Group currentCarBox = vehicleWithNames.get(id);
-                // get the SUMOPosition2D
-                SumoPosition2D pos = panel.getPosition(id);
-                // assign SUMO X to the car's X
-                currentCarBox.setTranslateX(pos.x);
-                // move the car up by 1 meter
-                currentCarBox.setTranslateY(-1.1);
-                // assign SUMO Y to the car's Z
-                currentCarBox.setTranslateZ(pos.y);
-            }
-
-            vehicleWithNames.entrySet().removeIf(entry -> {
-                // check if the car exists
-                boolean check = vehicleIDs.contains(entry.getKey());
-                // if not exist
-                if (!check)
-                {
-                    // get the car's data
-                    Group currentCarBox = entry.getValue();
-                    ObservableList<Node> vehicle = vehicleGroup.getChildren();
-                    // remove the box data from vehicleGroup
-                    vehicle.remove(currentCarBox);
-                    // removeIf(true) --> delete from vehicleWithNames
-                    return true;
-                }
-                // removeIf(false) --> don't delete
-                return false;
-            });
+            return;
         }
+
+        List<String> vehicleIDs = panel.getVehicleIDs();
+        for (String id : vehicleIDs)
+        {
+            // check if the car exists
+            if (!vehicleWithNames.containsKey(id))
+            {
+                // create the car
+                Group aCar = createVehicle();
+                // add in the hash map
+                vehicleWithNames.put(id, aCar);
+                // add in the vehicleGroup
+                ObservableList<Node> vehicle = vehicleGroup.getChildren();
+                vehicle.add(aCar);
+            }
+            // get the current car
+            Group currentCarBox = vehicleWithNames.get(id);
+            // get the SUMOPosition2D
+            SumoPosition2D pos = panel.getPosition(id);
+            // assign SUMO X to the car's X
+            currentCarBox.setTranslateX(pos.x);
+            // move the car up by 1 meter
+            currentCarBox.setTranslateY(-1.0);
+            // assign SUMO Y to the car's Z
+            currentCarBox.setTranslateZ(pos.y);
+
+            // rotate the vehicle along the road
+            rotateVehicle(id, currentCarBox);
+        }
+
+        vehicleWithNames.entrySet().removeIf(entry -> {
+            // check if the car exists
+            boolean check = vehicleIDs.contains(entry.getKey());
+            // if not exist
+            if (!check)
+            {
+                // get the car's data
+                Group currentCarBox = entry.getValue();
+                ObservableList<Node> vehicle = vehicleGroup.getChildren();
+                // remove the box data from vehicleGroup
+                vehicle.remove(currentCarBox);
+                // removeIf(true) --> delete from vehicleWithNames
+                return true;
+            }
+            // removeIf(false) --> don't delete
+            return false;
+        });
+    }
 
     private Box createGrassBox(double width, double length)
     {
@@ -343,7 +353,7 @@ public class MapDraw3D
                     double angle_deg = Math.toDegrees(angle_rad);
 
                     // create the roadBox
-                    Box roadBox = createRoadBox(3.2, roadLength);
+                    Box roadBox = createRoadBox(4.5, roadLength);
 
                     // set the position of the road box
                     roadBox.setTranslateX(midPoint.x);

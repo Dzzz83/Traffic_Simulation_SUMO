@@ -5,7 +5,9 @@ import javafx.animation.AnimationTimer;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.*;
+import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -18,17 +20,22 @@ import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Box;
+import javafx.scene.shape.StrokeLineCap;
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
+import java.awt.*;
 import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.awt.geom.Line2D;
+
 
 import org.apache.logging.log4j.LogManager; // use for logging
 import org.apache.logging.log4j.Logger;
@@ -59,12 +66,20 @@ public class Controller {
     @FXML
     private Button VehicleIDBtn;
     @FXML
+    private Button addVehicleBtn;
+    @FXML
     private Button TrafficLightIDBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
     @FXML
     private ToggleButton autoModeToggle;
+
+    // vehicle numbers form
+    @FXML
+    private VBox vehicleInputForm;
+    @FXML
+    private javafx.scene.control.TextField vehicleCountInput;
 
     // sliders
     @FXML
@@ -171,6 +186,12 @@ public class Controller {
     private HashSet<KeyCode> keyInputSet = new HashSet<KeyCode>();
 
     private List<Double> cameraCoords = new ArrayList<>();
+
+    private boolean isSpawnMode = false;
+    private String hoveredEdge = null;
+    private int hoveredSegmentIndex = -1;
+    private List<String> selectedRouteEdges = new ArrayList<>();
+    private List<String> validNextEdges = new ArrayList<>();
 
     @FXML
     // initialize the GUI function
@@ -328,6 +349,69 @@ public class Controller {
 
             drawMap(); // redraw map when done calculating
         });
+
+        mapCanvas.setOnMouseMoved(event -> {
+            if (isSpawnMode) {
+                String detectedLane = findEdge(event.getX(), event.getY());
+
+                String detectedEdge = null;
+                if (detectedLane != null) {
+                    detectedEdge = detectedLane;
+                    if (detectedLane.contains("_") && !detectedLane.startsWith(":")) {
+                        int lastUnderscore = detectedLane.lastIndexOf('_');
+                        if (detectedLane.substring(lastUnderscore + 1).matches("\\d+")) {
+                            detectedEdge = detectedLane.substring(0, lastUnderscore);
+                        }
+                    }
+                }
+
+                boolean isValid = false;
+                if (detectedEdge != null) {
+                    if (selectedRouteEdges.isEmpty()) {
+                        isValid = true;
+                    }
+                    else if (validNextEdges.contains(detectedEdge)) {
+                        isValid = true;
+                    }
+                }
+
+                String newHover = isValid ? detectedLane : null;
+
+                if ((newHover != null && !newHover.equals(hoveredEdge)) ||
+                        (newHover == null && hoveredEdge != null) ||
+                        (newHover != null && hoveredSegmentIndex != -1)) {
+
+                    hoveredEdge = newHover;
+                    drawMap();
+                }
+            }
+        });
+
+        mapCanvas.setOnMouseClicked(event -> {
+            if (isSpawnMode && hoveredEdge != null) {
+                String currentEdgeId = hoveredEdge;
+                if (hoveredEdge.contains("_") && !hoveredEdge.startsWith(":")) {
+                    int lastUnderscore = hoveredEdge.lastIndexOf('_');
+                    if (hoveredEdge.substring(lastUnderscore + 1).matches("\\d+")) {
+                        currentEdgeId = hoveredEdge.substring(0, lastUnderscore);
+                    }
+                }
+                if (selectedRouteEdges.isEmpty() || !selectedRouteEdges.getLast().equals(currentEdgeId)) {
+
+                    selectedRouteEdges.add(currentEdgeId);
+                    LOG.info("Added edge " + currentEdgeId);
+
+                    // Get valid next edges based on this Edge
+                    validNextEdges = panel.getValidEdges(currentEdgeId);
+                    LOG.info("Valid next edges: " + validNextEdges);
+
+                    addVehicleBtn.setText("Add Vehicle(" + selectedRouteEdges.size() + ")");
+                    addVehicleBtn.setStyle("-fx-background-color: #4CAF50;");
+
+                    drawMap();
+                }
+            }
+        });
     }
 
     private void setupControls() {
@@ -477,40 +561,179 @@ public class Controller {
         stopBtn.setDisable(true);
     }
 
+    // Helper methods to detect and highlight the edge
+    private double screenToWorldY(double screenY) {
+        return ((mapCanvas.getHeight() - screenY) - OFFSET_Y) / SCALE;
+    }
+
+    private double screenToWorldX(double screenX) {
+        return (screenX - OFFSET_X) / SCALE;
+    }
+
+    private double worldToScreenX(double worldX) {
+        return (worldX * SCALE) + OFFSET_X;
+    }
+
+    private double worldToScreenY(double worldY) {
+        return mapCanvas.getHeight() - ((worldY * SCALE) + OFFSET_Y);
+    }
+
+    private String findEdge(double screenX, double screenY) {
+        if (mapShapes == null) return null;
+
+        double worldX = screenToWorldX(screenX);
+        double worldY = screenToWorldY(screenY);
+
+        double minDistance = 15.0;
+        String bestEdge = null;
+        int bestIndex = -1;
+
+        for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
+            List<SumoPosition2D> points = entry.getValue();
+
+            for (int i = 0; i < points.size() - 1; i++) {
+                SumoPosition2D p1 = points.get(i);
+                SumoPosition2D p2 = points.get(i + 1);
+
+                double dist = Line2D.ptSegDist(p1.x, p1.y, p2.x, p2.y, worldX, worldY);
+
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    bestEdge = entry.getKey();
+                    bestIndex = i;
+                }
+            }
+        }
+
+        if (bestEdge != null) {
+            this.hoveredSegmentIndex = bestIndex;
+            return bestEdge;
+        }
+        return null;
+    }
+
+    private void drawSegmentHighlight(GraphicsContext gc, SumoPosition2D p1, SumoPosition2D p2) {
+        double x1 = worldToScreenX(p1.x);
+        double y1 = worldToScreenY(p1.y);
+        double x2 = worldToScreenX(p2.x);
+        double y2 = worldToScreenY(p2.y);
+
+        gc.setStroke(javafx.scene.paint.Color.LIMEGREEN);
+        gc.setLineWidth(7);
+        gc.setLineCap(StrokeLineCap.BUTT);
+        gc.strokeLine(x1, y1, x2, y2);
+
+        gc.setStroke(Color.web("#404040"));
+        gc.setLineWidth(4);
+        gc.strokeLine(x1, y1, x2, y2);
+    }
+
     @FXML
     // add vehicle button function
     public void onAddVehicleClick() {
-        LOG.info("Adding Vehicle...");
-        // generate a unique ID for the vehicle using the current system time
-        String vehId = "veh_" + System.currentTimeMillis();
+        // Case 1: user toggles the ON/OFF
+        isSpawnMode = !isSpawnMode;
+
+        if (isSpawnMode) {
+            LOG.info("Select Mode ON: Select route");
+            addVehicleBtn.setStyle("-fx-background-color: #808080;");
+            mapCanvas.getScene().setCursor(Cursor.CROSSHAIR);
+
+            selectedRouteEdges.clear();
+            validNextEdges.clear();
+            hoveredEdge = null;
+
+            // hide the number of vehicles form until the button "Add Vehicle" is clicked
+            vehicleInputForm.setVisible(false);
+        }
+        // Case 2: user has finished selecting routes and want to add vehicles
+        else {
+            if (!selectedRouteEdges.isEmpty()) {
+                LOG.info("Route selected. Prompting for vehicle count...");
+
+                vehicleCountInput.setText("1");
+                vehicleInputForm.setVisible(true); // the form pops up
+                vehicleInputForm.toFront(); // make sure it is on the top layer to be visible
+            }
+            else {
+                resetSpawningVehicleUI();
+            }
+        }
+    }
+
+    @FXML
+    public void onConfirmSpawnClick() {
+        try {
+            String input = vehicleCountInput.getText();
+            int count = Integer.parseInt(input);
+
+            if (count > 0) {
+                spawnMultipleVehicles(count);
+
+                vehicleInputForm.setVisible(false);
+                resetSpawningVehicleUI();
+            } else {
+                LOG.warn("Please enter a number greater than 0");
+            }
+        } catch (NumberFormatException e) {
+            LOG.error("Invalid number format entered: " + vehicleCountInput.getText());
+        }
+    }
+
+    @FXML
+    public void onCancelSpawnClick() {
+        LOG.info("Spawn cancelled by user.");
+        vehicleInputForm.setVisible(false);
+        resetSpawningVehicleUI();
+    }
+
+    private void resetSpawningVehicleUI() {
+        selectedRouteEdges.clear();
+        validNextEdges.clear();
+        hoveredEdge = null;
+
+        isSpawnMode = false;
+        addVehicleBtn.setText("Select Route");
+        addVehicleBtn.setStyle("-fx-background-color: #2196F3;");
+        if (mapCanvas.getScene() != null) {
+            mapCanvas.getScene().setCursor(Cursor.DEFAULT);
+        }
+        drawMap();
+    }
+
+    private void spawnMultipleVehicles(int count) {
+        long timestamp = System.currentTimeMillis();
+        String tempRouteId = "route_" + timestamp;
 
         try {
-            // fetch all available route IDs from the SUMO map
-            List<String> routeIDs = panel.getRouteIDs();
-            // stop if no routes exist in the map files
-            if (routeIDs.isEmpty()) {
-                System.err.println("No routes found in the map file");
-                return;
+            panel.addRoute(tempRouteId, selectedRouteEdges);
+            double currentTime = panel.getCurrentTime();
+
+            for (int i = 0; i < count; i++) {
+                String vehId = "veh_" + timestamp + "_" + i;
+                // define a gap when spawning vehicles (2 seconds) to prevent traffic jam.
+                int departTime = (int) (currentTime + (i * 2));
+                panel.addVehicle(vehId, "DEFAULT_VEHTYPE", tempRouteId, departTime, 0.0, 5.0, (byte) 0);
             }
-            // select the specific route using counter (clickRouteIndex)
-            String targetRoute = routeIDs.get(clickRouteIndex);
-            // get the current simulation time so the car spawns immediately
-            int departure_time = (int) panel.getCurrentTime();
-
-            // send the command to SUMO to add the vehicle with specific parameters
-            // parameters: (ID, Type, Route, DepartTime, Position, Speed, LaneIndex)
-            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", targetRoute, departure_time, 50.0, 10.0, (byte) -2);
-
-            System.out.println("Spawned " + vehId + " on route: " + targetRoute);
-            // update the counter for the next click
-            // The modulo (%) ensures that after the last route, the index resets to 0
-            clickRouteIndex = (clickRouteIndex + 1) % routeIDs.size();
-            // refresh the canvas to show the new vehicle immediately
-            drawMap();
+            LOG.info("Successfully spawned " + count + " vehicles.");
         } catch (Exception e) {
-            // log an error if the connection to SUMO fails or the ID is invalid
-            System.err.println("Failed to add vehicle: " + e.getMessage());
+            LOG.error("Failed to spawn vehicle batch: " + e.getMessage());
+        }
+    }
 
+    // is improving, have to create a longer route.
+    private void spawnVehicleOnSelectedRoute() {
+        String vehId = "veh_" + System.currentTimeMillis();
+        String tempRouteId = "route_" + System.currentTimeMillis();
+
+        try {
+            panel.addRoute(tempRouteId, selectedRouteEdges);
+
+            int departTime = (int) panel.getCurrentTime();
+            panel.addVehicle(vehId, "DEFAULT_VEHTYPE", tempRouteId, departTime, 0.0, 5.0, (byte) 0);
+            LOG.info("Spawned vehicle on route of length: " + selectedRouteEdges.size());
+        } catch (Exception e) {
+            LOG.error("Failed to spawn vehicle: " + e.getMessage());
         }
     }
 
@@ -735,6 +958,52 @@ public class Controller {
         mapDraw.showRouteID = this.showRouteID;
 
         mapDraw.drawAll();
+
+        GraphicsContext gc = mapCanvas.getGraphicsContext2D();
+
+        // feature for highlighting the valid route when drag mouse to.
+        if (isSpawnMode && hoveredEdge != null && mapShapes.containsKey(hoveredEdge)) {
+            List<SumoPosition2D> points = mapShapes.get(hoveredEdge);
+            gc.setStroke(Color.CYAN);
+            gc.setLineWidth(6);
+            gc.setLineCap(StrokeLineCap.ROUND);
+            drawPath(gc, points);
+        }
+
+        if (!selectedRouteEdges.isEmpty()) {
+            for (String edgeId : selectedRouteEdges) {
+                String lane0 = edgeId + "_0";
+                if (mapShapes.containsKey(lane0)) {
+                    List<SumoPosition2D> points = mapShapes.get(lane0);
+
+                    gc.setStroke(Color.LIMEGREEN);
+                    gc.setLineWidth(6);
+                    gc.setLineCap(StrokeLineCap.ROUND);
+                    drawPath(gc, points);
+                }
+                else {
+                    for (String mapLaneId : mapShapes.keySet()) {
+                        if (mapLaneId.startsWith(edgeId + "_")) {
+                            List<SumoPosition2D> points = mapShapes.get(mapLaneId);
+                            gc.setStroke(Color.LIMEGREEN);
+                            gc.setLineWidth(6);
+                            gc.setLineCap(StrokeLineCap.ROUND);
+                            drawPath(gc, points);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void drawPath(GraphicsContext gc, List<SumoPosition2D> points) {
+        for (int i = 0; i < points.size() - 1; i++) {
+            SumoPosition2D p1 = points.get(i);
+            SumoPosition2D p2 = points.get(i + 1);
+            gc.strokeLine(worldToScreenX(p1.x), worldToScreenY(p1.y),
+                    worldToScreenX(p2.x), worldToScreenY(p2.y));
+        }
     }
 
     private void initialize3D()

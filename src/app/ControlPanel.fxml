@@ -24,7 +24,23 @@
 <?import javafx.scene.text.Font?>
 
 <StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.Controller">
+    <VBox fx:id="vehicleInputForm" alignment="CENTER" spacing="15" visible="false"
+          maxWidth="300" maxHeight="180"
+          style="-fx-background-color: white; -fx-padding: 20; -fx-border-color: #808080; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 0);">
 
+        <Label text="Spawn Vehicles" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <Label text="Enter number of vehicles to add:" />
+
+        <javafx.scene.control.TextField fx:id="vehicleCountInput" promptText="e.g. 5" alignment="CENTER"/>
+
+        <javafx.scene.layout.HBox spacing="15" alignment="CENTER">
+            <Button text="Confirm" onAction="#onConfirmSpawnClick"
+                    style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-cursor: hand;"/>
+            <Button text="Cancel" onAction="#onCancelSpawnClick"
+                    style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-cursor: hand;"/>
+        </javafx.scene.layout.HBox>
+    </VBox>
     <fx:define>
         <Font name="System Bold" size="12.0" fx:id="x1" />
     </fx:define>
@@ -85,7 +101,7 @@
 
                                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                                             <children>
-                                                                <Button fx:id="addVehicleBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onAddVehicleClick" style="-fx-background-color: #2196F3;" text="Add Vehicle" textFill="WHITE">
+                                                                <Button fx:id="addVehicleBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onAddVehicleClick" style="-fx-background-color: #2196F3;" text="Select Route" textFill="WHITE">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Button>
                                                                 <Button fx:id="stressTestBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onStressTestClick" style="-fx-background-color: #FF9800;" text="Run Stress Test" textFill="WHITE">

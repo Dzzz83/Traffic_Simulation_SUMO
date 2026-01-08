@@ -8,20 +8,17 @@
 package wrapperSUMO;
 
 import de.tudresden.sumo.cmd.Trafficlight;
+import de.tudresden.sumo.objects.*;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
-import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.paint.Color;
-import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.cmd.Vehicle;
+import de.tudresden.sumo.cmd.Route;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+
 
 import de.tudresden.sumo.cmd.Lane;
-import de.tudresden.sumo.objects.SumoGeometry;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -910,6 +907,62 @@ public class ControlPanel
             
         }
         return new ArrayList<>();
+    }
+
+    public void addRoute(String routeId, List<String> edgeIds) {
+        if (!isRunning && edgeIds.isEmpty()) return;
+        try {
+            SumoStringList edgeList = new SumoStringList();
+            for  (String edge : edgeIds) {
+                edgeList.add(edge);
+            }
+            connection.do_job_set(Route.add(routeId, edgeList));
+        } catch (Exception e) {
+            LOG.error("Failed to add route " + routeId);
+        }
+    }
+
+    // Get valid outgoing edges connected to a specific edge
+    public List<String> getValidEdges(String edgeId) {
+        if (!isRunning) return new ArrayList<>();
+        Set<String> connectedEdges = new HashSet<>();
+
+        try {
+            String baseEdgeId = edgeId;
+            if (edgeId.contains("_") && !edgeId.startsWith(":")) {
+                int lastUnderscore = edgeId.lastIndexOf('_');
+                String suffix = edgeId.substring(lastUnderscore + 1);
+                if (suffix.matches("\\d+")) {
+                    baseEdgeId = edgeId.substring(0, lastUnderscore);
+                }
+            }
+
+            int laneCount = edgeWrapper.getLaneNumber(baseEdgeId);
+
+            for (int i = 0; i < laneCount; i++) {
+                String laneId = baseEdgeId + "_" + i;
+
+                try {
+                    SumoLinkList links = (SumoLinkList) connection.do_job_get(Lane.getLinks(laneId));
+
+                    for (SumoLink link : links) {
+                        String nextLane = link.notInternalLane;
+                        int lastUnderscore = nextLane.lastIndexOf('_');
+                        if (lastUnderscore != -1) {
+                            String nextEdge =  nextLane.substring(0, lastUnderscore);
+                            connectedEdges.add(nextEdge);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    // ignore, keep going on the next lanes.
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.error("Failed to get valid edges for " + edgeId + ": " + e.getMessage());
+        }
+        return new ArrayList<>(connectedEdges);
     }
 
     public int getEdgeCount()

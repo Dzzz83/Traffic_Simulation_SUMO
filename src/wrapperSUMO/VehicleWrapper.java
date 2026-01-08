@@ -291,8 +291,13 @@ public class VehicleWrapper
         return 0.0;
     }
 
-
-
-
-
+    public void moveTo(String vehicleId, String laneId, double pos) {
+        try {
+            connection.do_job_set(Vehicle.moveTo(vehicleId, laneId, pos));
+        }
+        catch (Exception e) {
+            System.out.println("Failed to move the vehicle");
+            e.printStackTrace();
+        }
+    }
 }

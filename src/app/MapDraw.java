@@ -35,12 +35,16 @@ public class MapDraw
     public boolean showVehicleID = false;
     public boolean showRouteID = false;
 
-    private static final Color WINDSHIELD_COLOR = Color.color(0, 0, 0, 0.5);
     private static final Color ASPHALT_COLOR = Color.web("#404040");
     private static final Color GRASS_COLOR = Color.web("#2E7D32");
 
     private List<List<SumoPosition2D>> dashedWhiteLines = new ArrayList<>();
     private List<List<SumoPosition2D>> solidCenterLines = new ArrayList<>();
+
+    private final VehicleRenderer carRenderer = new CarRenderer();
+    private final VehicleRenderer deliveryRenderer = new DeliveryRenderer();
+    private final VehicleRenderer taxiRenderer = new TaxiRenderer();
+    private final VehicleRenderer evRenderer = new EvehicleRenderer();
 
     public MapDraw(Canvas canvas)
     {
@@ -142,9 +146,24 @@ public class MapDraw
         }
     }
 
+    //Helper to select the correct renderer based on XML ID
+    private VehicleRenderer getRenderer(String typeID) {
+        if (typeID == null) return carRenderer;
+
+        switch (typeID) {
+            case "Delivery":         return deliveryRenderer;
+            case "Evehicle":         return evRenderer;
+            case "DEFAULT_TAXITYPE": return taxiRenderer;
+            case "DEFAULT_VEHTYPE":
+            default:                 return carRenderer;
+        }
+    }
+
     public void drawAllVehicles() {
         if (panel == null || !panel.isRunning()) return;
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        //Get the list of current vehicle IDs
         List<String> vehicles = panel.getVehicleIDs();
 
         double carLength = 4.5 * SCALE;
@@ -157,31 +176,35 @@ public class MapDraw
             SumoPosition2D pos = panel.getPosition(id);
             double x = (pos.x * SCALE) + OFFSET_X;
             double y = canvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
-
             double angle = panel.getVehicleAngle(id);
 
+            Color color;
             try {
-                gc.setFill(panel.getVehicleColor(id));
+                color = panel.getVehicleColor(id);
             } catch (Exception e) {
-                gc.setFill(Color.YELLOW);
+                color = Color.YELLOW;
             }
 
-            drawCar(gc, x, y, angle, carLength, carWidth);
+            //Ask the panel for the Type ID
+            String typeID = panel.getVehicleTypeID(id);
+
+            //Select the specific renderer
+            VehicleRenderer renderer = getRenderer(typeID);
+
+            //Draw
+            renderer.draw(gc, x, y, angle, carLength, carWidth, color);
 
             if (showVehicleID) {
                 gc.setFill(Color.LIME);
                 gc.fillText(id, x, y - 8);
             }
 
-            // Route ID Logic (Text Only, Red Line Removed)
             if (showRouteID) {
                 try {
                     String routeID = panel.getVehicleRouteID(id);
                     gc.setFill(Color.GREEN);
                     gc.fillText(routeID, x, y + 15);
-                } catch (Exception e) {
-                    // Ignore
-                }
+                } catch (Exception e) {}
             }
         }
     }
@@ -199,31 +222,6 @@ public class MapDraw
             yPoints[i] = canvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
         }
         gc.strokePolyline(xPoints, yPoints, points.size());
-    }
-
-    private void drawCar(GraphicsContext gc, double x, double y, double angle, double length, double width) {
-        gc.save();
-        gc.translate(x, y);
-        gc.rotate(angle);
-
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(1.0);
-
-        // Body
-        gc.fillRoundRect(-width / 2, -length / 2, width, length, 3, 3);
-        gc.strokeRoundRect(-width / 2, -length / 2, width, length, 3, 3);
-
-        // Windshield
-        gc.setFill(WINDSHIELD_COLOR);
-        gc.fillRoundRect(-width / 2 + 1, -length / 2 + 2, width - 2, length / 4, 2, 2);
-
-        // Headlights
-        gc.setFill(Color.WHITE);
-        double lightSize = width / 4;
-        gc.fillOval(-width / 2 + 1, -length / 2, lightSize, lightSize);
-        gc.fillOval(width / 2 - 1 - lightSize, -length / 2, lightSize, lightSize);
-
-        gc.restore();
     }
 
     public void drawEdgeLabel(GraphicsContext gc, String laneID, List<SumoPosition2D> points)

@@ -61,6 +61,15 @@ public class VehicleWrapper
         return new ArrayList<>();
     }
 
+    public String getVehicleTypeID(String vehicleID) {
+        try {
+            return (String) connection.do_job_get(Vehicle.getTypeID(vehicleID));
+        } catch (Exception e) {
+            System.out.println("Failed to get type for vehicle: " + vehicleID);
+            return "DEFAULT_VEHTYPE";
+        }
+    }
+
     public String getRouteID(String vehicleId) {
         try {
             return (String) connection.do_job_get(Vehicle.getRouteID(vehicleId));

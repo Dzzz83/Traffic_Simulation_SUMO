@@ -400,6 +400,19 @@ public class ControlPanel
         return new ArrayList<>();
     }
 
+    public String getVehicleTypeID(String vehicleID) {
+        if (!isRunning) {
+            return "DEFAULT_VEHTYPE";
+        }
+        try {
+            //Delegate to the wrapper
+            return vehicleWrapper.getVehicleTypeID(vehicleID);
+        } catch (Exception e) {
+            System.err.println("Error getting type for " + vehicleID);
+            return "DEFAULT_VEHTYPE";
+        }
+    }
+
     public int getVehicleCount()
     {
         if (!isRunning)

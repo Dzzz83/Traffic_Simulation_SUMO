@@ -19,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.text.FontWeight;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Box;
@@ -28,14 +29,12 @@ import wrapperSUMO.TrafficLightWrapper;
 import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.control.Label;
 
-import java.awt.*;
+// import java.awt.*;
+import javafx.scene.text.Font;
 import java.security.spec.ECField;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.awt.geom.Line2D;
+import java.util.List;
 
 
 import org.apache.logging.log4j.LogManager; // use for logging
@@ -70,21 +69,17 @@ public class Controller {
     private Button addVehicleBtn;
     @FXML
     private Button TrafficLightIDBtn;
-    @FXML
-    private Button exportBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
     @FXML
     private ToggleButton autoModeToggle;
 
-    // vehicle numbers and types form
+    // vehicle numbers form
     @FXML
     private VBox vehicleInputForm;
     @FXML
     private javafx.scene.control.TextField vehicleCountInput;
-    @FXML
-    private ComboBox<String> vehicleTypeCombo; // vehicle type for dropdown button in the form
 
     // sliders
     @FXML
@@ -94,11 +89,9 @@ public class Controller {
     @FXML
     private Slider maxSpeedSlider;
     @FXML
-    private Slider sliderRed;
+    private Slider sliderPhaseDuration;
     @FXML
-    private Slider sliderGreen;
-    @FXML
-    private Slider sliderYellow;
+    private Label labelPhaseDuration;
 
     // sliders values
     @FXML
@@ -141,12 +134,25 @@ public class Controller {
     private Label labelGreen;
     @FXML
     private Label labelYellow;
+    @FXML private Button optimize_all_traffic;
 
     @FXML
     private Label XYZCoord;
 
+    // traffic light
+    private boolean isOptimizationActive = false;
+    private boolean isGlobalOptimizationActive = false;
+    private Button optimize_traffic;
+    private int lastOptimizedPhase = -1;
+    private String lastSelectedId = "";
     private TrafficLightWrapper tlsWrapper;
     private static final String NET_XML_PATH = "src/SumoConfig/demo.net.xml";
+    private Map<String, SumoPosition2D> trafficLightPositions = new HashMap<>();
+    private boolean arePositionsLoaded = false;
+    // Interaction states (traffic light)
+    private String hoveredTrafficLightId = null;
+    private boolean isUserDraggingSlider = false;
+
     // logical variables
     private ControlPanel panel;
     private AnimationTimer simulationLoop;
@@ -164,11 +170,6 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
-
-    // Data history storage
-    private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
-    private ReportManager reportManager = new ReportManager();
-    private boolean isRecording = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -232,6 +233,15 @@ public class Controller {
 
         // traffic light
         List<String> tlsIds = panel.getTrafficLightIDs();
+        if (tlsIds != null) {
+            for (String id : tlsIds) {
+                SumoPosition2D pos = tlsWrapper.getTrafficLightPosition(id);
+                if (pos != null) {
+                    trafficLightPositions.put(id, pos);
+                }
+            }
+            arePositionsLoaded = true;
+        }
         trafficIdCombo.getItems().clear();
         if (tlsIds != null && !tlsIds.isEmpty()) {
             trafficIdCombo.getItems().addAll(tlsIds);
@@ -257,25 +267,10 @@ public class Controller {
             }
         });
 
-        // Helper listener for Red Slider
-        sliderRed.valueProperty().addListener((obs, oldVal, newVal) -> {
-            int seconds = newVal.intValue();
-            labelRed.setText(seconds + "s");
-        });
-
-        sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
-            int seconds = newVal.intValue();
-            labelGreen.setText(seconds + "s");
-        });
-
-        sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
-            int seconds = newVal.intValue();
-            labelYellow.setText(seconds + "s");
-        });
-
         // setup chart
 
         speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
         avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
@@ -304,19 +299,23 @@ public class Controller {
                     if (now - lastUpdate >= simulationDelay) {
                         updateSimulation();
                         lastUpdate = now;
+                        if (!isUserDraggingSlider && sliderPhaseDuration != null) {
+                            String selectedId = trafficIdCombo.getValue();
+
+                            // Check if a valid ID is selected and we have the wrapper
+                            if (selectedId != null && tlsWrapper != null) {
+                                double remaining = tlsWrapper.getRemainingTimeForConnection(selectedId);
+
+                                // Update the slider and label automatically
+                                sliderPhaseDuration.setValue(remaining);
+                                labelPhaseDuration.setText(String.format("%.1fs", remaining));
+                            }
+                        }
                     }
+
                 }
             }
         };
-
-        // redefine the vehicle types
-        vehicleTypeCombo.getItems().addAll(
-                "DEFAULT_VEHTYPE",
-                "Delivery",
-                "DEFAULT_TAXITYPE",
-                "Evehicle"
-        );
-        vehicleTypeCombo.getSelectionModel().selectFirst();
 
         // initialize the traffic light selection dropdown menu
         trafficIdCombo.getItems().addAll("Junction_1", "Junction_2");
@@ -403,9 +402,56 @@ public class Controller {
                     drawMap();
                 }
             }
+            // traffic light hover
+            if (arePositionsLoaded) {
+                // Reverse the math from MapDraw to find Mouse position in SUMO World
+                double mouseX = event.getX();
+                double mouseY = event.getY();
+
+                // 1. Undo Offset, 2. Undo Scale
+                double worldMouseX = (mouseX - OFFSET_X) / SCALE;
+
+                // 1. Undo Height Flip, 2. Undo Offset, 3. Undo Scale
+                double worldMouseY = ((mapCanvas.getHeight() - mouseY) - OFFSET_Y) / SCALE;
+
+                String foundId = null;
+                double detectionRadius = 30.0; // 30 meters in SUMO world
+
+                for (Map.Entry<String, SumoPosition2D> entry : trafficLightPositions.entrySet()) {
+                    SumoPosition2D pos = entry.getValue();
+                    // Calculate distance in World Coordinates
+                    double dist = Math.sqrt(Math.pow(worldMouseX - pos.x, 2) + Math.pow(worldMouseY - pos.y, 2));
+
+                    if (dist < detectionRadius) {
+                        foundId = entry.getKey();
+                        break;
+                    }
+                }
+
+                // Only redraw if the hovered light CHANGED (prevents lag)
+                // We compare strings safely using Objects.equals logic
+                boolean changed = (foundId == null && hoveredTrafficLightId != null) ||
+                        (foundId != null && !foundId.equals(hoveredTrafficLightId));
+
+                if (changed) {
+                    hoveredTrafficLightId = foundId;
+
+                    // Change cursor to HAND if hovering over a light
+                    if (hoveredTrafficLightId != null) {
+                        mapCanvas.setCursor(javafx.scene.Cursor.HAND);
+                    } else {
+                        mapCanvas.setCursor(javafx.scene.Cursor.DEFAULT);
+                    }
+
+                    drawMap(); // Trigger the glow effect in drawMap()
+                }
+            }
         });
 
+        // 5. MOUSE CLICK (Updated for Selection)
         mapCanvas.setOnMouseClicked(event -> {
+
+            // --- A. EXISTING: Spawn Mode Click ---
             if (isSpawnMode && hoveredEdge != null) {
                 String currentEdgeId = hoveredEdge;
                 if (hoveredEdge.contains("_") && !hoveredEdge.startsWith(":")) {
@@ -415,21 +461,40 @@ public class Controller {
                     }
                 }
                 if (selectedRouteEdges.isEmpty() || !selectedRouteEdges.getLast().equals(currentEdgeId)) {
-
                     selectedRouteEdges.add(currentEdgeId);
                     LOG.info("Added edge " + currentEdgeId);
-
-                    // Get valid next edges based on this Edge
                     validNextEdges = panel.getValidEdges(currentEdgeId);
-                    LOG.info("Valid next edges: " + validNextEdges);
-
                     addVehicleBtn.setText("Add Vehicle(" + selectedRouteEdges.size() + ")");
                     addVehicleBtn.setStyle("-fx-background-color: #4CAF50;");
-
                     drawMap();
                 }
             }
+
+            // --- B. NEW: Traffic Light Click ---
+            // If we are NOT in spawn mode (or didn't click a road), check for traffic light
+            else if (hoveredTrafficLightId != null) {
+                // 1. Update the Dropdown
+                trafficIdCombo.setValue(hoveredTrafficLightId);
+
+                // 2. Log it
+                LOG.info("Map Clicked: Selected Traffic Light " + hoveredTrafficLightId);
+
+                // 3. Force redraw to show the Yellow Selection Ring immediately
+                drawMap();
+            }
+            else if (hoveredTrafficLightId != null) {
+
+                // THIS LINE updates the Dropdown to match the map click
+                trafficIdCombo.setValue(hoveredTrafficLightId);
+
+                // Optional: Log it to verify
+                LOG.info("Syncing Dropdown: Map Clicked -> " + hoveredTrafficLightId);
+
+                drawMap(); // Update the yellow selection ring immediately
+            }
         });
+
+
     }
 
     private void setupControls() {
@@ -491,27 +556,31 @@ public class Controller {
                 drawMap();
             });
         }
+        if (sliderPhaseDuration != null) {
+            // 1. When user CLICKS the slider -> Stop auto-updating
+            sliderPhaseDuration.setOnMousePressed(e -> {
+                isUserDraggingSlider = true;
+            });
 
-        // slider traffic lights status
-        if (sliderRed != null) {
-            sliderRed.valueProperty().addListener((obs, oldVal, newVal) -> {
-                redValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info("set Red Traffic Light to: " + String.valueOf(newVal));
-            });
-        }
-        if (sliderGreen != null) {
-            sliderGreen.valueProperty().addListener((obs, oldVal, newVal) -> {
-                greenValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info("set Green Traffic Light to: " + String.valueOf(newVal));
-            });
-        }
-        if (sliderYellow != null) {
-            sliderYellow.valueProperty().addListener((obs, oldVal, newVal) -> {
-                yellowValue.setText(String.format("%.2fs", newVal.doubleValue()));
-                LOG.info("set Yellow Traffic Light to: " + newVal.intValue());
-            });
-        }
+            // 2. When user RELEASES the slider -> Send command to SUMO
+            sliderPhaseDuration.setOnMouseReleased(e -> {
+                isUserDraggingSlider = false;
 
+                String selectedId = trafficIdCombo.getValue();
+                if (selectedId != null && panel != null) {
+                    double newDuration = sliderPhaseDuration.getValue();
+                    // Call the new helper method we added to ControlPanel
+                    tlsWrapper.setPhaseDuration(selectedId, newDuration);
+                }
+            });
+
+            // 3. Visual update while dragging (just updates the text label)
+            sliderPhaseDuration.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (labelPhaseDuration != null) {
+                    labelPhaseDuration.setText(String.format("%.1fs", newVal.doubleValue()));
+                }
+            });
+        }
         // make delay slider function
         if (delaySlider != null) {
             // Set initial value
@@ -723,9 +792,6 @@ public class Controller {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
 
-        // get the selected type from the dropdown button from the form
-        String selectedType = vehicleTypeCombo.getValue();
-
         try {
             panel.addRoute(tempRouteId, selectedRouteEdges);
             double currentTime = panel.getCurrentTime();
@@ -734,7 +800,7 @@ public class Controller {
                 String vehId = "veh_" + timestamp + "_" + i;
                 // define a gap when spawning vehicles (2 seconds) to prevent traffic jam.
                 int departTime = (int) (currentTime + (i * 2));
-                panel.addVehicle(vehId, selectedType, tempRouteId, departTime, 0.0, 5.0, (byte) 0);
+                panel.addVehicle(vehId, "DEFAULT_VEHTYPE", tempRouteId, departTime, 0.0, 5.0, (byte) 0);
             }
             LOG.info("Successfully spawned " + count + " vehicles.");
         } catch (Exception e) {
@@ -790,6 +856,45 @@ public class Controller {
         LOG.info("User requested: RESTORING AUTOMATIC PROGRAM.");
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
+    }
+    @FXML
+    public void onOptimizeClick() {
+        isOptimizationActive = !isOptimizationActive;
+        if (isOptimizationActive) {
+            LOG.info("Auto-Optimization: ENABLED");
+            optimize_traffic.setText("DISABLE OPTIMIZATION");
+            // Amber color
+            optimize_traffic.setStyle("-fx-background-color: #FFC107; -fx-text-fill: black; -fx-font-weight: bold;");
+        } else {
+            LOG.info("Auto-Optimization: DISABLED");
+            optimize_traffic.setText("ENABLE OPTIMIZATION");
+            // Purple color
+            optimize_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;");
+
+            // FIX: Use the same variable name as in updateSimulation()
+            lastOptimizedPhase = -1;
+            lastSelectedId = ""; // Optional: Reset ID so it re-checks immediately on next enable
+        }
+    }
+
+    @FXML
+    public void onOptimizeAllClick() {
+        isGlobalOptimizationActive = !isGlobalOptimizationActive;
+
+        if (isGlobalOptimizationActive) {
+            LOG.info("Global Optimization: ENABLED");
+            optimize_all_traffic.setText("DISABLE ALL OPTIMIZATION");
+            optimize_all_traffic.setStyle("-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;");
+
+            // Safety: Turn off Single mode to avoid double-processing
+            if (isOptimizationActive) {
+                onOptimizeClick(); // Toggle the other button off
+            }
+        } else {
+            LOG.info("Global Optimization: DISABLED");
+            optimize_all_traffic.setText("OPTIMIZE ALL");
+            optimize_all_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white;");
+        }
     }
 
     // stress test button
@@ -878,32 +983,6 @@ public class Controller {
         LOG.info("Map returned to beginning state. Press Start to begin");
     }
 
-    @FXML
-    public void onExportClick() {
-        if (!isRecording) {
-            LOG.info("User requested Data Export...");
-
-            sessionHistory.clear();
-
-            isRecording = true;
-
-            exportBtn.setText("Stop & Save");
-        }
-        else {
-            LOG.info("Stopping Recording & Saving...");
-
-            isRecording = false;
-            exportBtn.setText("Export");
-            String filename = "TrafficReport.csv";
-
-            ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
-            Thread exportThread = new Thread(myTask);
-
-            exportThread.start();
-        }
-    }
-
-
     private void updateStats() {
         int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
@@ -941,9 +1020,6 @@ public class Controller {
             double totalCO2 = panel.getTotalCO2();
             // mg/s to grams/s
             co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
-            if (isRecording) {
-                sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
-            }
         }
     }
 
@@ -968,6 +1044,36 @@ public class Controller {
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();
+        if (isGlobalOptimizationActive && tlsWrapper != null) {
+            try {
+                // 1. Get ALL Traffic Light IDs
+                List<String> allIds = panel.getTrafficLightIDs();
+
+                // 2. Check every single traffic light
+                if (allIds != null) {
+                    for (String id : allIds) {
+                        // Wrapper now handles the memory and logic for each ID
+                        tlsWrapper.checkAndOptimize(id);
+                    }
+                }
+            } catch (Exception e) {
+                LOG.error("Error in Global Optimization: " + e.getMessage());
+            }
+        }
+        // --- EXISTING: SINGLE OPTIMIZATION FLOW ---
+        // (We use 'else if' because Global overrides Single)
+        else if (isOptimizationActive && tlsWrapper != null) {
+            try {
+                String selectedId = trafficIdCombo.getValue();
+                if (selectedId != null && !selectedId.isEmpty()) {
+                    // Reuse the same smart method!
+                    // It is much cleaner than keeping 'lastOptimizedPhase' variable in Controller
+                    tlsWrapper.checkAndOptimize(selectedId);
+                }
+            } catch (Exception e) {
+                LOG.error("Error in Single Optimization: " + e.getMessage());
+            }
+        }
         if (isStressTest2Active) {
             // get a list of all vehicles currently active in the simulation
             List<String> vehicles = panel.getVehicleIDs();
@@ -1042,6 +1148,39 @@ public class Controller {
                             break;
                         }
                     }
+                }
+            }
+        }
+        if (arePositionsLoaded) {
+            for (Map.Entry<String, SumoPosition2D> entry : trafficLightPositions.entrySet()) {
+                String id = entry.getKey();
+                SumoPosition2D pos = entry.getValue();
+
+                // --- CORRECT MATH FROM MAPDRAW.JAVA ---
+                double screenX = (pos.x * SCALE) + OFFSET_X;
+                // The critical fix: Subtract from height to flip Y-axis correctly
+                double screenY = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
+
+                // 1. Draw Standard Marker (Orange Dot)
+                gc.setFill(Color.ORANGE);
+                gc.fillOval(screenX - 4, screenY - 4, 8, 8);
+
+                // 2. Draw "Selected" Ring (Yellow)
+                String selectedId = trafficIdCombo.getValue();
+                if (id != null && id.equals(selectedId)) {
+                    gc.setStroke(Color.YELLOW);
+                    gc.setLineWidth(3);
+                    gc.strokeOval(screenX - 10, screenY - 10, 20, 20);
+                }
+
+                // 3. Draw "Hover" Glow (Cyan + Text)
+                if (id != null && id.equals(hoveredTrafficLightId)) {
+                    gc.setFill(Color.rgb(0, 255, 255, 0.5));
+                    gc.fillOval(screenX - 15, screenY - 15, 30, 30);
+
+                    gc.setFill(Color.WHITE);
+                    gc.setFont(Font.font("Arial", FontWeight.BOLD, 14)); // Fixed Font import
+                    gc.fillText(id, screenX + 15, screenY - 5);
                 }
             }
         }

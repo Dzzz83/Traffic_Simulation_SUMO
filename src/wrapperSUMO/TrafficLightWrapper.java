@@ -12,10 +12,12 @@ conn.do_job_set(Command.setSomething(parameter1, parameter2, ...));
 
 package wrapperSUMO;
 
+import de.tudresden.sumo.cmd.Junction;
 import de.tudresden.sumo.cmd.Lane;
 import de.tudresden.sumo.cmd.Simulation;
 import de.tudresden.sumo.cmd.Trafficlight;
 import de.tudresden.sumo.objects.SumoLink;
+import de.tudresden.sumo.objects.SumoPosition2D;
 import de.tudresden.sumo.objects.SumoTLSController;
 import it.polito.appeal.traci.SumoTraciConnection;
 
@@ -54,7 +56,8 @@ public class TrafficLightWrapper
     {
         this.connection = connection;
     }
-
+    // store phase of each traffic light id
+    private Map<String, Integer> phaseTracker = new HashMap<>();
     // get traffic light's IDs
     public List<String> getTrafficLightIDs()
     {
@@ -186,6 +189,15 @@ public class TrafficLightWrapper
         } catch (Exception e) {
             LOG.error("Failed to load connection directions");
             e.printStackTrace();
+        }
+    }
+    // get traffic light pos
+    public SumoPosition2D getTrafficLightPosition(String trafficLightId) {
+        try {
+            return (SumoPosition2D) connection.do_job_get(Junction.getPosition(trafficLightId));
+        } catch (Exception e) {
+            LOG.error("Could not get position for TL: " + trafficLightId);
+            return null;
         }
     }
     public double getRemainingTimeForConnection(String trafficLightId)
@@ -422,7 +434,45 @@ public class TrafficLightWrapper
             LOG.error("Failed to update phase duration for " + trafficLightId);
         }
     }
+    // get all of the traffic light with its phase
+    public void checkAndOptimize(String trafficLightId) {
+        if (!isRunning || trafficLightId == null) return;
 
+        try {
+            // Get current phase from SUMO
+            int currentPhase = this.getCurrentPhaseIndex(trafficLightId);
 
+            // Get the last known phase from our Memory Map (default to -1 if not found)
+            int lastPhase = phaseTracker.getOrDefault(trafficLightId, -1);
+
+            // Check if phase has changed
+            if (currentPhase != lastPhase) {
+
+                // Only optimize if the phase actually involves Green (usually checking state string)
+                // (Optional: You can reuse your existing logic for checking 'g' or 'G' state here)
+                String state = this.getRedYellowGreenState(trafficLightId);
+
+                if (state != null && (state.contains("G") || state.contains("g"))) {
+                    // LOGIC: The phase just changed to GREEN -> RUN OPTIMIZATION
+                    this.update_phase_based_traffic_level(trafficLightId);
+                }
+
+                // Update the Memory Map with the new phase
+                phaseTracker.put(trafficLightId, currentPhase);
+            }
+        } catch (Exception e) {
+            LOG.error("Error optimizing " + trafficLightId);
+        }
+    }
+
+    public void setPhaseDuration(String trafficLightId, double duration) {
+        try {
+            // Direct command to SUMO to override the current phase length
+            connection.do_job_set(Trafficlight.setPhaseDuration(trafficLightId, duration));
+            LOG.info("Manual Override: Set " + trafficLightId + " phase to " + duration + "s");
+        } catch (Exception e) {
+            LOG.error("Error setting duration for " + trafficLightId, e);
+        }
+    }
 }
 

@@ -1,20 +1,24 @@
+/*
+1. Vehicles
+2. Traffic Lights
+3. Map/Routes
+4. Statistics
+ */
+
 package wrapperSUMO;
 
 import de.tudresden.sumo.cmd.Trafficlight;
+import de.tudresden.sumo.objects.*;
 import it.polito.appeal.traci.SumoTraciConnection;
 import de.tudresden.sumo.cmd.Simulation;
-import de.tudresden.sumo.objects.SumoPosition2D;
 import javafx.scene.paint.Color;
-import de.tudresden.sumo.objects.SumoColor;
 import de.tudresden.sumo.cmd.Vehicle;
+import de.tudresden.sumo.cmd.Route;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+
 
 import de.tudresden.sumo.cmd.Lane;
-import de.tudresden.sumo.objects.SumoGeometry;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +35,8 @@ public class ControlPanel
     private TrafficConnectInfo trafficConnectInfo;
     private EdgeWrapper edgeWrapper;
     private RouteWrapper routeWrapper;
+    private LaneWrapper laneWrapper;
+    private SimulationWrapper simulationWrapper;
 
     // initialize the boolean value isRunning
     public boolean isRunning = false;
@@ -46,9 +52,9 @@ public class ControlPanel
     {
         try
         {
-            // initialize the connection with your specific paths
+            // initialize the connection with specific paths
             connection = new SumoTraciConnection("sumo",
-                    "src/map/demo.sumocfg");
+                    "src/SumoConfig/demo.sumocfg");
 
             // start the simulation
             connection.runServer();
@@ -58,6 +64,8 @@ public class ControlPanel
             trafficLightWrapper = new TrafficLightWrapper(connection);
             edgeWrapper = new EdgeWrapper(connection);
             routeWrapper = new RouteWrapper(connection);
+            laneWrapper = new LaneWrapper(connection);
+            simulationWrapper = new SimulationWrapper(connection);
 
             // set the isRunning to true
             isRunning = true;
@@ -65,60 +73,127 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to run the simulation");
-            e.printStackTrace();
         }
         return true;
     }
 
+    // create function stopSimulation
+    public void stopSimulation()
+    {
+        if (connection == null)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+
+        try
+        {
+            // close the connection
+            connection.close();
+            isRunning = false;
+        }
+        catch (Exception e)
+        {
+            LOG.error("Can't stop the simulation");
+        }
+    }
+
+    // restartSimulation function
     public void restartSimulation() {
         try {
+            // check if a connection exists and close it
             if (connection != null) {
                 connection.close();
             }
+            // pause for 0.5 seconds to let the OS fully release the network port and resources
             Thread.sleep(500);
+            // call the startSimulation method to start a brand-new simulation
             startSimulation();
+            // log the success message
             LOG.info("Simulation restarted successfully");
         } catch (Exception e) {
+            // if the restart fails, log the error and print details for debugging
             LOG.error("Failed to restart simulation: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
-    // Retrieves the shape (list of X,Y points) for EVERY lane in your map
-    public Map<String, List<SumoPosition2D>> getMapShape()
+    // function step
+    public void step()
     {
-        Map<String, List<SumoPosition2D>> allShapes = new HashMap<>();
-
+        // check if the simulation is running
         if (!isRunning)
         {
-            return allShapes;
+            LOG.error("The simulation is not running");
+            return;
         }
-
-        try {
-            // get the list of ALL lane IDs in the simulation
-            List<String> laneIDs = (List<String>) connection.do_job_get(Lane.getIDList());
-
-            // loop through each lane and retrieve all the lane shapes from SUMO
-            for (String laneId : laneIDs) {
-                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneId));
-
-                // convert SumoGeometry to a simple Java List
-                List<SumoPosition2D> points = new ArrayList<>();
-                for (SumoPosition2D p : geometry.coords) {
-                    points.add(p);
-                }
-                allShapes.put(laneId, points);
-            }
-        } catch (Exception e) {
-            LOG.error("Failed to get the shapes of all lanes in map");
-            e.printStackTrace();
+        try
+        {
+            // do timestep
+            connection.do_timestep();
+            // get current time
+            double time = getCurrentTime();
+            LOG.info("Step to: " + time);
         }
-        return allShapes;
-    }
-    public TrafficLightWrapper getTrafficLightWrapper() {
-        return this.trafficLightWrapper;
+        catch (Exception e)
+        {
+            LOG.error("Failed to time step the simulation");
+
+        }
     }
 
+    // create function isRunning()
+    public boolean isRunning()
+    {
+        return isRunning;
+    }
+
+    public SumoTraciConnection getConnection() {
+        return this.connection;
+    }
+
+    // ------------------------------------------
+    // VEHICLE METHODS
+    // ------------------------------------------
+
+    // create function addVehicle
+    public void addVehicle(String vehicleId, String typeId, String routeId, int depart, double position, double speed, byte lane)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.addVehicle(vehicleId, typeId, routeId, depart, position, speed, lane);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to add the vehicle " + vehicleId);
+            
+        }
+    }
+
+    // create function removeVehicle
+    public void removeVehicle(String vehicleId, byte reason)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.removeVehicle(vehicleId, reason);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to remove the vehicle:  " + vehicleId);
+            
+        }
+    }
+    // stress test method
     public void stressTest(int vehicleCount)
     {
         synchronized (connection)
@@ -158,118 +233,10 @@ public class ControlPanel
             catch (Exception e)
             {
                 LOG.error("Failed to perform stress test");
-                // e.printStackTrace();
+                // 
             }
         }
 
-    }
-
-    // get the switching time between two signals
-    public double getNextSwitchTime(String tlsID) {
-        if (!isRunning) return -1.0;
-        try
-        {
-            return (double) connection.do_job_get(Trafficlight.getPhaseDuration(tlsID));
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to get next switch time for " + tlsID);
-            e.printStackTrace();
-        }
-        return -1.0;
-    }
-    // get the list of all routes
-    public List<String> getRouteIDs()
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return new ArrayList<>();
-        }
-        try
-        {
-            return routeWrapper.getRouteIDs();
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get lists of route ids");
-            e.printStackTrace();
-        }
-        return new ArrayList<>();
-    }
-
-    // for display routeID next to Vehicle
-    public String getVehicleRouteID(String vehicleId) {
-        if (!isRunning) {
-            return "";
-        }
-        return vehicleWrapper.getRouteID(vehicleId);
-    }
-
-    // function step
-    public void step()
-    {
-        // check if the simulation is running
-        if (!isRunning)
-        {
-           LOG.error("The simulation is not running");
-            return;
-        }
-        try
-        {
-            // do timestep
-            connection.do_timestep();
-            // get current time
-            double time = getCurrentTime();
-            LOG.info("Step to: " + time);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to time step the simulation");
-            e.printStackTrace();
-        }
-    }
-
-    // function getCurrentTime()
-    public double getCurrentTime()
-    {
-        // check if running
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0.0;
-        }
-        try
-        {
-            // use the SUMO command
-            return (Double) connection.do_job_get(Simulation.getTime());
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get current time");
-            e.printStackTrace();
-        }
-        return 0.0;
-    }
-
-
-    public int getVehicleCount()
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0;
-        }
-        try
-        {
-            return vehicleWrapper.getVehicleCount();
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the number of vehicles");
-            e.printStackTrace();
-        }
-        return 0;
     }
 
     // create function setColor
@@ -287,27 +254,34 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set the color");
-            e.printStackTrace();
+            
         }
     }
 
     // gets the current color of a vehicle from SUMO and converts it for JavaFX
     public Color getVehicleColor(String id) {
-        // ff the simulation isn't running, return a default yellow color
+        // if the simulation isn't running, return a default yellow color
         if (!isRunning) return Color.YELLOW;
         try {
-            // fetch the color from SUMO (TraCI)
+            // use TraCI to request the raw color data (SumoColor object)
+            // from the SUMO backend for this specific vehicle ID.
             SumoColor sc = (SumoColor) connection.do_job_get(Vehicle.getColor(id));
 
-            // use & 0xFF to convert potential negative signed bytes to positive integers (0-255)
+            // Java bytes are "signed" (-128 to 127), but colors
+            // are "unsigned" (0 to 255). Using '& 0xFF' to convert
+            // potential negative values into the correct positive integers
             int r = sc.r & 0xFF;
             int g = sc.g & 0xFF;
             int b = sc.b & 0xFF;
+            // convert the Alpha (transparency) channel from a 0-255 byte
+            // to a 0.0-1.0 double, which is what the JavaFX Color.rgb method requires
             double a = (sc.a & 0xFF) / 255.0;
 
+            // create and return the final JavaFX Color object to the Controller
             return Color.rgb(r, g, b, a);
         } catch (Exception e) {
-            // log the error
+            // if the vehicle ID doesn't exist yet or the connection drops,
+            // log the error and return Yellow to prevent the GUI from crashing
             System.err.println("TraCI Color Error for " + id + ": " + e.getMessage());
             return Color.YELLOW;
         }
@@ -328,7 +302,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to change lane for vehicle: " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
@@ -347,10 +321,65 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to slow down vehicle: " + vehicleId);
-            e.printStackTrace();
+            
         }
     }
 
+    public void changeTarget(String vehicleId, String edgeId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.changeTarget(vehicleId, edgeId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to change the destination of that vehicle");
+            
+        }
+    }
+
+    // create function setRouteID
+    public void setRouteID(String vehicleId, String routeId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.setRouteID(vehicleId, routeId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to set the route of the vehicle:  " + vehicleId);
+            
+        }
+    }
+
+    // create function setSpeed
+    public void setSpeed(String vehicleId, double speed)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return;
+        }
+        try
+        {
+            vehicleWrapper.setSpeed(vehicleId, speed);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to set the speed of the vehicle:  " + vehicleId);
+            
+        }
+    }
 
     public List<String> getVehicleIDs()
     {
@@ -366,9 +395,41 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get lists of vehicle ids");
-            e.printStackTrace();
+            
         }
         return new ArrayList<>();
+    }
+
+    public String getVehicleTypeID(String vehicleID) {
+        if (!isRunning) {
+            return "DEFAULT_VEHTYPE";
+        }
+        try {
+            //Delegate to the wrapper
+            return vehicleWrapper.getVehicleTypeID(vehicleID);
+        } catch (Exception e) {
+            System.err.println("Error getting type for " + vehicleID);
+            return "DEFAULT_VEHTYPE";
+        }
+    }
+
+    public int getVehicleCount()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return vehicleWrapper.getVehicleCount();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the number of vehicles");
+            
+        }
+        return 0;
     }
 
     public double getVehicleSpeed(String vehicleId)
@@ -385,7 +446,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the speed");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -405,9 +466,29 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the position of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return new SumoPosition2D(0.0, 0.0);
+    }
+
+    // create function getVehicleAngle
+    public double getVehicleAngle(String vehicleId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return vehicleWrapper.getAngle(vehicleId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the angle of the vehicle " + vehicleId);
+            
+        }
+        return 0.0;
     }
 
     // create function getLaneID
@@ -425,7 +506,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the laneID of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return "";
     }
@@ -445,85 +526,513 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get the roadId of the vehicle " + vehicleId);
-            e.printStackTrace();
+            
         }
         return "";
     }
 
-    // create function addVehicle
-    public void addVehicle(String vehicleId, String typeId, String routeId, int depart, double position, double speed, byte lane)
+    // for display routeID next to Vehicle
+    public String getVehicleRouteID(String vehicleId) {
+        if (!isRunning) {
+            return "";
+        }
+        return vehicleWrapper.getRouteID(vehicleId);
+    }
+
+    // create function getDistance
+    public double getDistance(String vehicleId)
     {
         if (!isRunning)
         {
             LOG.error("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return vehicleWrapper.getDistance(vehicleId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the distance of the vehicle:  " + vehicleId);
+            
+        }
+        return 0.0;
+    }
+
+    // create function getCo2
+    public double getCO2Emission(String vehicleId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            return vehicleWrapper.getCO2Emission(vehicleId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the CO2 Emission:  " + vehicleId);
+            
+        }
+        return 0.0;
+    }
+
+    // -----------------------------------------
+    // TRAFFIC LIGHT METHODS
+    // ------------------------------------------
+
+    public TrafficLightWrapper getTrafficLightWrapper() {
+        return this.trafficLightWrapper;
+    }
+
+    public List<String> getTrafficLightIDs()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return trafficLightWrapper.getTrafficLightIDs();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get traffic light IDs");
+            
+        }
+        return new ArrayList<>();
+    }
+
+    public int getTrafficLightCount()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return trafficLightWrapper.getTrafficLightCount();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get number of traffic lights");
+            
+        }
+        return 0;
+    }
+
+    // get the switching time between two signals
+    public double getNextSwitchTime(String tlsID) {
+        if (!isRunning) return -1.0;
+        try
+        {
+            return (double) connection.do_job_get(Trafficlight.getPhaseDuration(tlsID));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Failed to get next switch time for " + tlsID);
+            
+        }
+        return -1.0;
+    }
+
+    public String getRedYellowGreenState(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return "";
+        }
+        try
+        {
+            return trafficLightWrapper.getRedYellowGreenState(trafficLightId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get traffic light state");
+            
+        }
+        return "";
+    }
+
+    // Get the position of traffic light
+    public Map<String, List<SumoPosition2D>> get_traffic_light_pos(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new HashMap<>();
+        }
+        try
+        {
+            Map<String, List<SumoPosition2D>> lane_position = new HashMap<>();
+            Map<String, String> edges = this.get_controlled_lanes(trafficLightId);
+            for (Map.Entry<String, String> entry : edges.entrySet())
+            {
+                String edgeid = entry.getKey();
+                String laneid = entry.getValue();
+                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneid));
+                List<SumoPosition2D> shape = geometry.coords;
+                lane_position.put(edgeid, shape);
+            }
+            return lane_position;
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the traffic light pos in map");
+            
+        }
+        return new HashMap<>();
+    }
+
+    // get the incomming controlled road for traffic light
+    public Map<String, String> get_controlled_lanes(String trafficLightId)
+    {
+        if (!isRunning)
+        {
+            return new HashMap<>();
+        }
+        try
+        {
+            // get controlled lanes
+            List<String> controlled_lanes =(List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
+            // get edge
+            Map<String, String> edges = new HashMap<>();
+            for (String landid : controlled_lanes)
+            {
+                String edgeid = landid.split("_")[0];
+                edges.putIfAbsent(edgeid, landid);
+            }
+            return edges;
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get the controlled lanes in map");
+            
+        }
+        return new HashMap<>();
+    }
+
+    // Set traffic light to automatic mode
+    public void set_automatic_state(String trafficLightId)
+    {
+        if (!isRunning)
+        {
             return;
         }
         try
         {
-            vehicleWrapper.addVehicle(vehicleId, typeId, routeId, depart, position, speed, lane);
+            trafficLightWrapper.setautomaticmode(trafficLightId);
         }
         catch (Exception e)
         {
-            LOG.error("Failed to add the vehicle " + vehicleId);
-            e.printStackTrace();
+            LOG.error("Failed to set auto traffic light");
+        }
+        return;
+    }
+
+    // Logic to turn ON a specific light (Set program to default "0")
+    public void turnOnTrafficLight(String tlsID)
+    {
+        try {
+            connection.do_job_set(Trafficlight.setProgram(tlsID, "0"));
+            LOG.error("Traffic Light " + tlsID + " set to ON (Program 0)");
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to turn on the traffic lights");
         }
     }
 
-    // create function setRouteID
-    public void setRouteID(String vehicleId, String routeId)
+    // Logic to turn OFF a specific light (Set program to "off")
+    public void turnOffTrafficLight(String tlsID)
     {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return;
-        }
-        try
-        {
-            vehicleWrapper.setRouteID(vehicleId, routeId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to set the route of the vehicle:  " + vehicleId);
-            e.printStackTrace();
+        try {
+            connection.do_job_set(Trafficlight.setProgram(tlsID, "off"));
+            LOG.error("Traffic Light " + tlsID + " set to OFF");
+        } catch (Exception e) {
+            
         }
     }
 
-    // create function removeVehicle
-    public void removeVehicle(String vehicleId, byte reason)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return;
-        }
-        try
-        {
-            vehicleWrapper.removeVehicle(vehicleId, reason);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to remove the vehicle:  " + vehicleId);
-            e.printStackTrace();
+    public void turnOffAllLights() {
+        try {
+            // 1. Get the list of all Traffic Light IDs
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            // 2. Iterate and set program to "off"
+            for (String id : tlIDs) {
+                connection.do_job_set(Trafficlight.setProgram(id, "off"));
+            }
+            LOG.error("All traffic lights turned OFF.");
+        } catch (Exception e) {
+            
         }
     }
 
-    // create function setSpeed
-    public void setSpeed(String vehicleId, double speed)
+    public void turnOnAllLights() {
+        try {
+            // 1. Get the list of all Traffic Light IDs
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            // 2. Iterate and set program to "0" (default)
+            for (String id : tlIDs) {
+                connection.do_job_set(Trafficlight.setProgram(id, "0"));
+            }
+            LOG.error("All traffic lights turned ON.");
+        } catch (Exception e) {
+            
+        }
+    }
+
+    // turn all light to red
+    public void turn_all_light_red()
+    {
+        try
+        {
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            for (String id : tlIDs)
+            {
+                String currentState = getBaseStateString(id);
+                int length = currentState.length();
+                String allRedState = "r".repeat(length);
+
+                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allRedState));
+            }
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error forcing all lights to RED: " + e.getMessage());
+            
+        }
+    }
+
+    // turn all lights to greeen
+    public void turn_all_light_green() {
+        try {
+            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
+
+            for (String id : tlIDs) {
+                String currentState = getBaseStateString(id);
+                int length = currentState.length();
+
+                String allGreenState = "g".repeat(length);
+                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allGreenState));
+            }
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
+            
+        }
+    }
+
+    private String getBaseStateString(String tlsID) throws Exception
+    {
+        return (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(tlsID));
+    }
+
+    // ------------------------------------------
+    // MAP, ROUTES & EDGES
+    // -------------------------------------------
+
+    // get the lane id list
+    public List<String> getLaneIDList()
     {
         if (!isRunning)
         {
             LOG.error("The simulation is not running");
-            return;
+            return new ArrayList<>();
         }
         try
         {
-            vehicleWrapper.setSpeed(vehicleId, speed);
+            return laneWrapper.getLaneIDList();
         }
         catch (Exception e)
         {
-            LOG.error("Failed to set the speed of the vehicle:  " + vehicleId);
+            LOG.error("Failed to get lists of lane ids");
+        }
+        return new ArrayList<>();
+    }
+
+    // get the lane shape
+    public List<SumoPosition2D> getLaneShape(String laneId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return laneWrapper.getLaneShape(laneId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get lists of lane shapes");
+        }
+        return new ArrayList<>();
+    }
+
+    public Map<String, List<SumoPosition2D>> getMapShape()
+    {
+        Map<String, List<SumoPosition2D>> allShapes = new HashMap<>();
+
+        if (!isRunning)
+        {
+            return allShapes;
+        }
+
+        try {
+            // get the list of ALL lane IDs in the simulation
+            List<String> laneIDs = laneWrapper.getLaneIDList();
+
+            // loop through each lane and retrieve all the lane shapes from SUMO
+            for (String laneId : laneIDs) {
+                List<SumoPosition2D> points = laneWrapper.getLaneShape(laneId);
+                allShapes.put(laneId, points);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to get the shapes of all lanes in map");
             e.printStackTrace();
         }
+        return allShapes;
+    }
+    // get the list of all routes
+    public List<String> getRouteIDs()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return routeWrapper.getRouteIDs();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get lists of route ids");
+            
+        }
+        return new ArrayList<>();
+    }
+
+    public void addRoute(String routeId, List<String> edgeIds) {
+        if (!isRunning && edgeIds.isEmpty()) return;
+        try {
+            SumoStringList edgeList = new SumoStringList();
+            for  (String edge : edgeIds) {
+                edgeList.add(edge);
+            }
+            connection.do_job_set(Route.add(routeId, edgeList));
+        } catch (Exception e) {
+            LOG.error("Failed to add route " + routeId);
+        }
+    }
+
+    // Get valid outgoing edges connected to a specific edge
+    public List<String> getValidEdges(String edgeId) {
+        if (!isRunning) return new ArrayList<>();
+        Set<String> connectedEdges = new HashSet<>();
+
+        try {
+            String baseEdgeId = edgeId;
+            if (edgeId.contains("_") && !edgeId.startsWith(":")) {
+                int lastUnderscore = edgeId.lastIndexOf('_');
+                String suffix = edgeId.substring(lastUnderscore + 1);
+                if (suffix.matches("\\d+")) {
+                    baseEdgeId = edgeId.substring(0, lastUnderscore);
+                }
+            }
+
+            int laneCount = edgeWrapper.getLaneNumber(baseEdgeId);
+
+            for (int i = 0; i < laneCount; i++) {
+                String laneId = baseEdgeId + "_" + i;
+
+                try {
+                    SumoLinkList links = (SumoLinkList) connection.do_job_get(Lane.getLinks(laneId));
+
+                    for (SumoLink link : links) {
+                        String nextLane = link.notInternalLane;
+                        int lastUnderscore = nextLane.lastIndexOf('_');
+                        if (lastUnderscore != -1) {
+                            String nextEdge =  nextLane.substring(0, lastUnderscore);
+                            connectedEdges.add(nextEdge);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    // ignore, keep going on the next lanes.
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.error("Failed to get valid edges for " + edgeId + ": " + e.getMessage());
+        }
+        return new ArrayList<>(connectedEdges);
+    }
+
+    public int getEdgeCount()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return edgeWrapper.getEdgeCount();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get number of edges");
+            
+        }
+        return 0;
+    }
+
+    public List<String> getEdgeIDs()
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return new ArrayList<>();
+        }
+        try
+        {
+            return edgeWrapper.getEdgeIDs();
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get edge IDs");
+            
+        }
+        return new ArrayList<>();
+    }
+
+    public int getLaneNumber(String edgeId)
+    {
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0;
+        }
+        try
+        {
+            return edgeWrapper.getLaneNumber(edgeId);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get lane number");
+            
+        }
+        return 0;
     }
 
     public int setMaxSpeed(String edgeID, double speed) {
@@ -539,7 +1048,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to set max speed");
-            e.printStackTrace();
+            
         }
         return 0;
     }
@@ -557,7 +1066,7 @@ public class ControlPanel
         catch (Exception e)
         {
             LOG.error("Failed to get mean speed");
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -569,6 +1078,32 @@ public class ControlPanel
             return 0;
         }
         return edgeWrapper.setGlobalMaxSpeed(speed);
+    }
+
+    // --------------------------------------------
+    // STATISTICS & GLOBAL
+    // --------------------------------------------
+
+    // function getCurrentTime()
+    public double getCurrentTime()
+    {
+        // check if running
+        if (!isRunning)
+        {
+            LOG.error("The simulation is not running");
+            return 0.0;
+        }
+        try
+        {
+            // use the SUMO command
+            return (Double) connection.do_job_get(Simulation.getTime());
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to get current time");
+            
+        }
+        return 0.0;
     }
 
     public double getGlobalMeanSpeed() {
@@ -592,47 +1127,7 @@ public class ControlPanel
             return (totalSpeed / allVehicles.size());
         } catch (Exception e) {
             LOG.error("Failed to calculate global mean speed");
-            e.printStackTrace();
-        }
-        return 0.0;
-    }
-
-    // create function getDistance
-    public double getDistance(String vehicleId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0.0;
-        }
-        try
-        {
-            return vehicleWrapper.getDistance(vehicleId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the distance of the vehicle:  " + vehicleId);
-            e.printStackTrace();
-        }
-        return 0.0;
-    }
-
-    // create function getCo2
-    public double getCO2Emission(String vehicleId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0.0;
-        }
-        try
-        {
-            return vehicleWrapper.getCO2Emission(vehicleId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the CO2 Emission:  " + vehicleId);
-            e.printStackTrace();
+            
         }
         return 0.0;
     }
@@ -675,7 +1170,12 @@ public class ControlPanel
         }
     }
 
-    public List<String> getTrafficLightIDs()
+    // ------------------------------------------
+    // SIMULATION
+    // -------------------------------------------
+
+    // get the map boundary's coordinates
+    public List<SumoPosition2D> getNetBoundary()
     {
         if (!isRunning)
         {
@@ -684,352 +1184,13 @@ public class ControlPanel
         }
         try
         {
-            return trafficLightWrapper.getTrafficLightIDs();
+            return simulationWrapper.getNetBoundary();
         }
         catch (Exception e)
         {
-            LOG.error("Failed to get traffic light IDs");
-            e.printStackTrace();
+            LOG.error("Failed to get the map boundary");
         }
         return new ArrayList<>();
     }
 
-    public int getTrafficLightCount()
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0;
-        }
-        try
-        {
-            return trafficLightWrapper.getTrafficLightCount();
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get number of traffic lights");
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public String getRedYellowGreenState(String trafficLightId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return "";
-        }
-        try
-        {
-            return trafficLightWrapper.getRedYellowGreenState(trafficLightId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get traffic light state");
-            e.printStackTrace();
-        }
-        return "";
-    }
-
-    public int getEdgeCount()
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0;
-        }
-        try
-        {
-            return edgeWrapper.getEdgeCount();
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get number of edges");
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public List<String> getEdgeIDs()
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return new ArrayList<>();
-        }
-        try
-        {
-            return edgeWrapper.getEdgeIDs();
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get edge IDs");
-            e.printStackTrace();
-        }
-        return new ArrayList<>();
-    }
-
-    public int getLaneNumber(String edgeId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0;
-        }
-        try
-        {
-            return edgeWrapper.getLaneNumber(edgeId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get lane number");
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public void changeTarget(String vehicleId, String edgeId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return;
-        }
-        try
-        {
-            vehicleWrapper.changeTarget(vehicleId, edgeId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to change the destination of that vehicle");
-            e.printStackTrace();
-        }
-    }
-
-    // create function stopSimulation
-    public void stopSimulation()
-    {
-        if (connection == null)
-        {
-            LOG.error("The simulation is not running");
-            return;
-        }
-
-        try
-        {
-            // close the connection
-            connection.close();
-            isRunning = false;
-        }
-        catch (Exception e)
-        {
-            LOG.error("Can't stop the simulation");
-            e.printStackTrace();
-        }
-    }
-
-    // create function getVehicleAngle
-    public double getVehicleAngle(String vehicleId)
-    {
-        if (!isRunning)
-        {
-            LOG.error("The simulation is not running");
-            return 0.0;
-        }
-        try
-        {
-            return vehicleWrapper.getAngle(vehicleId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the angle of the vehicle " + vehicleId);
-            e.printStackTrace();
-        }
-        return 0.0;
-    }
-    // Get the position of traffic light
-    public Map<String, List<SumoPosition2D>> get_traffic_light_pos(String trafficLightId)
-    {
-        if (!isRunning)
-        {
-            return new HashMap<>();
-        }
-        try
-        {
-            Map<String, List<SumoPosition2D>> lane_position = new HashMap<>();
-            Map<String, String> edges = this.get_controlled_lanes(trafficLightId);
-            for (Map.Entry<String, String> entry : edges.entrySet())
-            {
-                String edgeid = entry.getKey();
-                String laneid = entry.getValue();
-                SumoGeometry geometry = (SumoGeometry) connection.do_job_get(Lane.getShape(laneid));
-                List<SumoPosition2D> shape = geometry.coords;
-                lane_position.put(edgeid, shape);
-            }
-            return lane_position;
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the traffic light pos in map");
-            e.printStackTrace();
-        }
-        return new HashMap<>();
-    }
-
-
-
-    // get the incomming controlled road for traffic light
-    public Map<String, String> get_controlled_lanes(String trafficLightId)
-    {
-        if (!isRunning)
-        {
-            return new HashMap<>();
-        }
-        try
-        {
-            // get controlled lanes
-            List<String> controlled_lanes =(List<String>) connection.do_job_get(Trafficlight.getControlledLanes(trafficLightId));
-            // get edge
-            Map<String, String> edges = new HashMap<>();
-            for (String landid : controlled_lanes)
-            {
-                String edgeid = landid.split("_")[0];
-                edges.putIfAbsent(edgeid, landid);
-            }
-            return edges;
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to get the controlled lanes in map");
-            e.printStackTrace();
-        }
-        return new HashMap<>();
-    }
-
-
-    // Set traffic light to automatic mode
-    public void set_automatic_state(String trafficLightId)
-    {
-        if (!isRunning)
-        {
-            return;
-        }
-        try
-        {
-            trafficLightWrapper.setautomaticmode(trafficLightId);
-        }
-        catch (Exception e)
-        {
-            LOG.error("Failed to set auto traffic light");
-        }
-        return;
-    }
-
-    // Logic to turn ON a specific light (Set program to default "0")
-    public void turnOnTrafficLight(String tlsID)
-    {
-        try {
-            connection.do_job_set(Trafficlight.setProgram(tlsID, "0"));
-            LOG.error("Traffic Light " + tlsID + " set to ON (Program 0)");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    // Logic to turn OFF a specific light (Set program to "off")
-    public void turnOffTrafficLight(String tlsID)
-    {
-        try {
-            connection.do_job_set(Trafficlight.setProgram(tlsID, "off"));
-            LOG.error("Traffic Light " + tlsID + " set to OFF");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void turnOffAllLights() {
-        try {
-            // 1. Get the list of all Traffic Light IDs
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            // 2. Iterate and set program to "off"
-            for (String id : tlIDs) {
-                connection.do_job_set(Trafficlight.setProgram(id, "off"));
-            }
-            LOG.error("All traffic lights turned OFF.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String getBaseStateString(String tlsID) throws Exception
-    {
-        return (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(tlsID));
-    }
-
-    // turn all light to red
-    public void turn_all_light_red()
-    {
-        try
-        {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs)
-            {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-                String allRedState = "r".repeat(length);
-
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allRedState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to RED: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // turn all lights to greeen
-    public void turn_all_light_green() {
-        try {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs) {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-
-                String allGreenState = "g".repeat(length);
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allGreenState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    public void turnOnAllLights() {
-        try {
-            // 1. Get the list of all Traffic Light IDs
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            // 2. Iterate and set program to "0" (default)
-            for (String id : tlIDs) {
-                connection.do_job_set(Trafficlight.setProgram(id, "0"));
-            }
-            LOG.error("All traffic lights turned ON.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    public SumoTraciConnection getConnection() {
-        return this.connection;
-    }
-
-    // create function isRunning()
-    public boolean isRunning()
-    {
-        return isRunning;
-    }
 }

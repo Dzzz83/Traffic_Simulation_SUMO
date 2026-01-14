@@ -20,11 +20,6 @@ import java.util.List;
 import java.util.ArrayList;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
-// TO DO:
-// get number of vehicles
-// get all the vehicle's ids
-// get the vehicle speed
-
 public class VehicleWrapper
 {
     // initialize the connection
@@ -64,6 +59,15 @@ public class VehicleWrapper
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+    public String getVehicleTypeID(String vehicleID) {
+        try {
+            return (String) connection.do_job_get(Vehicle.getTypeID(vehicleID));
+        } catch (Exception e) {
+            System.out.println("Failed to get type for vehicle: " + vehicleID);
+            return "DEFAULT_VEHTYPE";
+        }
     }
 
     public String getRouteID(String vehicleId) {
@@ -296,8 +300,13 @@ public class VehicleWrapper
         return 0.0;
     }
 
-
-
-
-
+    public void moveTo(String vehicleId, String laneId, double pos) {
+        try {
+            connection.do_job_set(Vehicle.moveTo(vehicleId, laneId, pos));
+        }
+        catch (Exception e) {
+            System.out.println("Failed to move the vehicle");
+            e.printStackTrace();
+        }
+    }
 }

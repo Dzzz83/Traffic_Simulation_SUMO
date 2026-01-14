@@ -1,7 +1,6 @@
 // this file serves as the central code that connects backend (ControlPanel.java) and frontend (ui_design.java & ControlPanel.fxml)
 package ui;
 
-import de.tudresden.sumo.cmd.Edge;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -19,7 +18,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.chart.NumberAxis;
 
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
@@ -53,7 +51,6 @@ public class Controller {
     @FXML private Button RouteIDBtn;
     @FXML private Button VehicleIDBtn;
     @FXML private Button TrafficLightIDBtn;
-    @FXML private Button optimize_traffic;
 
     @FXML private ComboBox<String> trafficIdCombo;
     @FXML private ToggleButton autoModeToggle;
@@ -80,6 +77,8 @@ public class Controller {
     @FXML private Label averageSpeed;
     @FXML private Label congestionDensity;
     @FXML private Label numberOfEdges;
+    @FXML private Label numOfTL;
+    @FXML private Label co2Emission;
 
     // chart
     @FXML private LineChart<Number, Number> avgSpeedChart;
@@ -140,11 +139,6 @@ public class Controller {
     private static final Color ASPHALT_COLOR = Color.web("#404040");
     private static final Color GRASS_COLOR = Color.web("#2E7D32");
 
-    // Traffic light optimization
-    private boolean isOptimizationActive = false;
-    private int lastPhaseIndex = -1;
-    private int lastOptimizedPhase = -1;
-    private String lastSelectedId = "";
     @FXML
     // initialize the GUI function
     public void initialize() {
@@ -505,25 +499,7 @@ public class Controller {
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
     }
-    @FXML
-    public void onOptimizeClick() {
-        isOptimizationActive = !isOptimizationActive;
 
-        if (isOptimizationActive) {
-            // State: ACTIVE
-            LOG.info("Auto-Optimization: ENABLED");
-            optimize_traffic.setText("DISABLE OPTIMIZATION");
-            optimize_traffic.setStyle("-fx-background-color: #FFC107; -fx-text-fill: black; -fx-font-weight: bold;"); // Amber color for "Working"
-        } else {
-            // State: INACTIVE
-            LOG.info("Auto-Optimization: DISABLED");
-            optimize_traffic.setText("ENABLE OPTIMIZATION");
-            optimize_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;"); // Back to Purple
-
-            // Optional: Reset last phase so it triggers immediately if re-enabled
-            lastPhaseIndex = -1;
-        }
-    }
     // add the stress test button
     public void onStressTestClick()
     {
@@ -563,12 +539,14 @@ public class Controller {
         }
         // call the restart logic in the backend
         panel.restartSimulation();
+
+        // Re-initializes the Traffic Light Wrapper
         tlsWrapper = panel.getTrafficLightWrapper();
         if (tlsWrapper != null) {
             tlsWrapper.isRunning = true;
-            // reload the traffic light directions from the map file
-            tlsWrapper.loadConnectionDirections(NET_XML_PATH);
+            tlsWrapper.loadConnectionDirections("src/map/demo.net.xml");
         }
+
         // reset the UI variables
         clickRouteIndex = 0;
         // redraw the empty map
@@ -580,67 +558,48 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount();
+        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount();
+        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
         numberOfEdges.setText("Edges: " + edgeCount);
+        int trafficLightCount = panel.getTrafficLightCount();
+        numOfTL.setText("Traffic Lights: " + trafficLightCount);
 
 
         if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed();
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6));
+            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
         }
 
         if (panel.isRunning()) {
-            double currentSpeed = panel.getGlobalMeanSpeed();
-            currentSpeed *= 3.6;
+            double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
+            currentSpeed *= 3.6; // m/s to km/h
 
-            timeSeconds += 0.1;
-            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed));
+            timeSeconds += 0.1; // X-axis to show the time
+            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
 
-            if (speedSeries.getData().size() > 50) {
+            if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
+            double congestion = panel.getCongestionPercentage();
+            // Color to gain insight
+            String color = "green";
+            if (congestion > 30) color = "orange";
+            if (congestion > 60) color = "red";
+
+            congestionDensity.setText(String.format("Density: %.1f%%", congestion));
+            congestionDensity.setStyle("-fx-text-fill: " + color + ";");
+
+            // 5. Show CO2
+            double totalCO2 = panel.getTotalCO2();
+            // mg/s to grams/s
+            co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
         }
     }
 
     // step and draw map accordingly
     private void updateSimulation() {
         panel.step();
-        if (isOptimizationActive && tlsWrapper != null) {
-            try {
-                // Get the ID directly from the Dropdown Menu
-                String selectedId = trafficIdCombo.getValue();
-
-                // process only if a valid ID is selected
-                if (selectedId != null && !selectedId.isEmpty()) {
-
-                    if (!selectedId.equals(lastSelectedId)) {
-                        lastOptimizedPhase = -1;
-                        lastSelectedId = selectedId;
-                    }
-
-                    // 2. Get the current phase index
-                    int currentPhase = tlsWrapper.getCurrentPhaseIndex(selectedId);
-
-                    // check whether this is new phase
-                    if (currentPhase != lastOptimizedPhase) {
-
-                        String state = tlsWrapper.getRedYellowGreenState(selectedId);
-
-                        if (state != null && (state.contains("G") || state.contains("g"))) {
-                            LOG.info("Phase Change Detected on " + selectedId + " (Phase " + currentPhase + "). Optimizing...");
-                            tlsWrapper.update_phase_based_traffic_level(selectedId);
-                        }
-
-                        // update our memory
-                        lastOptimizedPhase = currentPhase;
-                    }
-                }
-            } catch (Exception e) {
-                LOG.error("Error in optimization loop: " + e.getMessage());
-            }
-        }
         if (isStressTest2Active) {
             // get a list of all vehicles currently present on the map
             List<String> vehicles = panel.getVehicleIDs();
@@ -657,7 +616,7 @@ public class Controller {
         updateStats();
         drawMap();
     }
-    // a function to take raw, geometric data from SUMO and transforms into drawable pixels on JavaFx
+    // a function to take raw, geometric data from SUMO and transforms into pixels on JavaFx
     // take in GraphicsContext gc which will handling all the drawing-related logic and points which is a collections of (X, Y) coordinates
     public void drawPolyLine(GraphicsContext gc, List<SumoPosition2D> points)
     {
@@ -669,8 +628,11 @@ public class Controller {
         for (int i = 0; i < points.size(); i++)
         {
             // take raw X and Y points and adjust with the current zoom level and shift the coordinates based on offset
-            xPoints[i] = (points.get(i).x * SCALE ) + OFFSET_X;
-            yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
+            // SUMO (X, Y) = (50, 0), SCALE = 2.0, OFFSET = (100, 50), Map Height: 600
+            xPoints[i] = (points.get(i).x * SCALE ) + OFFSET_X; // ==> 200
+            // in SUMO, y increases as go up in the screen, in JavaFx, y decreases as go up in the screen
+            yPoints[i] = mapCanvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y); // ==> 550
+
         }
         // take in (X, Y) and draw the line
         gc.strokePolyline(xPoints, yPoints, points.size());
@@ -784,18 +746,25 @@ public class Controller {
         // normal mode: draw the roads normally (border --> asphalt --> white lines)
         else {
             // calculate road width relative to zoom (SCALE)
-            double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
-            double visualWidth = baseRoadWidth * 1.2;
+            double baseRoadWidth = 4.5 * SCALE;
+            // ensure baseRoadWidth is at least 2 pixels
+            if (baseRoadWidth < 2.0)
+            {
+                baseRoadWidth = 2.0;
+            }
 
             // smooth line endings
             gc.setLineCap(StrokeLineCap.ROUND);
             gc.setLineJoin(StrokeLineJoin.ROUND);
+
+            // turn off drawing dashed
             gc.setLineDashes(null);
 
-            // draw the outline, border
+            // draw the curb
             gc.setStroke(Color.LIGHTGRAY);
+
             // draw it a little bit wider than the asphalt
-            gc.setLineWidth(visualWidth + (0.5 * SCALE));
+            gc.setLineWidth(baseRoadWidth + (0.5 * SCALE));
 
             // loop through each point and draw the border
             for (List<SumoPosition2D> points : mapShapes.values())
@@ -805,7 +774,7 @@ public class Controller {
 
             // draw the asphalt road
             gc.setStroke(ASPHALT_COLOR);
-            gc.setLineWidth(visualWidth);
+            gc.setLineWidth(baseRoadWidth);
 
             // draw asphalt on top of the border
             for (List<SumoPosition2D> points: mapShapes.values())
@@ -822,27 +791,30 @@ public class Controller {
                 // draw the white dashed lines
                 gc.setStroke(Color.WHITESMOKE);
                 gc.setLineWidth(lineWidth);
+
                 // make it ends squarely
                 gc.setLineCap(StrokeLineCap.BUTT);
-                // draw the line in 3 meters then dashes for another 3 meters
-                gc.setLineDashes(3.0 * SCALE, 3.0 * SCALE);
 
+                // draw the line in 2 meters then dashes for another 3 meters
+                gc.setLineDashes(2.0 * SCALE, 3.0 * SCALE);
+
+                // draw the dashed line
                 for (List<SumoPosition2D> points : laneSeperators) {
                     drawPolyLine(gc, points);
                 }
 
-                // continuous white lines
-                // reset the line
+                // draw the continuous white lines
+                // reset the dashes
                 gc.setLineDashes(null);
                 gc.setLineWidth(lineWidth);
                 gc.setStroke(Color.WHITE);
 
-
+                // draw the solid lines
                 for (List<SumoPosition2D> points : solidCenterLines) {
                     drawPolyLine(gc, points);
                 }
 
-                // Cleanup: Reset settings for next drawing
+                // reset the dashes
                 gc.setLineDashes(null);
                 gc.setLineCap(StrokeLineCap.ROUND);
             }
@@ -853,7 +825,6 @@ public class Controller {
             drawTrafficLights(gc);
         }
 
-
         // draw vehicles
         // check if simulation is running
         if (panel.isRunning())
@@ -862,14 +833,27 @@ public class Controller {
             List<String> vehicles = panel.getVehicleIDs();
 
             // calculate car size
-            double carLength = Math.max(8.0, 4.5 * SCALE);
-            double carWidth = Math.max(4.0, 2.0 * SCALE);
+            double carLength = 4.5 * SCALE;
+
+            // make sure minimum length is 8 pixels
+            if (carLength < 8.0)
+            {
+                carLength = 8.0;
+            }
+
+            // make sure minimum width is 4 pixels
+            double carWidth = 2.0 * SCALE;
+            if (carWidth < 4.0)
+            {
+                carWidth = 4.0;
+            }
 
             // loop through every vehicle in the simulation
             for (String id: vehicles)
             {
-                // get the position
+                // get the position of the vehicle
                 SumoPosition2D pos = panel.getPosition(id);
+
                 // convert to screen pixel
                 double x = (pos.x * SCALE) + OFFSET_X;
                 double y = mapCanvas.getHeight() - ((pos.y * SCALE) + OFFSET_Y);
@@ -919,6 +903,8 @@ public class Controller {
 // main method for draw traffic lights based on its incoming edge
     private void drawTrafficLights(GraphicsContext gc) {
         if (tlsWrapper == null || !panel.isRunning) return;
+
+        // Level of Detail (LOD) Check
         // If map is zoomed out too far, don't draw anything to keep it clean.
         if (SCALE < 0.2) return;
 
@@ -943,6 +929,7 @@ public class Controller {
                     double drawY = mapCanvas.getHeight() - ((stopPos.y * SCALE) + OFFSET_Y);
 
                     // B. Calculate Rotation (Perpendicular to the road end)
+                    // We need the screen coordinates of the last two points to determine angle relative to screen
                     SumoPosition2D prevPos = shape.get(shape.size() - 2);
                     double prevX = (prevPos.x * SCALE) + OFFSET_X;
                     double prevY = mapCanvas.getHeight() - ((prevPos.y * SCALE) + OFFSET_Y);
@@ -960,7 +947,7 @@ public class Controller {
                     gc.translate(drawX, drawY); // Move origin to the stop line
                     gc.rotate(rotation); // Rotate the entire context
 
-                    // draw at (0,0)
+                    // Now draw at (0,0) because we shifted the origin
                     drawDirectionalTrafficLight(gc, 0, 0, secondsLeft, edgeConnections, trafficid);
 
                     gc.restore(); // Restore state for next iteration
@@ -973,13 +960,16 @@ public class Controller {
     private void drawDirectionalTrafficLight(GraphicsContext gc, double x, double y, int secondsLeft, List<TrafficConnectInfo> connections, String trafficId) {
         if (connections.isEmpty()) return;
 
-        // If zoomed out (SCALE < 0.6), draw a smaller
+        // --- LOD: Scale Adaptation ---
+        // If zoomed out (SCALE < 0.6), draw a smaller, simplified version
         boolean isDetailed = SCALE > 0.6;
 
         // 1. Organize Slots
         Map<String, TrafficConnectInfo> slotMap = new HashMap<>();
         for (TrafficConnectInfo info : connections) slotMap.putIfAbsent(info.getDirection().toLowerCase(), info);
 
+        // 2. Config (Minimalist Design)
+        // We scale the size slightly based on zoom, but clamp it so it doesn't get huge
         double sizeFactor = Math.min(1.0, Math.max(0.6, SCALE)); // Clamp between 0.6x and 1.0x size
 
         double lightRadius = (isDetailed ? 4 : 2.5) * sizeFactor;
@@ -993,13 +983,14 @@ public class Controller {
         double boxWidth = (slotStep * 4) + padding;
         double boxHeight = slotSize + (padding * 2);
 
+        // If detailed, add height for timer
         if (isDetailed) boxHeight += (10 * sizeFactor);
 
         // Draw centered on (x,y) - remember (x,y) is (0,0) relative to rotation
         double startX = x - (boxWidth / 2);
         double startY = y; // Draw "above" the stop line (relative to rotation)
 
-        // 3. Draw Housing
+        // 3. Draw Housing (Matte Black Capsule)
         gc.setFill(Color.web("#222222")); // Softer black
         gc.setStroke(Color.web("#111111"));
         gc.setLineWidth(0.5);
@@ -1028,12 +1019,12 @@ public class Controller {
                 // Draw actual arrow shape
                 drawArrow(gc, currentX, lightY, lightRadius, dir, arrowColor);
             } else {
-                // Zoomed out: draw a small dot
+                // Zoomed out: Just draw a small dot
                 gc.setFill(arrowColor);
                 gc.fillOval(currentX - lightRadius, lightY - lightRadius, lightRadius * 2, lightRadius * 2);
             }
 
-            // Draw Timer
+            // Draw Timer (Only in detailed mode)
             if (isDetailed && secondsLeft >= 0 && info != null) {
                 gc.setFill(Color.web("#DDDDDD"));
                 gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8 * sizeFactor));
@@ -1096,15 +1087,15 @@ public class Controller {
 
     // calculates a smooth parallel line on the left to draw a straight or curved line that is always parallel to the road
     // what this function does is take the center line of the leftmost lane of the current direction and calculate to help draw a line
-    // which can be dashed line or solid line 1.6 meters to the left and it will always be parallel to the center line
+    // which can be dashed line or solid line that is 1.6 meters to the left and it will always be parallel to the center line
     // accepts the list of lane center points and the shift distance
-    private List<SumoPosition2D> calculateLeftBorder(List<SumoPosition2D> points, double offset) {
+    private List<SumoPosition2D> calculateLeftParallelLine(List<SumoPosition2D> points, double offset) {
         // create a list to store the coordinates of the parallel line
-        List<SumoPosition2D> shiftedLine = new ArrayList<>();
+        List<SumoPosition2D> leftParallelLine = new ArrayList<>();
         // if the input has less than 2 points then can't calculate
         if (points.size() < 2)
         {
-            return shiftedLine;
+            return leftParallelLine;
         }
 
         for (int i = 0; i < points.size(); i++) {
@@ -1123,8 +1114,8 @@ public class Controller {
                 double len = Math.sqrt(dx*dx + dy*dy); // sqrt(1 + 0) = 1
                 // check if the length is greater than zero
                 // calculate the perpendicular vector
-                if (len > 0) {
-
+                if (len > 0)
+                {
                     avgNx -= dy / len; // -= (0/1) ==> avgNx = 0 - 0 = 0
                     avgNy += dx / len; // += (1/1) ==> avgNx = 0 + 1 = 1
                     // ==> new vector = (0,1)
@@ -1134,7 +1125,7 @@ public class Controller {
             // 2. Normal from Next Segment (i & i+1)
             // check if i is not the last point of the road
             if (i < points.size() - 1) {
-                // calculate the distancy between the 2 points
+                // calculate the distance between the 2 points
                 // Ex: (Xi, Yi) = (5, 5)
                 // (Xi+1, Yi+1) = (6, 5)
                 double dx = points.get(i + 1).x - points.get(i).x; // dx = 1
@@ -1142,30 +1133,35 @@ public class Controller {
                 // calculate the length of the segment
                 double len = Math.sqrt(dx*dx + dy*dy); // len = 1
                 // check if the length is greater than zero
-                if (len > 0) {
+                if (len > 0)
+                {
                     // calculate the perpendicular vector
                     avgNx -= dy / len; // ==> avgNx = 0
                     avgNy += dx / len; // ==> avgNx = 2
                 }
             }
 
-            // 3. Average the normals for a smooth curve
+            // 3. Normalize the vector
+            // the vector stores the direction but it also contains length
+            // if we don't normalize then length will influence the distance between the leftmost lane and the parallel line
+            // Ex: (avgNx, avgNy) = (0, 2) ==> points north ==> normalize ==> (0, 1) ==> points north
             double len = Math.sqrt(avgNx*avgNx + avgNy*avgNy); // len = 2
-            if (len > 0) {
+            if (len > 0)
+            {
                 avgNx /= len; // ==> avgNx = 0
                 avgNy /= len; // ==> avgNy = 1
             }
 
             // 4. Apply Offset
             // (Xi, Yi) = (5, 5)
-            // (avgNx, avgNy) = (0, 1)
+            // (avgNx, avgNy) = (0, 1) --> points North
             double newX = points.get(i).x + (avgNx * offset); // newX = 5.0
             double newY = points.get(i).y + (avgNy * offset); // newY = 6.6
 
-            // add the new points to the shiftedLine
-            shiftedLine.add(new SumoPosition2D(newX, newY));
+            // add the new points to the leftParallelLine
+            leftParallelLine.add(new SumoPosition2D(newX, newY));
         }
-        return shiftedLine;
+        return leftParallelLine;
     }
 
     // Draws car with rotation
@@ -1184,31 +1180,39 @@ public class Controller {
         // draw car body (Centered at 0,0)
         // width is X, length is Y. We draw it pointing UP (-y) because in JavFX, the Y-axis starts at the top and increases as the car
         // moving down so the car must move (-y) if it is moving "up" in the screen.
-        // fill the car's color
-        //gc.setFill(Color.RED);
+
         // set the color for the outline
         gc.setStroke(Color.BLACK);
         // set the thickness of the outline
         gc.setLineWidth(1.0);
 
-        // Draw the main body rectangle (*)
+        // Draw the main body rectangle
+        // because the car is in the center of the grid but gc expects the drawing start position to be the top left
+        // so divide by 2 to get the coordinates of the top left corner of the car
+        // Ex: Width = 20, Length = 40 ==> for the center of the car to be (0, 0) then left side = -10, right side = +10
+        // top = -20 and bottom = +20
         gc.fillRoundRect(-width / 2, -length / 2, width, length, 3, 3);
         gc.strokeRoundRect(-width / 2, -length / 2, width, length, 3, 3);
 
         // draw windshield
         // draw a dark box near the "front" (which is up, -y)
         gc.setFill(WINDSHIELD_COLOR); // Semi-transparent black
-        // (*)
+        // same logic but +1 and +2 to visualize the "frame" of the windshield
         gc.fillRoundRect(-width / 2 + 1, -length / 2 + 2, width - 2, length / 4, 2, 2);
 
-        // headlights
+        // draw the headlight
         gc.setFill(Color.WHITE); // headlight color
+        // size of the light
         double lightSize = width / 4;
+
         gc.fillOval(-width / 2 + 1, -length / 2, lightSize, lightSize); // left headlight
+        // width / 2 = 10 --> width / 2 - 1 = 9 --> width/2 - 1 - lightSize(5) = 4 ==> start drawing from 4 to 9
         gc.fillOval(width / 2 - 1 - lightSize, -length / 2, lightSize, lightSize); // right headline
 
-        gc.restore(); // restore state so next car isn't messed up
+        // resest the gc
+        gc.restore();
     }
+
     // function to generate dashed lines and solid lines
     private void generateLaneSeparators() {
         // clear the old data
@@ -1350,7 +1354,7 @@ public class Controller {
             List<SumoPosition2D> leftmostLane = road.get(maxIndex);
 
             // calculate the parallel line to the left with offset 1.6m
-            List<SumoPosition2D> leftParallelLine = calculateLeftBorder(leftmostLane, 1.6);
+            List<SumoPosition2D> leftParallelLine = calculateLeftParallelLine(leftmostLane, 1.6);
 
             // check if a road has multiple lanes (e.g: highways)
             if (road.size() > 1)

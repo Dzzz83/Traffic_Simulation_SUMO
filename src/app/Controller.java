@@ -33,6 +33,7 @@ import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.awt.geom.Line2D;
 
@@ -69,6 +70,8 @@ public class Controller {
     private Button addVehicleBtn;
     @FXML
     private Button TrafficLightIDBtn;
+    @FXML
+    private Button exportBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
@@ -161,6 +164,11 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // Data history storage
+    private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
+    private ReportManager reportManager = new ReportManager();
+    private boolean isRecording = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -268,7 +276,6 @@ public class Controller {
         // setup chart
 
         speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
         avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
@@ -871,6 +878,32 @@ public class Controller {
         LOG.info("Map returned to beginning state. Press Start to begin");
     }
 
+    @FXML
+    public void onExportClick() {
+        if (!isRecording) {
+            LOG.info("User requested Data Export...");
+
+            sessionHistory.clear();
+
+            isRecording = true;
+
+            exportBtn.setText("Stop & Save");
+        }
+        else {
+            LOG.info("Stopping Recording & Saving...");
+
+            isRecording = false;
+            exportBtn.setText("Export");
+            String filename = "TrafficReport.csv";
+
+            ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
+            Thread exportThread = new Thread(myTask);
+
+            exportThread.start();
+        }
+    }
+
+
     private void updateStats() {
         int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
@@ -908,6 +941,9 @@ public class Controller {
             double totalCO2 = panel.getTotalCO2();
             // mg/s to grams/s
             co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
+            if (isRecording) {
+                sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
+            }
         }
     }
 

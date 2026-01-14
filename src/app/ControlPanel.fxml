@@ -25,10 +25,13 @@
 
 <StackPane fx:id="rootPane" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.Controller">
     <VBox fx:id="vehicleInputForm" alignment="CENTER" spacing="15" visible="false"
-          maxWidth="300" maxHeight="180"
+          maxWidth="300" maxHeight="250"
           style="-fx-background-color: white; -fx-padding: 20; -fx-border-color: #808080; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 0);">
 
         <Label text="Spawn Vehicles" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <Label text="Select Vehicle Type:" />
+        <ComboBox fx:id="vehicleTypeCombo" maxWidth="Infinity" />
 
         <Label text="Enter number of vehicles to add:" />
 
@@ -267,6 +270,10 @@
                                                     <font><Font name="Arial" size="13.0" /></font>
                                                 </Label>
                                             </children>
+                                            <Button fx:id="exportBtn" mnemonicParsing="false" onAction="#onExportClick"
+                                                    prefWidth="150.0" style="-fx-background-color: #9C27B0;" text="Export" textFill="WHITE">
+                                                <font><Font name="System Bold" size="14.0" /></font>
+                                            </Button>
                                         </VBox>
                                     </content>
                                 </TitledPane>

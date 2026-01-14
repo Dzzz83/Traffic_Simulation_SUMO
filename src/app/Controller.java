@@ -33,6 +33,7 @@ import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.awt.geom.Line2D;
 
@@ -69,17 +70,21 @@ public class Controller {
     private Button addVehicleBtn;
     @FXML
     private Button TrafficLightIDBtn;
+    @FXML
+    private Button exportBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
     @FXML
     private ToggleButton autoModeToggle;
 
-    // vehicle numbers form
+    // vehicle numbers and types form
     @FXML
     private VBox vehicleInputForm;
     @FXML
     private javafx.scene.control.TextField vehicleCountInput;
+    @FXML
+    private ComboBox<String> vehicleTypeCombo; // vehicle type for dropdown button in the form
 
     // sliders
     @FXML
@@ -159,6 +164,11 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // Data history storage
+    private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
+    private ReportManager reportManager = new ReportManager();
+    private boolean isRecording = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -266,7 +276,6 @@ public class Controller {
         // setup chart
 
         speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
         avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
@@ -299,6 +308,15 @@ public class Controller {
                 }
             }
         };
+
+        // redefine the vehicle types
+        vehicleTypeCombo.getItems().addAll(
+                "DEFAULT_VEHTYPE",
+                "Delivery",
+                "DEFAULT_TAXITYPE",
+                "Evehicle"
+        );
+        vehicleTypeCombo.getSelectionModel().selectFirst();
 
         // initialize the traffic light selection dropdown menu
         trafficIdCombo.getItems().addAll("Junction_1", "Junction_2");
@@ -705,6 +723,9 @@ public class Controller {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
 
+        // get the selected type from the dropdown button from the form
+        String selectedType = vehicleTypeCombo.getValue();
+
         try {
             panel.addRoute(tempRouteId, selectedRouteEdges);
             double currentTime = panel.getCurrentTime();
@@ -713,7 +734,7 @@ public class Controller {
                 String vehId = "veh_" + timestamp + "_" + i;
                 // define a gap when spawning vehicles (2 seconds) to prevent traffic jam.
                 int departTime = (int) (currentTime + (i * 2));
-                panel.addVehicle(vehId, "DEFAULT_VEHTYPE", tempRouteId, departTime, 0.0, 5.0, (byte) 0);
+                panel.addVehicle(vehId, selectedType, tempRouteId, departTime, 0.0, 5.0, (byte) 0);
             }
             LOG.info("Successfully spawned " + count + " vehicles.");
         } catch (Exception e) {
@@ -857,6 +878,32 @@ public class Controller {
         LOG.info("Map returned to beginning state. Press Start to begin");
     }
 
+    @FXML
+    public void onExportClick() {
+        if (!isRecording) {
+            LOG.info("User requested Data Export...");
+
+            sessionHistory.clear();
+
+            isRecording = true;
+
+            exportBtn.setText("Stop & Save");
+        }
+        else {
+            LOG.info("Stopping Recording & Saving...");
+
+            isRecording = false;
+            exportBtn.setText("Export");
+            String filename = "TrafficReport.csv";
+
+            ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
+            Thread exportThread = new Thread(myTask);
+
+            exportThread.start();
+        }
+    }
+
+
     private void updateStats() {
         int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
         numberVehicles.setText("Vehicles: " + count);
@@ -894,6 +941,9 @@ public class Controller {
             double totalCO2 = panel.getTotalCO2();
             // mg/s to grams/s
             co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
+            if (isRecording) {
+                sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
+            }
         }
     }
 

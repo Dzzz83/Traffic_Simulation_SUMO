@@ -75,11 +75,13 @@ public class Controller {
     @FXML
     private ToggleButton autoModeToggle;
 
-    // vehicle numbers form
+    // vehicle numbers and types form
     @FXML
     private VBox vehicleInputForm;
     @FXML
     private javafx.scene.control.TextField vehicleCountInput;
+    @FXML
+    private ComboBox<String> vehicleTypeCombo; // vehicle type for dropdown button in the form
 
     // sliders
     @FXML
@@ -299,6 +301,15 @@ public class Controller {
                 }
             }
         };
+
+        // redefine the vehicle types
+        vehicleTypeCombo.getItems().addAll(
+                "DEFAULT_VEHTYPE",
+                "Delivery",
+                "DEFAULT_TAXITYPE",
+                "Evehicle"
+        );
+        vehicleTypeCombo.getSelectionModel().selectFirst();
 
         // initialize the traffic light selection dropdown menu
         trafficIdCombo.getItems().addAll("Junction_1", "Junction_2");
@@ -705,6 +716,9 @@ public class Controller {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
 
+        // get the selected type from the dropdown button from the form
+        String selectedType = vehicleTypeCombo.getValue();
+
         try {
             panel.addRoute(tempRouteId, selectedRouteEdges);
             double currentTime = panel.getCurrentTime();
@@ -713,7 +727,7 @@ public class Controller {
                 String vehId = "veh_" + timestamp + "_" + i;
                 // define a gap when spawning vehicles (2 seconds) to prevent traffic jam.
                 int departTime = (int) (currentTime + (i * 2));
-                panel.addVehicle(vehId, "DEFAULT_VEHTYPE", tempRouteId, departTime, 0.0, 5.0, (byte) 0);
+                panel.addVehicle(vehId, selectedType, tempRouteId, departTime, 0.0, 5.0, (byte) 0);
             }
             LOG.info("Successfully spawned " + count + " vehicles.");
         } catch (Exception e) {

@@ -69,6 +69,8 @@ public class Controller {
     private Button addVehicleBtn;
     @FXML
     private Button TrafficLightIDBtn;
+    @FXML
+    private Button exportBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
@@ -173,6 +175,11 @@ public class Controller {
     // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // Data history storage
+    private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
+    private ReportManager reportManager = new ReportManager();
+    private boolean isRecording = false;
 
     // variables for map
     // SCALE = 1.0 ==> 1 meter in SUMO is 1 pixel on the screen
@@ -822,6 +829,33 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void onExportClick() {
+        if (!isRecording) {
+            LOG.info("User requested Data Export...");
+
+            sessionHistory.clear();
+
+            isRecording = true;
+
+            exportBtn.setText("Stop & Save");
+        }
+        else {
+            LOG.info("Stopping Recording & Saving...");
+
+            isRecording = false;
+            exportBtn.setText("Export");
+            String filename = "TrafficReport.csv";
+
+            ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
+            Thread exportThread = new Thread(myTask);
+
+            exportThread.start();
+        }
+    }
+
+
+
     // is improving, have to create a longer route.
     private void spawnVehicleOnSelectedRoute() {
         String vehId = "veh_" + System.currentTimeMillis();
@@ -1034,6 +1068,9 @@ public class Controller {
             double totalCO2 = panel.getTotalCO2();
             // mg/s to grams/s
             co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
+            if (isRecording) {
+                sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
+            }
         }
     }
 

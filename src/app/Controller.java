@@ -886,21 +886,6 @@ public class Controller {
         LOG.info("User requested: Turning ALL Lights ON.");
         panel.turnOnAllLights();
     }
-
-    @FXML
-    public void turn_all_lights_red() {
-        LOG.info("User requested: FORCING ALL LIGHTS TO RED.");
-        panel.turn_all_light_red();
-        // Note: The UI drawing will update automatically on the next simulation step
-        // because it calls panel.getRedYellowGreenState()
-    }
-
-    @FXML
-    public void turn_all_lights_green() {
-        LOG.info("User requested: FORCING ALL LIGHTS TO GREEN.");
-        panel.turn_all_light_green();
-    }
-
     @FXML
     public void onRestoreAutoClick() {
         LOG.info("User requested: RESTORING AUTOMATIC PROGRAM.");

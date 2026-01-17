@@ -174,8 +174,6 @@
 
                                                                 <Separator /> <VBox spacing="5.0">
                                                                 <Label style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" text="Global Control (Force State):" />
-                                                                <Button maxWidth="Infinity" onAction="#turn_all_lights_red" style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL RED" />
-                                                                <Button maxWidth="Infinity" onAction="#turn_all_lights_green" style="-fx-background-color: #8bc34a; -fx-text-fill: white; -fx-font-weight: bold;" text="FORCE ALL GREEN" />
                                                                 <Button maxWidth="Infinity" onAction="#onRestoreAutoClick" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="RESTORE AUTO" />
                                                                 <Button fx:id="btnOptimize" maxWidth="Infinity" onAction="#onOptimizeClick" style="-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;" text="ENABLE OPTIMIZATION" />
                                                                 <Button fx:id="optimize_all_traffic" maxWidth="Infinity" onAction="#onOptimizeAllClick" style="-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;" text="OPTIMIZE ALL TRAFFIC" />

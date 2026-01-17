@@ -3,6 +3,7 @@ package app;
 
 import javafx.animation.AnimationTimer;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.*;
 import javafx.scene.Cursor;
@@ -85,6 +86,9 @@ public class Controller {
     // vehicle type
     @FXML
     private ComboBox<String> vehicleTypeCombo;
+    // filter vehicle
+    @FXML
+    private ComboBox<String> filterVehicleCombo;
 
     // sliders
     @FXML
@@ -646,6 +650,18 @@ public class Controller {
                 }
             });
         }
+        //
+        filterVehicleCombo.getItems().addAll("All", "Passenger", "Taxi", "Delivery", "Evehicle");
+        filterVehicleCombo.getSelectionModel().select("All");
+    }
+
+    @FXML
+    public void onFilterVehicleChange(ActionEvent event) {
+        String selectedType = filterVehicleCombo.getValue();
+
+        if (mapDraw != null) {
+            mapDraw.setVehicleFilter(selectedType);
+        }
     }
 
 
@@ -1019,20 +1035,20 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
-        numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
-        numberOfEdges.setText("Edges: " + edgeCount);
-        int trafficLightCount = panel.getTrafficLightCount();
-        numOfTL.setText("Traffic Lights: " + trafficLightCount);
-
-
-        if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
-        }
-
         if (panel.isRunning()) {
+            int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
+            numberVehicles.setText("Vehicles: " + count);
+            int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
+            numberOfEdges.setText("Edges: " + edgeCount);
+            int trafficLightCount = panel.getTrafficLightCount();
+            numOfTL.setText("Traffic Lights: " + trafficLightCount);
+
+
+            if (!panel.getVehicleIDs().isEmpty()) {
+                double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+                averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
+            }
+
             double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
             currentSpeed *= 3.6; // m/s to km/h
 

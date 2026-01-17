@@ -394,7 +394,20 @@ public class MapDraw
             }
         }
     }
-
+    /**
+     * Renders all traffic lights onto the simulation canvas.
+     * <p>
+     * This method iterates through all registered traffic lights. For each connection,
+     * it calculates the position and rotation of the stop line based on the lane geometry.
+     * It then applies a coordinate transformation (translate and rotate) to the
+     * {@link GraphicsContext} before drawing the specific light configuration.
+     * </p>
+     * <p>
+     * <strong>Optimization:</strong> Rendering is skipped if the current zoom scale
+     * is below 0.2 to improve performance.
+     * </p>
+     * * @param gc The JavaFX GraphicsContext used for drawing.
+     */
     public void drawTrafficLights(GraphicsContext gc) {
         if (tlsWrapper == null || !panel.isRunning()) return;
         if (SCALE < 0.2) return;
@@ -434,7 +447,19 @@ public class MapDraw
             }
         }
     }
-
+    /**
+     * Draws a specific traffic light box containing directional arrows.
+     * <p>
+     * Adapts the detail level (text vs. simple dots) based on the current zoom {@code SCALE}.
+     * Colors the arrows Red, Yellow, or Green based on the simulation state.
+     * </p>
+     * * @param gc The graphics context.
+     * @param x The center X coordinate.
+     * @param y The center Y coordinate.
+     * @param secondsLeft The countdown timer value to display (if detailed mode is on).
+     * @param connections The list of lane connections controlled by this light.
+     * @param trafficId The ID of the traffic light (for state lookup).
+     */
     private void drawDirectionalTrafficLight(GraphicsContext gc, double x, double y, int secondsLeft, List<TrafficConnectInfo> connections, String trafficId) {
         if (connections.isEmpty()) return;
         boolean isDetailed = SCALE > 0.6;

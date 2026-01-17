@@ -59,6 +59,10 @@ public class TrafficLightWrapper
     // store phase of each traffic light id
     private Map<String, Integer> phaseTracker = new HashMap<>();
     // get traffic light's IDs
+    /**
+     * Retrieves a list of all Traffic Light IDs currently in the simulation.
+     * * @return A list of ID strings. Returns an empty list if the request fails.
+     */
     public List<String> getTrafficLightIDs()
     {
         try
@@ -87,7 +91,11 @@ public class TrafficLightWrapper
         }
         return 0;
     }
-
+    /**
+     * Gets the current Red/Yellow/Green state string for the specified traffic light.
+     * * @param trafficLightId The ID of the traffic light.
+     * @return A string representing the state (e.g., "GrGr"), or empty string on failure.
+     */
     // get the traffic light's state
     public String getRedYellowGreenState(String trafficLightId)
     {
@@ -114,7 +122,17 @@ public class TrafficLightWrapper
             LOG.error("Failed to set the program of Traffic Lights" + trafficLightId);
         }
     }
-
+    /**
+     * Retrieves the layout of connections controlled by a specific traffic light.
+     * <p>
+     * This method combines dynamic data from the simulation (TraaS) with static
+     * direction data parsed from the network XML file to build a complete
+     * map of the junction.
+     * </p>
+     * * @param trafficLightId The ID of the traffic light to query.
+     * @return A Map where keys are 'From Edge' IDs and values are lists of {@link TrafficConnectInfo}.
+     * Returns an empty map if the simulation is not running or an error occurs.
+     */
     public Map<String, List<TrafficConnectInfo>> get_traffic_connections(String trafficLightId) {
         if (!isRunning) return new HashMap<>();
         try {
@@ -150,11 +168,19 @@ public class TrafficLightWrapper
         }
         return new HashMap<>();
     }
-
     private XmlConnectionData getConnectionData(String fromLane, String toLane) {
         String key = fromLane + "->" + toLane;
         return staticConnectionData.get(key);
     }
+    /**
+     * Parses the SUMO network XML file to load static connection details.
+     * <p>
+     * It extracts the 'dir' (direction) and 'linkIndex' attributes for every connection
+     * controlled by a traffic light and caches them in {@code staticConnectionData}.
+     * This is required because the live TraaS API does not provide direction strings (e.g., "r", "s", "l").
+     * </p>
+     * * @param netFilePath The absolute or relative path to the .net.xml file.
+     */
     public void loadConnectionDirections(String netFilePath) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -401,7 +427,19 @@ public class TrafficLightWrapper
         }
         return max_vehicles;
     }
-
+    /**
+     * Calculates and sets the green phase duration based on current traffic density.
+     * <p>
+     * <strong>Adaptive Logic:</strong> This method queries the number of vehicles on the
+     * currently green lanes. It scales the duration linearly:
+     * <ul>
+     * <li>Base duration: 20.0s</li>
+     * <li>Scaling: +2.5s per vehicle</li>
+     * <li>Maximum cap: 60.0s</li>
+     * </ul>
+     * </p>
+     * * @param trafficLightId The ID of the traffic light to update.
+     */
     // set phase duration based on traffic level
     public void update_phase_based_traffic_level(String trafficLightId)
     {
@@ -422,7 +460,15 @@ public class TrafficLightWrapper
             LOG.error("Failed to update phase duration for " + trafficLightId);
         }
     }
-    // get all of the traffic light with its phase
+    /**
+     * Monitors the traffic light phase and triggers optimization logic when a phase change is detected.
+     * <p>
+     * This method should be called inside the main simulation loop. It checks if the
+     * phase index has changed since the last call. If the new phase indicates a
+     * green state (containing 'G' or 'g'), it triggers {@link #update_phase_based_traffic_level}.
+     * </p>
+     * * @param trafficLightId The ID of the traffic light to check.
+     */
     public void checkAndOptimize(String trafficLightId) {
         if (!isRunning || trafficLightId == null) return;
 
@@ -452,7 +498,11 @@ public class TrafficLightWrapper
             LOG.error("Error optimizing " + trafficLightId);
         }
     }
-
+    /**
+     * Manually overrides the phase duration for a specific traffic light.
+     * * @param trafficLightId The ID of the traffic light.
+     * @param duration The new duration in seconds.
+     */
     public void setPhaseDuration(String trafficLightId, double duration) {
         try {
             // Direct command to SUMO to override the current phase length

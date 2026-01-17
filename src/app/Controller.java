@@ -9,7 +9,6 @@ import javafx.scene.*;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.chart.BarChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -138,8 +137,6 @@ public class Controller {
     // chart
     @FXML
     private LineChart<Number, Number> avgSpeedChart;
-    @FXML
-    private BarChart<String, Number> waitingTimeChart;
 
     // traffic light
     @FXML
@@ -181,12 +178,9 @@ public class Controller {
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
 
-    // variables for line chart
+    // variables for chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
-
-    // variables for bar chart
-    private XYChart.Series<String, Number> timeDataSeries;
 
     // Data history storage
     private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
@@ -236,20 +230,6 @@ public class Controller {
 
         mapDraw = new MapDraw(mapCanvas);
         mapDraw3D = new MapDraw3D();
-
-        // setup line chart
-        speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
-        avgSpeedChart.getData().add(speedSeries);
-
-        // setup bar chart
-        timeDataSeries = new XYChart.Series<>();
-        timeDataSeries.setName("Waiting Time Distribution");
-        timeDataSeries.getData().add(new XYChart.Data<>("<30s", 0));
-        timeDataSeries.getData().add(new XYChart.Data<>("30-60s", 0));
-        timeDataSeries.getData().add(new XYChart.Data<>(">60s", 0));
-        waitingTimeChart.getData().add(timeDataSeries);
-        waitingTimeChart.setAnimated(false);
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -302,6 +282,12 @@ public class Controller {
                 panel.turnOffTrafficLight(selectedId);
             }
         });
+
+        // setup chart
+
+        speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
+        avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
         setupMapInteractions();
@@ -370,143 +356,169 @@ public class Controller {
     }
 
     private void setupMapInteractions() {
-        // 1. Zoom (Scroll)
-        mapCanvas.setOnScroll(this::handleMapScroll);
+        // zoom in zoom out feature
+        mapCanvas.setOnScroll(event -> {
+            double zoomFactor = 1.1; // 10% zoom per scroll
+            if (event.getDeltaY() < 0) {
+                SCALE /= zoomFactor; // zoom out logic
+            } else {
+                SCALE *= zoomFactor; // zoom in logic
+            }
+            drawMap(); // redraw map according to the zoom
+        });
 
-        // 2. Dragging
+        // drag mouse feature
+        // capture mouse position when user clicks
         mapCanvas.setOnMousePressed(event -> {
             lastMouseX = event.getX();
             lastMouseY = event.getY();
         });
-        mapCanvas.setOnMouseDragged(this::handleMapDrag);
 
-        // 3. Hover Effects (Edge & Traffic Light Detection)
-        mapCanvas.setOnMouseMoved(this::handleMapHover);
+        // calculate movement when dragged logic
+        mapCanvas.setOnMouseDragged(event -> {
+            double deltaX = event.getX() - lastMouseX;
+            double deltaY = event.getY() - lastMouseY;
 
-        // 4. Selection & Clicking
-        mapCanvas.setOnMouseClicked(this::handleMapClick);
-    }
+            OFFSET_X += deltaX;
 
-    private void handleMapScroll(javafx.scene.input.ScrollEvent event) {
-        double zoomFactor = 1.1;
-        if (event.getDeltaY() < 0) {
-            SCALE /= zoomFactor;
-        } else {
-            SCALE *= zoomFactor;
-        }
-        drawMap();
-    }
 
-    private void handleMapDrag(javafx.scene.input.MouseEvent event) {
-        double deltaX = event.getX() - lastMouseX;
-        double deltaY = event.getY() - lastMouseY;
+            // dragging down
+            OFFSET_Y -= deltaY;
 
-        OFFSET_X += deltaX;
-        OFFSET_Y -= deltaY; // Dragging down moves view up
+            lastMouseX = event.getX();
+            lastMouseY = event.getY();
 
-        lastMouseX = event.getX();
-        lastMouseY = event.getY();
+            drawMap(); // redraw map when done calculating
+        });
 
-        drawMap();
-    }
+        mapCanvas.setOnMouseMoved(event -> {
+            if (isSpawnMode) {
+                String detectedLane = findEdge(event.getX(), event.getY());
 
-    private void handleMapHover(javafx.scene.input.MouseEvent event) {
-        if (isSpawnMode) {
-            handleEdgeHover(event);
-        }
+                String detectedEdge = null;
+                if (detectedLane != null) {
+                    detectedEdge = detectedLane;
+                    if (detectedLane.contains("_") && !detectedLane.startsWith(":")) {
+                        int lastUnderscore = detectedLane.lastIndexOf('_');
+                        if (detectedLane.substring(lastUnderscore + 1).matches("\\d+")) {
+                            detectedEdge = detectedLane.substring(0, lastUnderscore);
+                        }
+                    }
+                }
 
-        if (arePositionsLoaded) {
-            handleTrafficLightHover(event);
-        }
-    }
+                boolean isValid = false;
+                if (detectedEdge != null) {
+                    if (selectedRouteEdges.isEmpty()) {
+                        isValid = true;
+                    }
+                    else if (validNextEdges.contains(detectedEdge)) {
+                        isValid = true;
+                    }
+                }
 
-    // Helper for Edge Hover
-    private void handleEdgeHover(javafx.scene.input.MouseEvent event) {
-        String detectedLane = findEdge(event.getX(), event.getY());
+                String newHover = isValid ? detectedLane : null;
 
-        // Logic to normalize lane ID to edge ID
-        String detectedEdge = null;
-        if (detectedLane != null) {
-            detectedEdge = detectedLane;
-            if (detectedLane.contains("_") && !detectedLane.startsWith(":")) {
-                int lastUnderscore = detectedLane.lastIndexOf('_');
-                if (detectedLane.substring(lastUnderscore + 1).matches("\\d+")) {
-                    detectedEdge = detectedLane.substring(0, lastUnderscore);
+                if ((newHover != null && !newHover.equals(hoveredEdge)) ||
+                        (newHover == null && hoveredEdge != null) ||
+                        (newHover != null && hoveredSegmentIndex != -1)) {
+
+                    hoveredEdge = newHover;
+                    drawMap();
                 }
             }
-        }
+            // traffic light hover
+            if (arePositionsLoaded) {
+                // Reverse the math from MapDraw to find Mouse position in SUMO World
+                double mouseX = event.getX();
+                double mouseY = event.getY();
 
-        // Logic to validate connectivity
-        boolean isValid = false;
-        if (detectedEdge != null) {
-            if (selectedRouteEdges.isEmpty()) {
-                isValid = true;
-            } else if (validNextEdges.contains(detectedEdge)) {
-                isValid = true;
+                // 1. Undo Offset, 2. Undo Scale
+                double worldMouseX = (mouseX - OFFSET_X) / SCALE;
+
+                // 1. Undo Height Flip, 2. Undo Offset, 3. Undo Scale
+                double worldMouseY = ((mapCanvas.getHeight() - mouseY) - OFFSET_Y) / SCALE;
+
+                String foundId = null;
+                double detectionRadius = 30.0; // 30 meters in SUMO world
+
+                for (Map.Entry<String, SumoPosition2D> entry : trafficLightPositions.entrySet()) {
+                    SumoPosition2D pos = entry.getValue();
+                    // Calculate distance in World Coordinates
+                    double dist = Math.sqrt(Math.pow(worldMouseX - pos.x, 2) + Math.pow(worldMouseY - pos.y, 2));
+
+                    if (dist < detectionRadius) {
+                        foundId = entry.getKey();
+                        break;
+                    }
+                }
+
+                // Only redraw if the hovered light CHANGED (prevents lag)
+                // We compare strings safely using Objects.equals logic
+                boolean changed = (foundId == null && hoveredTrafficLightId != null) ||
+                        (foundId != null && !foundId.equals(hoveredTrafficLightId));
+
+                if (changed) {
+                    hoveredTrafficLightId = foundId;
+
+                    // Change cursor to HAND if hovering over a light
+                    if (hoveredTrafficLightId != null) {
+                        mapCanvas.setCursor(javafx.scene.Cursor.HAND);
+                    } else {
+                        mapCanvas.setCursor(javafx.scene.Cursor.DEFAULT);
+                    }
+
+                    drawMap(); // Trigger the glow effect in drawMap()
+                }
             }
-        }
+        });
 
-        String newHover = isValid ? detectedLane : null;
+        // 5. MOUSE CLICK (Updated for Selection)
+        mapCanvas.setOnMouseClicked(event -> {
 
-        // Only redraw if the state actually changed
-        if (!Objects.equals(hoveredEdge, newHover)) {
-            hoveredEdge = newHover;
-            drawMap();
-        }
-    }
-
-    // Helper for Traffic Light Hover
-    private void handleTrafficLightHover(javafx.scene.input.MouseEvent event) {
-        double worldMouseX = screenToWorldX(event.getX());
-        double worldMouseY = screenToWorldY(event.getY());
-
-        String foundId = null;
-        double detectionRadius = 30.0;
-
-        for (Map.Entry<String, SumoPosition2D> entry : trafficLightPositions.entrySet()) {
-            SumoPosition2D pos = entry.getValue();
-            double dist = Math.sqrt(Math.pow(worldMouseX - pos.x, 2) + Math.pow(worldMouseY - pos.y, 2));
-
-            if (dist < detectionRadius) {
-                foundId = entry.getKey();
-                break;
-            }
-        }
-
-        if (!Objects.equals(hoveredTrafficLightId, foundId)) {
-            hoveredTrafficLightId = foundId;
-            mapCanvas.setCursor(foundId != null ? Cursor.HAND : Cursor.DEFAULT);
-            drawMap();
-        }
-    }
-
-    private void handleMapClick(javafx.scene.input.MouseEvent event) {
-        // Case A: Spawn Mode Click
-        if (isSpawnMode && hoveredEdge != null) {
-            String currentEdgeId = hoveredEdge;
-            // Strip lane number logic...
-            if (hoveredEdge.contains("_") && !hoveredEdge.startsWith(":")) {
-                int lastUnderscore = hoveredEdge.lastIndexOf('_');
-                if (hoveredEdge.substring(lastUnderscore + 1).matches("\\d+")) {
-                    currentEdgeId = hoveredEdge.substring(0, lastUnderscore);
+            // --- A. EXISTING: Spawn Mode Click ---
+            if (isSpawnMode && hoveredEdge != null) {
+                String currentEdgeId = hoveredEdge;
+                if (hoveredEdge.contains("_") && !hoveredEdge.startsWith(":")) {
+                    int lastUnderscore = hoveredEdge.lastIndexOf('_');
+                    if (hoveredEdge.substring(lastUnderscore + 1).matches("\\d+")) {
+                        currentEdgeId = hoveredEdge.substring(0, lastUnderscore);
+                    }
+                }
+                if (selectedRouteEdges.isEmpty() || !selectedRouteEdges.getLast().equals(currentEdgeId)) {
+                    selectedRouteEdges.add(currentEdgeId);
+                    LOG.info("Added edge " + currentEdgeId);
+                    validNextEdges = panel.getValidEdges(currentEdgeId);
+                    addVehicleBtn.setText("Add Vehicle(" + selectedRouteEdges.size() + ")");
+                    addVehicleBtn.setStyle("-fx-background-color: #4CAF50;");
+                    drawMap();
                 }
             }
 
-            if (selectedRouteEdges.isEmpty() || !selectedRouteEdges.getLast().equals(currentEdgeId)) {
-                selectedRouteEdges.add(currentEdgeId);
-                LOG.info("Added edge " + currentEdgeId);
-                validNextEdges = panel.getValidEdges(currentEdgeId);
-                addVehicleBtn.setText("Add Vehicle(" + selectedRouteEdges.size() + ")");
-                addVehicleBtn.setStyle("-fx-background-color: #4CAF50;");
+            // --- B. NEW: Traffic Light Click ---
+            // If we are NOT in spawn mode (or didn't click a road), check for traffic light
+            else if (hoveredTrafficLightId != null) {
+                // 1. Update the Dropdown
+                trafficIdCombo.setValue(hoveredTrafficLightId);
+
+                // 2. Log it
+                LOG.info("Map Clicked: Selected Traffic Light " + hoveredTrafficLightId);
+
+                // 3. Force redraw to show the Yellow Selection Ring immediately
                 drawMap();
             }
-        }
-        // Case B: Click the junction
-        else if (hoveredTrafficLightId != null) {
-            trafficIdCombo.setValue(hoveredTrafficLightId);
-            LOG.info("Map Clicked: Selected Traffic Lights in the Junction " + hoveredTrafficLightId);
-            drawMap();
-        }
+            else if (hoveredTrafficLightId != null) {
+
+                // THIS LINE updates the Dropdown to match the map click
+                trafficIdCombo.setValue(hoveredTrafficLightId);
+
+                // Optional: Log it to verify
+                LOG.info("Syncing Dropdown: Map Clicked -> " + hoveredTrafficLightId);
+
+                drawMap(); // Update the yellow selection ring immediately
+            }
+        });
+
+
     }
 
     private void setupControls() {
@@ -958,7 +970,7 @@ public class Controller {
         // switch the state between true and false
         isStressTest2Active = !isStressTest2Active;
         // print a message to the console
-        LOG.info("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
+        System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
     }
 
     @FXML
@@ -1046,22 +1058,6 @@ public class Controller {
             if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
-
-            List<Double> waits = panel.getAccumulatedWaitingTimes();
-            int stage1 = 0;
-            int stage2 = 0;
-            int stage3 = 0;
-
-            for (double w : waits) {
-                if (w < 30) stage1++;
-                else if (w < 60) stage2++;
-                else stage3++;
-            }
-
-            timeDataSeries.getData().get(0).setYValue(stage1);
-            timeDataSeries.getData().get(1).setYValue(stage2);
-            timeDataSeries.getData().get(2).setYValue(stage3);
-
             double congestion = panel.getCongestionPercentage();
             // Color to gain insight
             String color = "green";

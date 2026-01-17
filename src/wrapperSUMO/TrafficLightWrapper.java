@@ -406,28 +406,16 @@ public class TrafficLightWrapper
     public void update_phase_based_traffic_level(String trafficLightId)
     {
         int max_vehicles = this.get_largest_no_vehicles(trafficLightId);
-        String logicType = "";
-        double new_duration = 0;
-        if (max_vehicles >= 15)
-        {
-            new_duration = 60.0;
-            logicType = "HIGH Demand";
-        }
-        else if (max_vehicles >= 10)
-        {
-            new_duration = 45.0;
-            logicType = "MODERATE Demand";
-        }
-        else
-        {
-            new_duration = 20.0;
-            logicType = "LOW Demand";
-        }
+        double min_dur = 20.0;
+        double max_dur = 60.0;
+        double timepercar  = 2.5;
+        double calculated_duration = min_dur + (max_vehicles * max_dur);
+        double new_duration = Math.min(max_dur, calculated_duration);
         try
         {
             connection.do_job_set(Trafficlight.setPhaseDuration(trafficLightId, new_duration));
-            LOG.info(String.format(">>> OPTIMIZED %s: Found %d vehicles (%s). Set Duration to %.1fs",
-                    trafficLightId, max_vehicles, logicType, new_duration));
+            LOG.info(String.format(">>> ADAPTIVE %s: %d vehicles. Scaled Duration: %.1fs",
+                    trafficLightId, max_vehicles, new_duration));
         }
         catch (Exception e)
         {

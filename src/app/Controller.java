@@ -149,7 +149,7 @@ public class Controller {
     // traffic light
     private boolean isOptimizationActive = false;
     private boolean isGlobalOptimizationActive = false;
-    private Button optimize_traffic;
+    @FXML private Button optimize_traffic;
     private int lastOptimizedPhase = -1;
     private String lastSelectedId = "";
     private TrafficLightWrapper tlsWrapper;

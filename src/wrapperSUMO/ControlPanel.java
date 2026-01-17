@@ -787,50 +787,6 @@ public class ControlPanel
             
         }
     }
-
-    // turn all light to red
-    public void turn_all_light_red()
-    {
-        try
-        {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs)
-            {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-                String allRedState = "r".repeat(length);
-
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allRedState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to RED: " + e.getMessage());
-            
-        }
-    }
-
-    // turn all lights to greeen
-    public void turn_all_light_green() {
-        try {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs) {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-
-                String allGreenState = "g".repeat(length);
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allGreenState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
-            
-        }
-    }
-
     private String getBaseStateString(String tlsID) throws Exception
     {
         return (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(tlsID));
@@ -1167,6 +1123,33 @@ public class ControlPanel
             return ((double) stoppedCars / ids.size()) * 100.0;
         } catch (Exception e) {
             return 0.0;
+        }
+    }
+
+    public String getMostCongestedEdge() {
+        if (!isRunning) return "N/A";
+
+        String worstEdge = "";
+        double maxOccupancy = -1;
+
+        try {
+            List<String> allEdgeIDs = edgeWrapper.getEdgeIDs();
+
+
+            for (String id : allEdgeIDs) {
+                double occupancy = edgeWrapper.getEdgeOccupancy(id);
+                if (occupancy > maxOccupancy) {
+                    maxOccupancy = occupancy;
+                    worstEdge = id;
+                }
+            }
+            maxOccupancy = maxOccupancy * 150;
+            if (maxOccupancy > 100.0) maxOccupancy = 100.0;
+            if (maxOccupancy < 10.0) return "Flowing Free";
+
+            return String.format("%s (%.1f%% full)", worstEdge, maxOccupancy);
+        } catch (Exception e) {
+            return "Error";
         }
     }
 

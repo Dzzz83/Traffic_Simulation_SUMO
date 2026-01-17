@@ -131,6 +131,8 @@ public class Controller {
     private Label numOfTL;
     @FXML
     private Label co2Emission;
+    @FXML
+    private Label congestionHotspot;
 
     // chart
     @FXML
@@ -900,21 +902,6 @@ public class Controller {
         LOG.info("User requested: Turning ALL Lights ON.");
         panel.turnOnAllLights();
     }
-
-    @FXML
-    public void turn_all_lights_red() {
-        LOG.info("User requested: FORCING ALL LIGHTS TO RED.");
-        panel.turn_all_light_red();
-        // Note: The UI drawing will update automatically on the next simulation step
-        // because it calls panel.getRedYellowGreenState()
-    }
-
-    @FXML
-    public void turn_all_lights_green() {
-        LOG.info("User requested: FORCING ALL LIGHTS TO GREEN.");
-        panel.turn_all_light_green();
-    }
-
     @FXML
     public void onRestoreAutoClick() {
         LOG.info("User requested: RESTORING AUTOMATIC PROGRAM.");
@@ -1048,20 +1035,20 @@ public class Controller {
     }
 
     private void updateStats() {
-        int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
-        numberVehicles.setText("Vehicles: " + count);
-        int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
-        numberOfEdges.setText("Edges: " + edgeCount);
-        int trafficLightCount = panel.getTrafficLightCount();
-        numOfTL.setText("Traffic Lights: " + trafficLightCount);
-
-
-        if (!panel.getVehicleIDs().isEmpty()) {
-            double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
-            averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
-        }
-
         if (panel.isRunning()) {
+            int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
+            numberVehicles.setText("Vehicles: " + count);
+            int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
+            numberOfEdges.setText("Edges: " + edgeCount);
+            int trafficLightCount = panel.getTrafficLightCount();
+            numOfTL.setText("Traffic Lights: " + trafficLightCount);
+
+
+            if (!panel.getVehicleIDs().isEmpty()) {
+                double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
+                averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
+            }
+
             double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
             currentSpeed *= 3.6; // m/s to km/h
 
@@ -1087,6 +1074,9 @@ public class Controller {
             if (isRecording) {
                 sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
             }
+
+            String hotspot = panel.getMostCongestedEdge();
+            congestionHotspot.setText("Hotspot: " + hotspot);
         }
     }
 

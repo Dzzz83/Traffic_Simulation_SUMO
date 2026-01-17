@@ -787,50 +787,6 @@ public class ControlPanel
             
         }
     }
-
-    // turn all light to red
-    public void turn_all_light_red()
-    {
-        try
-        {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs)
-            {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-                String allRedState = "r".repeat(length);
-
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allRedState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to RED: " + e.getMessage());
-            
-        }
-    }
-
-    // turn all lights to greeen
-    public void turn_all_light_green() {
-        try {
-            List<String> tlIDs = (List<String>) connection.do_job_get(Trafficlight.getIDList());
-
-            for (String id : tlIDs) {
-                String currentState = getBaseStateString(id);
-                int length = currentState.length();
-
-                String allGreenState = "g".repeat(length);
-                connection.do_job_set(Trafficlight.setRedYellowGreenState(id, allGreenState));
-            }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error forcing all lights to GREEN: " + e.getMessage());
-            
-        }
-    }
-
     private String getBaseStateString(String tlsID) throws Exception
     {
         return (String) connection.do_job_get(Trafficlight.getRedYellowGreenState(tlsID));

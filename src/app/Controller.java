@@ -269,16 +269,14 @@ public class Controller {
             if (selectedId == null) return;
 
             if (newVal) {
-                // Button is ON -> Enable Logic "0" (Standard Program)
                 autoModeToggle.setText("ON");
                 autoModeToggle.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
                 // Call backend:
                 panel.turnOnTrafficLight(selectedId);
             } else {
-                // Button is OFF -> Disable Lights "off"
+                // Button is off -> disable Lights "off"
                 autoModeToggle.setText("OFF");
                 autoModeToggle.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
-                // Call backend:
                 panel.turnOffTrafficLight(selectedId);
             }
         });
@@ -428,18 +426,14 @@ public class Controller {
             }
             // traffic light hover
             if (arePositionsLoaded) {
-                // Reverse the math from MapDraw to find Mouse position in SUMO World
+                // Reverse the math from MapDraw to find Mouse position in SUMO
                 double mouseX = event.getX();
                 double mouseY = event.getY();
-
-                // 1. Undo Offset, 2. Undo Scale
                 double worldMouseX = (mouseX - OFFSET_X) / SCALE;
-
-                // 1. Undo Height Flip, 2. Undo Offset, 3. Undo Scale
                 double worldMouseY = ((mapCanvas.getHeight() - mouseY) - OFFSET_Y) / SCALE;
 
                 String foundId = null;
-                double detectionRadius = 30.0; // 30 meters in SUMO world
+                double detectionRadius = 30.0;
 
                 for (Map.Entry<String, SumoPosition2D> entry : trafficLightPositions.entrySet()) {
                     SumoPosition2D pos = entry.getValue();
@@ -451,9 +445,6 @@ public class Controller {
                         break;
                     }
                 }
-
-                // Only redraw if the hovered light CHANGED (prevents lag)
-                // We compare strings safely using Objects.equals logic
                 boolean changed = (foundId == null && hoveredTrafficLightId != null) ||
                         (foundId != null && !foundId.equals(hoveredTrafficLightId));
 
@@ -467,7 +458,7 @@ public class Controller {
                         mapCanvas.setCursor(javafx.scene.Cursor.DEFAULT);
                     }
 
-                    drawMap(); // Trigger the glow effect in drawMap()
+                    drawMap();
                 }
             }
         });
@@ -494,27 +485,16 @@ public class Controller {
                 }
             }
 
-            // --- B. NEW: Traffic Light Click ---
-            // If we are NOT in spawn mode (or didn't click a road), check for traffic light
             else if (hoveredTrafficLightId != null) {
-                // 1. Update the Dropdown
                 trafficIdCombo.setValue(hoveredTrafficLightId);
-
-                // 2. Log it
                 LOG.info("Map Clicked: Selected Traffic Light " + hoveredTrafficLightId);
-
-                // 3. Force redraw to show the Yellow Selection Ring immediately
                 drawMap();
             }
             else if (hoveredTrafficLightId != null) {
-
-                // THIS LINE updates the Dropdown to match the map click
                 trafficIdCombo.setValue(hoveredTrafficLightId);
-
-                // Optional: Log it to verify
                 LOG.info("Syncing Dropdown: Map Clicked -> " + hoveredTrafficLightId);
 
-                drawMap(); // Update the yellow selection ring immediately
+                drawMap();
             }
         });
 
@@ -538,8 +518,6 @@ public class Controller {
                 drawMap();
             });
         }
-
-        // make the traffic light id button function
         if (TrafficLightIDBtn != null) {
             TrafficLightIDBtn.setOnAction(e -> {
                 showTrafficLightID = !showTrafficLightID;
@@ -581,12 +559,12 @@ public class Controller {
             });
         }
         if (sliderPhaseDuration != null) {
-            // 1. When user CLICKS the slider -> Stop auto-updating
+            // When user clicks the slider -> stop auto-updating
             sliderPhaseDuration.setOnMousePressed(e -> {
                 isUserDraggingSlider = true;
             });
 
-            // 2. When user RELEASES the slider -> Send command to SUMO
+            // when user releases the slider -> send command to SUMO
             sliderPhaseDuration.setOnMouseReleased(e -> {
                 isUserDraggingSlider = false;
 
@@ -598,7 +576,7 @@ public class Controller {
                 }
             });
 
-            // 3. Visual update while dragging (just updates the text label)
+            // Visual update while dragging
             sliderPhaseDuration.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (labelPhaseDuration != null) {
                     labelPhaseDuration.setText(String.format("%.1fs", newVal.doubleValue()));
@@ -611,7 +589,6 @@ public class Controller {
             simulationDelay = (long) (delaySlider.getValue() * 1_000_000);
 
             delaySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-                // Convert ms to nanoseconds
                 simulationDelay = (long) (newVal.doubleValue() * 1_000_000);
                 delayValue.setText(String.format("%.0f", newVal.doubleValue()));
                 LOG.info("Delay set to: " + newVal.intValue() + "ms");
@@ -1019,7 +996,6 @@ public class Controller {
         tlsWrapper = panel.getTrafficLightWrapper();
         if (tlsWrapper != null) {
             tlsWrapper.isRunning = true;
-            // reload the traffic light directions from the map file
             tlsWrapper.loadConnectionDirections(NET_XML_PATH);
         }
 
@@ -1103,10 +1079,10 @@ public class Controller {
         panel.step();
         if (isGlobalOptimizationActive && tlsWrapper != null) {
             try {
-                // 1. Get ALL Traffic Light IDs
+                // Get ALL Traffic Light IDs
                 List<String> allIds = panel.getTrafficLightIDs();
 
-                // 2. Check every single traffic light
+                // Check every single traffic light
                 if (allIds != null) {
                     for (String id : allIds) {
                         // Wrapper now handles the memory and logic for each ID
@@ -1117,14 +1093,11 @@ public class Controller {
                 LOG.error("Error in Global Optimization: " + e.getMessage());
             }
         }
-        // --- EXISTING: SINGLE OPTIMIZATION FLOW ---
-        // (We use 'else if' because Global overrides Single)
         else if (isOptimizationActive && tlsWrapper != null) {
             try {
                 String selectedId = trafficIdCombo.getValue();
                 if (selectedId != null && !selectedId.isEmpty()) {
-                    // Reuse the same smart method!
-                    // It is much cleaner than keeping 'lastOptimizedPhase' variable in Controller
+                    // Reuse the same smart method
                     tlsWrapper.checkAndOptimize(selectedId);
                 }
             } catch (Exception e) {

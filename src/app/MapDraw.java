@@ -20,6 +20,11 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 public class MapDraw
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
+    private String activeVehicleFilter = "All";
+
+    public void setVehicleFilter(String filter) {
+        this.activeVehicleFilter = filter;
+    }
 
     private Canvas canvas;
 
@@ -159,6 +164,25 @@ public class MapDraw
         }
     }
 
+    private boolean shouldDrawVehicle(String vehicleTypeID) {
+        if ("All".equals(activeVehicleFilter)) {
+            return true;
+        }
+
+        switch (activeVehicleFilter) {
+            case "Passenger":
+                return "DEFAULT_VEHTYPE".equals(vehicleTypeID);
+            case "Taxi":
+                return "DEFAULT_TAXITYPE".equals(vehicleTypeID);
+            case "Delivery":
+                return "Delivery".equals(vehicleTypeID);
+            case "Evehicle":
+                return "Evehicle".equals(vehicleTypeID);
+            default:
+                return true;
+        }
+    }
+
     public void drawAllVehicles() {
         if (panel == null || !panel.isRunning()) return;
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -179,20 +203,21 @@ public class MapDraw
             double angle = panel.getVehicleAngle(id);
 
             Color color;
+            //Select the specific renderer
             try {
                 color = panel.getVehicleColor(id);
+
+                //Ask the panel for the Type ID
+                String typeID = panel.getVehicleTypeID(id);
+                if (!shouldDrawVehicle(typeID)) {
+                    continue;
+                }
+                VehicleRenderer renderer = getRenderer(typeID);
+                //Draw
+                renderer.draw(gc, x, y, angle, carLength, carWidth, color);
             } catch (Exception e) {
                 color = Color.YELLOW;
             }
-
-            //Ask the panel for the Type ID
-            String typeID = panel.getVehicleTypeID(id);
-
-            //Select the specific renderer
-            VehicleRenderer renderer = getRenderer(typeID);
-
-            //Draw
-            renderer.draw(gc, x, y, angle, carLength, carWidth, color);
 
             if (showVehicleID) {
                 gc.setFill(Color.LIME);

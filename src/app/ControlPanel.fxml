@@ -133,6 +133,14 @@
 
                                                         <VBox spacing="5.0">
                                                             <children>
+                                                                <Label text="Filter Vehicle Type:" textFill="black" />
+                                                                <ComboBox fx:id="filterVehicleCombo" maxWidth="Infinity" onAction="#onFilterVehicleChange" />
+                                                            </children>
+                                                        </VBox>
+                                                        <Separator prefWidth="200.0" />
+
+                                                        <VBox spacing="5.0">
+                                                            <children>
                                                                 <HBox alignment="CENTER_LEFT">
                                                                     <children>
                                                                         <Label text="Delay (ms)" textFill="black" />

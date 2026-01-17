@@ -3,6 +3,7 @@ package app;
 
 import javafx.animation.AnimationTimer;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.*;
 import javafx.scene.Cursor;
@@ -85,6 +86,9 @@ public class Controller {
     // vehicle type
     @FXML
     private ComboBox<String> vehicleTypeCombo;
+    // filter vehicle
+    @FXML
+    private ComboBox<String> filterVehicleCombo;
 
     // sliders
     @FXML
@@ -643,6 +647,18 @@ public class Controller {
                     LOG.info("Auto mode: ON");
                 }
             });
+        }
+        //
+        filterVehicleCombo.getItems().addAll("All", "Passenger", "Taxi", "Delivery", "Evehicle");
+        filterVehicleCombo.getSelectionModel().select("All");
+    }
+
+    @FXML
+    public void onFilterVehicleChange(ActionEvent event) {
+        String selectedType = filterVehicleCombo.getValue();
+
+        if (mapDraw != null) {
+            mapDraw.setVehicleFilter(selectedType);
         }
     }
 

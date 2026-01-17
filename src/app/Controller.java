@@ -8,6 +8,7 @@ import javafx.scene.*;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.BarChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -133,6 +134,8 @@ public class Controller {
     // chart
     @FXML
     private LineChart<Number, Number> avgSpeedChart;
+    @FXML
+    private BarChart<String, Number> waitingTimeChart;
 
     // traffic light
     @FXML
@@ -174,9 +177,12 @@ public class Controller {
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
 
-    // variables for chart
+    // variables for line chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // variables for bar chart
+    private XYChart.Series<String, Number> timeDataSeries;
 
     // Data history storage
     private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
@@ -279,8 +285,7 @@ public class Controller {
             }
         });
 
-        // setup chart
-
+        // setup line chart
         speedSeries = new XYChart.Series<>();
         speedSeries.setName("Real-time Speed");
         avgSpeedChart.getData().add(speedSeries);

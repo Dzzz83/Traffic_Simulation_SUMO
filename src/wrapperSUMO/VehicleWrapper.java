@@ -309,4 +309,13 @@ public class VehicleWrapper
             e.printStackTrace();
         }
     }
+
+    public double getAccumulatedWaitingTime(String vehicleID) {
+        try {
+            return (Double) connection.do_job_get(Vehicle.getAccumulatedWaitingTime(vehicleID));
+        } catch (Exception e) {
+            System.err.println("Failed to get the accumulated waiting time");
+            return 0.0;
+        }
+    }
 }

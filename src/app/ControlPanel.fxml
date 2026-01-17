@@ -246,12 +246,12 @@
                                                         <Label fx:id="congestionHotspot" text="Hotspot: N/A" textFill="#555555">
                                                             <font><Font name="Arial" size="13.0" /></font>
                                                         </Label>
-                                                        <BarChart minHeight="106.0" prefHeight="150.0" prefWidth="383.0">
+                                                        <BarChart fx:id="waitingTimeChart" minHeight="106.0" prefHeight="150.0" prefWidth="383.0">
                                                             <xAxis>
-                                                                <CategoryAxis side="BOTTOM" />
+                                                                <CategoryAxis side="BOTTOM" label="Duration"/>
                                                             </xAxis>
                                                             <yAxis>
-                                                                <NumberAxis side="LEFT" />
+                                                                <NumberAxis side="LEFT" label="Vehicles"/>
                                                             </yAxis>
                                                         </BarChart>
                                                         <Button fx:id="exportBtn" mnemonicParsing="false" onAction="#onExportClick" prefWidth="150.0" style="-fx-background-color: #9C27B0;" text="Export" textFill="WHITE">

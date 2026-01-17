@@ -127,6 +127,8 @@ public class Controller {
     private Label numOfTL;
     @FXML
     private Label co2Emission;
+    @FXML
+    private Label congestionHotspot;
 
     // chart
     @FXML
@@ -1071,6 +1073,9 @@ public class Controller {
             if (isRecording) {
                 sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
             }
+
+            String hotspot = panel.getMostCongestedEdge();
+            congestionHotspot.setText("Hotspot: " + hotspot);
         }
     }
 

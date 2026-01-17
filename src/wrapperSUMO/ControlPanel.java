@@ -1170,6 +1170,33 @@ public class ControlPanel
         }
     }
 
+    public String getMostCongestedEdge() {
+        if (!isRunning) return "N/A";
+
+        String worstEdge = "";
+        double maxOccupancy = -1;
+
+        try {
+            List<String> allEdgeIDs = edgeWrapper.getEdgeIDs();
+
+
+            for (String id : allEdgeIDs) {
+                double occupancy = edgeWrapper.getEdgeOccupancy(id);
+                if (occupancy > maxOccupancy) {
+                    maxOccupancy = occupancy;
+                    worstEdge = id;
+                }
+            }
+            maxOccupancy = maxOccupancy * 150;
+            if (maxOccupancy > 100.0) maxOccupancy = 100.0;
+            if (maxOccupancy < 10.0) return "Flowing Free";
+
+            return String.format("%s (%.1f%% full)", worstEdge, maxOccupancy);
+        } catch (Exception e) {
+            return "Error";
+        }
+    }
+
     // ------------------------------------------
     // SIMULATION
     // -------------------------------------------

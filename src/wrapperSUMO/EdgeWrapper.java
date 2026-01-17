@@ -125,4 +125,22 @@ public class EdgeWrapper {
             return -1;
         }
     }
+
+    public int getVehicleCountOnEdge(String edgeID) {
+        try {
+            return (Integer) connection.do_job_get(Edge.getLastStepVehicleNumber(edgeID));
+        } catch (Exception e) {
+            System.out.println("Failed to get last step vehicle count on edge");
+            return 0;
+        }
+    }
+
+    public double getEdgeOccupancy(String edgeID) {
+        try {
+            return (Double) connection.do_job_get(Edge.getLastStepOccupancy(edgeID));
+        } catch (Exception e) {
+            System.out.println("Failed to get last step edge occupancy");
+            return 0;
+        }
+    }
 }

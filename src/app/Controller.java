@@ -3,6 +3,7 @@ package app;
 
 import javafx.animation.AnimationTimer;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.*;
 import javafx.scene.Cursor;
@@ -86,6 +87,9 @@ public class Controller {
     // vehicle type
     @FXML
     private ComboBox<String> vehicleTypeCombo;
+    // filter vehicle
+    @FXML
+    private ComboBox<String> filterVehicleCombo;
 
     // sliders
     @FXML
@@ -152,7 +156,7 @@ public class Controller {
     // traffic light
     private boolean isOptimizationActive = false;
     private boolean isGlobalOptimizationActive = false;
-    private Button optimize_traffic;
+    @FXML private Button optimize_traffic;
     private int lastOptimizedPhase = -1;
     private String lastSelectedId = "";
     private TrafficLightWrapper tlsWrapper;
@@ -650,6 +654,18 @@ public class Controller {
                     LOG.info("Auto mode: ON");
                 }
             });
+        }
+        //
+        filterVehicleCombo.getItems().addAll("All", "Passenger", "Taxi", "Delivery", "Evehicle");
+        filterVehicleCombo.getSelectionModel().select("All");
+    }
+
+    @FXML
+    public void onFilterVehicleChange(ActionEvent event) {
+        String selectedType = filterVehicleCombo.getValue();
+
+        if (mapDraw != null) {
+            mapDraw.setVehicleFilter(selectedType);
         }
     }
 

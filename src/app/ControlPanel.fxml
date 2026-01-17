@@ -140,19 +140,6 @@
                                                             <children>
                                                                 <HBox alignment="CENTER_LEFT">
                                                                     <children>
-                                                                        <Label text="Inflow" textFill="black" />
-                                                                        <Region HBox.hgrow="ALWAYS" />
-                                                                        <Label fx:id="inFlowValue" text="0.0" textFill="black" />
-                                                                    </children>
-                                                                </HBox>
-                                                                <Slider fx:id="inFlowSlider" blockIncrement="0.1" max="5.0" showTickMarks="true" />
-                                                            </children>
-                                                        </VBox>
-
-                                                        <VBox spacing="5.0">
-                                                            <children>
-                                                                <HBox alignment="CENTER_LEFT">
-                                                                    <children>
                                                                         <Label text="Max Speed" textFill="black" />
                                                                         <Region HBox.hgrow="ALWAYS" />
                                                                         <Label fx:id="maxSpeedValue" text="20.0" textFill="black" />

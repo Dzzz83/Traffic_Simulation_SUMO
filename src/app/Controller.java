@@ -970,7 +970,7 @@ public class Controller {
         // switch the state between true and false
         isStressTest2Active = !isStressTest2Active;
         // print a message to the console
-        System.out.println("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
+        LOG.info("Stress Test 2 is now: " + (isStressTest2Active ? "Active" : "Inactive"));
     }
 
     @FXML

@@ -108,7 +108,6 @@
                                                                         <Button fx:id="EdgeIDBtn" mnemonicParsing="false" text="Edge ID" />
                                                                         <Button fx:id="RouteIDBtn" mnemonicParsing="false" text="Route ID" />
                                                                         <Button fx:id="VehicleIDBtn" mnemonicParsing="false" text="Vehicle ID" />
-                                                                        <Button fx:id="TrafficLightIDBtn" mnemonicParsing="false" text="TL ID" />
                                                                     </children>
                                                                 </HBox>
                                                             </children>

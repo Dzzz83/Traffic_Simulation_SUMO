@@ -9,6 +9,7 @@ import javafx.scene.*;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.BarChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -137,6 +138,8 @@ public class Controller {
     // chart
     @FXML
     private LineChart<Number, Number> avgSpeedChart;
+    @FXML
+    private BarChart<String, Number> waitingTimeChart;
 
     // traffic light
     @FXML
@@ -178,9 +181,12 @@ public class Controller {
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
 
-    // variables for chart
+    // variables for line chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // variables for bar chart
+    private XYChart.Series<String, Number> timeDataSeries;
 
     // Data history storage
     private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
@@ -230,6 +236,20 @@ public class Controller {
 
         mapDraw = new MapDraw(mapCanvas);
         mapDraw3D = new MapDraw3D();
+
+        // setup line chart
+        speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
+        avgSpeedChart.getData().add(speedSeries);
+
+        // setup bar chart
+        timeDataSeries = new XYChart.Series<>();
+        timeDataSeries.setName("Waiting Time Distribution");
+        timeDataSeries.getData().add(new XYChart.Data<>("<30s", 0));
+        timeDataSeries.getData().add(new XYChart.Data<>("30-60s", 0));
+        timeDataSeries.getData().add(new XYChart.Data<>(">60s", 0));
+        waitingTimeChart.getData().add(timeDataSeries);
+        waitingTimeChart.setAnimated(false);
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -282,12 +302,6 @@ public class Controller {
                 panel.turnOffTrafficLight(selectedId);
             }
         });
-
-        // setup chart
-
-        speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
-        avgSpeedChart.getData().add(speedSeries);
 
         // setup UI interactions
         setupMapInteractions();
@@ -1058,6 +1072,22 @@ public class Controller {
             if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
             }
+
+            List<Double> waits = panel.getAccumulatedWaitingTimes();
+            int stage1 = 0;
+            int stage2 = 0;
+            int stage3 = 0;
+
+            for (double w : waits) {
+                if (w < 30) stage1++;
+                else if (w < 60) stage2++;
+                else stage3++;
+            }
+
+            timeDataSeries.getData().get(0).setYValue(stage1);
+            timeDataSeries.getData().get(1).setYValue(stage2);
+            timeDataSeries.getData().get(2).setYValue(stage3);
+
             double congestion = panel.getCongestionPercentage();
             // Color to gain insight
             String color = "green";

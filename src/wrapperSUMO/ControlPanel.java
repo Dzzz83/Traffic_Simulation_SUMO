@@ -1153,6 +1153,22 @@ public class ControlPanel
         }
     }
 
+    public List<Double> getAccumulatedWaitingTimes() {
+        List<Double> waitingTimes = new ArrayList<>();
+        if (!isRunning) return waitingTimes;
+
+        try {
+            List<String> vehicles = getVehicleIDs();
+            for (String id : vehicles) {
+                double wait = vehicleWrapper.getAccumulatedWaitingTime(id);
+                waitingTimes.add(wait);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to get waiting times");
+        }
+        return waitingTimes;
+    }
+
     // ------------------------------------------
     // SIMULATION
     // -------------------------------------------

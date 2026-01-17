@@ -1084,8 +1084,6 @@ public class Controller {
                 else stage3++;
             }
 
-            LOG.info("Stage 1: " + stage1 + " | Stage 2: " + stage2 + " | Stage 3: " + stage3);
-
             timeDataSeries.getData().get(0).setYValue(stage1);
             timeDataSeries.getData().get(1).setYValue(stage2);
             timeDataSeries.getData().get(2).setYValue(stage3);

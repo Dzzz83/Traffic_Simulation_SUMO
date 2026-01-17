@@ -1161,6 +1161,7 @@ public class ControlPanel
             List<String> vehicles = getVehicleIDs();
             for (String id : vehicles) {
                 double wait = vehicleWrapper.getAccumulatedWaitingTime(id);
+                waitingTimes.add(wait);
             }
         } catch (Exception e) {
             LOG.error("Failed to get waiting times");

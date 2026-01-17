@@ -20,11 +20,14 @@ import java.util.List;
 import java.util.ArrayList;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class VehicleWrapper
 {
     // initialize the connection
     private final SumoTraciConnection connection;
-
+    private static final Logger LOG = LogManager.getLogger(TrafficLightWrapper.class.getName());
     // Constructor
     public VehicleWrapper(SumoTraciConnection connection)
     {
@@ -40,7 +43,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get number of vehicles");
+            LOG.error("Failed to get number of vehicles");
             e.printStackTrace();
         }
         return 0;
@@ -55,7 +58,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the list of vehicle IDs");
+            LOG.error("Failed to get the list of vehicle IDs");
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -65,7 +68,7 @@ public class VehicleWrapper
         try {
             return (String) connection.do_job_get(Vehicle.getTypeID(vehicleID));
         } catch (Exception e) {
-            System.out.println("Failed to get type for vehicle: " + vehicleID);
+            LOG.error("Failed to get type for vehicle: " + vehicleID);
             return "DEFAULT_VEHTYPE";
         }
     }
@@ -74,7 +77,7 @@ public class VehicleWrapper
         try {
             return (String) connection.do_job_get(Vehicle.getRouteID(vehicleId));
         } catch (Exception e) {
-            System.out.println("Failed to get Route ID for vehicle: " + vehicleId);
+            LOG.error("Failed to get Route ID for vehicle: " + vehicleId);
             e.printStackTrace();
         }
         return "";
@@ -89,7 +92,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the speed of the vehicle " + vehicleId);
+            LOG.error("Failed to get the speed of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -104,7 +107,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the position of the vehicle " + vehicleId);
+            LOG.error("Failed to get the position of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return new SumoPosition2D(0.0, 0.0);
@@ -119,7 +122,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the laneID of the vehicle " + vehicleId);
+            LOG.error("Failed to get the laneID of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return "";
@@ -134,7 +137,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the roadId of the vehicle " + vehicleId);
+            LOG.error("Failed to get the roadId of the vehicle " + vehicleId);
             e.printStackTrace();
         }
         return "";
@@ -149,7 +152,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to add the vehicle " + vehicleId);
+            LOG.error("Failed to add the vehicle " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -163,7 +166,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the route of the vehicle:  " + vehicleId);
+            LOG.error("Failed to set the route of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -183,7 +186,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to remove the vehicle:  " + vehicleId);
+            LOG.error("Failed to remove the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -196,7 +199,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the speed of the vehicle:  " + vehicleId);
+            LOG.error("Failed to set the speed of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
     }
@@ -209,7 +212,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the distance of the vehicle:  " + vehicleId);
+            LOG.error("Failed to get the distance of the vehicle:  " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -223,7 +226,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the CO2 Emission:  " + vehicleId);
+            LOG.error("Failed to get the CO2 Emission:  " + vehicleId);
             e.printStackTrace();
         }
         return 0.0;
@@ -238,7 +241,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to change the lane of the vehicle");
+            LOG.error("Failed to change the lane of the vehicle");
             e.printStackTrace();
         }
     }
@@ -252,7 +255,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to slow down the vehicle");
+            LOG.error("Failed to slow down the vehicle");
             e.printStackTrace();
         }
     }
@@ -268,7 +271,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to set the color");
+            LOG.error("Failed to set the color");
             e.printStackTrace();
         }
     }
@@ -281,7 +284,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Failed to change the target");
+            LOG.error("Failed to change the target");
             e.printStackTrace();
         }
     }
@@ -294,7 +297,7 @@ public class VehicleWrapper
         }
         catch (Exception e)
         {
-            System.out.println("Can't get the angle of the vehicle");
+            LOG.error("Can't get the angle of the vehicle");
             e.printStackTrace();
         }
         return 0.0;
@@ -305,7 +308,7 @@ public class VehicleWrapper
             connection.do_job_set(Vehicle.moveTo(vehicleId, laneId, pos));
         }
         catch (Exception e) {
-            System.out.println("Failed to move the vehicle");
+            LOG.error("Failed to move the vehicle");
             e.printStackTrace();
         }
     }
@@ -314,7 +317,7 @@ public class VehicleWrapper
         try {
             return (Double) connection.do_job_get(Vehicle.getAccumulatedWaitingTime(vehicleID));
         } catch (Exception e) {
-            System.err.println("Failed to get the accumulated waiting time");
+            LOG.error("Failed to get the accumulated waiting time");
             return 0.0;
         }
     }

@@ -437,7 +437,6 @@ public class TrafficLightWrapper
      * <li>Scaling: +2.5s per vehicle</li>
      * <li>Maximum cap: 60.0s</li>
      * </ul>
-     * </p>
      * * @param trafficLightId The ID of the traffic light to update.
      */
     // set phase duration based on traffic level

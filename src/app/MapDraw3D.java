@@ -49,6 +49,11 @@ public class MapDraw3D implements MapRenderer {
     private Map<String, List<SumoPosition2D>> mapShapes;
     List<Box> allRoadBoxes = new ArrayList<>();
 
+    private static final double CAMERA_INITIAL_Y = -100.0;
+    private static final double CAMERA_INITIAL_Z_OFFSET = -600.0;
+    private static final double ROAD_WIDTH = 4.5;
+    private static final double GRASS_SIZE = 2000.0;
+
     /**
      * Constructs a MapDraw3D instance and initializes the root 3D group.
      * Sets up the hierarchical structure for roads, vehicles, lights, and the camera.
@@ -343,10 +348,9 @@ public class MapDraw3D implements MapRenderer {
      * Calculates the length, position, and rotation of each road segment
      * based on the map's coordinate shapes.
      */
-    public void drawRoad()
-    {
+    public void drawRoad() {
         allRoadBoxes.clear();
-        Box grassBox = createGrassBox(2000, 2000);
+        Box grassBox = createGrassBox(GRASS_SIZE, GRASS_SIZE);
         for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
         {
             // get the points
@@ -385,7 +389,6 @@ public class MapDraw3D implements MapRenderer {
                 // add in the list
                 allRoadBoxes.add(roadBox);
             }
-
         }
         ObservableList<Node> roadList = roadGroup.getChildren();
         roadList.addAll(allRoadBoxes);
@@ -619,42 +622,17 @@ public class MapDraw3D implements MapRenderer {
     public void updateCamera(HashSet<KeyCode> keyInputSet) {
         double speed = 5.0;
 
-        boolean isWPressed = false;
-        if (keyInputSet.contains(KeyCode.W))
-        {
-            isWPressed = true;
-        }
+        boolean isWPressed = keyInputSet.contains(KeyCode.W);
         
-        boolean isSPressed = false;
-        if (keyInputSet.contains(KeyCode.S))
-        {
-            isSPressed = true;
-        }
+        boolean isSPressed = keyInputSet.contains(KeyCode.S);
         
-        boolean isAPressed = false;
-        if (keyInputSet.contains(KeyCode.A))
-        {
-            isAPressed = true;
-        }
+        boolean isAPressed = keyInputSet.contains(KeyCode.A);
         
-        boolean isDPressed = false;
-        if (keyInputSet.contains(KeyCode.D))
-        {
-            isDPressed = true;
-        }
+        boolean isDPressed = keyInputSet.contains(KeyCode.D);
         
-        boolean isSpacePressed = false;
-        if (keyInputSet.contains(KeyCode.SPACE))
-        {
-            isSpacePressed = true;
-        }
+        boolean isSpacePressed = keyInputSet.contains(KeyCode.SPACE);
         
-        boolean isShiftPressed = false;
-        if (keyInputSet.contains(KeyCode.SHIFT))
-        {
-            isShiftPressed = true;
-        }
-
+        boolean isShiftPressed = keyInputSet.contains(KeyCode.SHIFT);
 
         upDownMovement(isSpacePressed, isShiftPressed, speed);
         leftRightMovement(isAPressed, isDPressed, speed);
@@ -668,8 +646,7 @@ public class MapDraw3D implements MapRenderer {
      */
     // get the camera coordinates
     public List<Double> getCameraCoords() {
-        try
-        {
+        try {
             // get the coords
             double x = cameraGroup.getTranslateX();
             double y = cameraGroup.getTranslateY();

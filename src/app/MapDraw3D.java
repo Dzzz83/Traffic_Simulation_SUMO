@@ -18,8 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class MapDraw3D
-{
+public class MapDraw3D implements MapRenderer {
     private static final Logger LOG = LogManager.getLogger(MapDraw3D.class.getName());
 
     private Group root3D;
@@ -46,8 +45,7 @@ public class MapDraw3D
     public Map<String, List<SumoPosition2D>> mapShapes;
     List<Box> allRoadBoxes = new ArrayList<>();
 
-    public MapDraw3D()
-    {
+    public MapDraw3D() {
         root3D = new Group();
 
         // add the road and vehicle groups
@@ -56,8 +54,7 @@ public class MapDraw3D
         children.addAll(vehicleGroup, roadGroup, lightGroup, cameraGroup);
     }
 
-    public void setSubScene(double width, double height)
-    {
+    public void setSubScene(double width, double height) {
         // initialize subScene
         subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
         subScene.setCamera(camera);
@@ -66,8 +63,7 @@ public class MapDraw3D
         subScene.setFill(Color.SKYBLUE);
     }
 
-    public void setCamera(SumoPosition2D mapCenterCoord)
-    {
+    public void setCamera(SumoPosition2D mapCenterCoord) {
         // "true" means the car will get smaller the farther it moves
         camera = new PerspectiveCamera(true);
         // camera's range of sight
@@ -89,8 +85,7 @@ public class MapDraw3D
         camera.getTransforms().add(rotateX);
     }
 
-    public void setup()
-    {
+    public void setup() {
         SumoPosition2D mapCenterCoord = getMapCenter();
 
         // set the camera
@@ -103,8 +98,7 @@ public class MapDraw3D
         createLight(mapCenterCoord);
     }
 
-    public void createLight(SumoPosition2D mapCenterCoord)
-    {
+    public void createLight(SumoPosition2D mapCenterCoord) {
         ambientLight = new AmbientLight(Color.WHITE);
 
         pointLight = new PointLight(Color.LIGHTYELLOW);
@@ -117,18 +111,15 @@ public class MapDraw3D
         pointLight.setTranslateZ(mapCenterCoord.y);
     }
 
-    public SubScene getSubScene()
-    {
+    public SubScene getSubScene() {
         return this.subScene;
     }
 
-    public Group getRoadGroup()
-    {
+    public Group getRoadGroup() {
         return this.roadGroup;
     }
 
-    public void clearAll()
-    {
+    public void clearAll() {
         // clear everything
         ObservableList<Node> roads = roadGroup.getChildren();
         roads.clear();
@@ -153,8 +144,7 @@ public class MapDraw3D
         return centralVehicleBox;
     }
 
-    private Box createEngineBox(double width, double height, double depth)
-    {
+    private Box createEngineBox(double width, double height, double depth) {
         Box engineBox = new Box(width, height, depth);
         PhongMaterial mat1 = new PhongMaterial();
         mat1.setDiffuseColor(Color.BLUE);
@@ -166,8 +156,7 @@ public class MapDraw3D
         return engineBox;
     }
 
-    private Box createWindshieldBox(double width, double height, double depth)
-    {
+    private Box createWindshieldBox(double width, double height, double depth) {
         Box windShieldBox = new Box(width, height, depth);
         PhongMaterial mat2 = new PhongMaterial();
         mat2.setDiffuseColor(Color.BLACK);
@@ -179,8 +168,7 @@ public class MapDraw3D
         return windShieldBox;
     }
 
-    private Group createVehicleTires(double radius, double height)
-    {
+    private Group createVehicleTires(double radius, double height) {
         PhongMaterial mat = new PhongMaterial();
         mat.setDiffuseColor(Color.BLACK);
 
@@ -218,8 +206,7 @@ public class MapDraw3D
         return carTireGroup;
     }
 
-    private Group createVehicle()
-    {
+    private Group createVehicle() {
         // width, height, depth
         Box centralVehicleBox = createCentralVehicleBox(2.0, 1.0, 2.0);
 
@@ -235,15 +222,13 @@ public class MapDraw3D
         return carGroup;
     }
 
-    private void rotateVehicle(String vehicleId, Group vehicle)
-    {
+    private void rotateVehicle(String vehicleId, Group vehicle) {
         double vehAngle = panel.getVehicleAngle(vehicleId);
         vehicle.setRotationAxis(Rotate.Y_AXIS);
         vehicle.setRotate(vehAngle+180);
     }
 
-    public void updateVehicles()
-    {
+    public void updateVehicles() {
         if (panel == null)
         {
             return;
@@ -297,8 +282,7 @@ public class MapDraw3D
         });
     }
 
-    private Box createGrassBox(double width, double length)
-    {
+    private Box createGrassBox(double width, double length) {
         Box grassBox = new Box(width, 1, length);
 
         PhongMaterial mat = new PhongMaterial();
@@ -310,8 +294,7 @@ public class MapDraw3D
         return grassBox;
     }
 
-    private Box createRoadBox(double width, double length)
-    {
+    private Box createRoadBox(double width, double length) {
         // width, height, depth
         Box roadBox = new Box(width, 1, length);
 
@@ -373,8 +356,7 @@ public class MapDraw3D
             roadList.add(grassBox);
         }
 
-    public SumoPosition2D getMapCenter()
-    {
+    public SumoPosition2D getMapCenter() {
         try
         {
             if (panel != null)
@@ -409,8 +391,7 @@ public class MapDraw3D
     }
 
     // fly up and fly down method
-    public void upDownMovement(boolean isSpacePressed, boolean isShiftPressed, double speed)
-    {
+    public void upDownMovement(boolean isSpacePressed, boolean isShiftPressed, double speed) {
         // variable to store current Y-Axis
         double currentPosY;
 
@@ -442,16 +423,14 @@ public class MapDraw3D
     }
 
     // get angle and convert to radiance helper function
-    public double getRadianAngle()
-    {
+    public double getRadianAngle() {
         double angle = rotateY.getAngle();
         return Math.toRadians(angle);
     }
 
 
     // move left move right method
-    public void leftRightMovement(boolean isAPressed, boolean isDPressed, double speed)
-    {
+    public void leftRightMovement(boolean isAPressed, boolean isDPressed, double speed) {
         // get the camera's angle
         double cameraAngle = getRadianAngle();
 
@@ -497,8 +476,7 @@ public class MapDraw3D
     }
 
     // move foward and backward method
-    public void fowardBackwardMovement(boolean isWPressed, boolean isSPressed, double speed)
-    {
+    public void fowardBackwardMovement(boolean isWPressed, boolean isSPressed, double speed) {
         // get the camera's angle
         double cameraAngle = getRadianAngle();
 
@@ -543,8 +521,7 @@ public class MapDraw3D
     }
 
         // control camera eye method
-        public void controlCameraEye(double x, double y, double sensitivity)
-        {
+        public void controlCameraEye(double x, double y, double sensitivity) {
             // get the current angle
             double currentAngleX = rotateX.getAngle();
             double currentAngleY = rotateY.getAngle();
@@ -565,8 +542,8 @@ public class MapDraw3D
             rotateY.setAngle(deltaAngleY);
             rotateX.setAngle(deltaAngleX);
         }
-    public void updateCamera(HashSet<KeyCode> keyInputSet)
-    {
+
+    public void updateCamera(HashSet<KeyCode> keyInputSet) {
         double speed = 5.0;
 
         boolean isWPressed = false;
@@ -612,8 +589,7 @@ public class MapDraw3D
     }
 
     // get the camera coordinates
-    public List<Double> getCameraCoords()
-    {
+    public List<Double> getCameraCoords() {
         try
         {
             // get the coords
@@ -641,6 +617,28 @@ public class MapDraw3D
             LOG.error("Failed to get the coordinates of the camera");
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public void drawAll() {
+
+        if (allRoadBoxes.isEmpty() && mapShapes != null) {
+            drawRoad();
+        }
+        updateVehicles();
+    }
+
+    @Override
+    public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
+        this.mapShapes = mapShapes;
+    }
+
+    @Override
+    public void setShowEdgesID(boolean show) {
+    }
+
+    @Override
+    public void setShowVehicleID(boolean show) {
     }
 
 }

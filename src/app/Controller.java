@@ -123,8 +123,6 @@ public class Controller {
     @FXML
     private Label delayValue;
     @FXML
-    private Label inFlowValue;
-    @FXML
     private Label maxSpeedValue;
     @FXML
     private Label redValue;
@@ -191,6 +189,8 @@ public class Controller {
     private MapDraw mapDraw;
     private MapDraw3D mapDraw3D;
 
+    private MapRenderer currentRenderer;
+
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
     private boolean showTrafficLightID = false;
@@ -252,6 +252,10 @@ public class Controller {
 
         mapDraw = new MapDraw(mapCanvas);
         mapDraw3D = new MapDraw3D();
+
+        currentRenderer = mapDraw;
+        mapDraw.panel = panel;
+        mapDraw3D.panel = panel;
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -334,7 +338,11 @@ public class Controller {
                 if (panel.isRunning()) {
 
                     // control the camera
-                    mapDraw3D.updateCamera(keyInputSet);
+                    if (currentRenderer instanceof MapDraw3D) {
+                        ((MapDraw3D) currentRenderer).updateCamera(keyInputSet);
+                    }
+
+                    currentRenderer.drawAll();
 
                     // display the coords
                     displayCoords();
@@ -367,6 +375,7 @@ public class Controller {
                 "DEFAULT_TAXITYPE",
                 "Evehicle"
         );
+        // default the first type
         vehicleTypeCombo.getSelectionModel().selectFirst();
 
         // initialize the traffic light selection dropdown menu
@@ -649,7 +658,6 @@ public class Controller {
             });
         }
 
-        // auto mode is currently for fun, does no real impact
         if (autoModeToggle != null) {
             autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal) {
@@ -865,6 +873,7 @@ public class Controller {
      * @param count The number of vehicles to spawn.
      * Vehicles are spawned with a 2-second time gap to prevent collisions.
      */
+
     private void spawnMultipleVehicles(int count) {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
@@ -973,9 +982,8 @@ public class Controller {
             // Purple color
             optimize_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;");
 
-            // FIX: Use the same variable name as in updateSimulation()
             lastOptimizedPhase = -1;
-            lastSelectedId = ""; // Optional: Reset ID so it re-checks immediately on next enable
+            lastSelectedId = "";
         }
     }
 
@@ -988,7 +996,6 @@ public class Controller {
             optimize_all_traffic.setText("DISABLE ALL OPTIMIZATION");
             optimize_all_traffic.setStyle("-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;");
 
-            // Safety: Turn off Single mode to avoid double-processing
             if (isOptimizationActive) {
                 onOptimizeClick(); // Toggle the other button off
             }
@@ -1027,6 +1034,7 @@ public class Controller {
     @FXML
     // 3D button
     public void on3DClick() {
+        initialize3D();
         SubScene subScene = mapDraw3D.getSubScene();
         if (subScene == null) {
             LOG.error("The subscene is not initialized yet");
@@ -1035,9 +1043,12 @@ public class Controller {
         if (mapCanvas.isVisible()) {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
+            currentRenderer = mapDraw3D;
+            subScene.requestFocus();
         } else {
             mapCanvas.setVisible(true);
             subScene.setVisible(false);
+            currentRenderer = mapDraw;
         }
 
         Group roadGroup = mapDraw3D.getRoadGroup();
@@ -1212,26 +1223,24 @@ public class Controller {
         // refresh the UI labels
         updateStats();
         // redraw the entire map, including the new positions and colors of vehicles
-        drawMap();
-        updateVehicle3D();
+        currentRenderer.drawAll();
     }
 
     private void drawMap() {
         if (mapDraw == null) {
             return;
         }
+        mapDraw.setScale(this.SCALE);
+        mapDraw.setOffsetX(this.OFFSET_X);
+        mapDraw.setOffsetY(this.OFFSET_Y);
+        mapDraw.setMapShapes(this.mapShapes);
 
-        mapDraw.SCALE = this.SCALE;
-        mapDraw.OFFSET_X = this.OFFSET_X;
-        mapDraw.OFFSET_Y = this.OFFSET_Y;
+        mapDraw.setShowEdgesID(this.showEdgesID);
+        mapDraw.setShowVehicleID(this.showVehicleID);
+        mapDraw.setShowRouteID(this.showRouteID);
 
-        mapDraw.mapShapes = this.mapShapes;
         mapDraw.panel = this.panel;
         mapDraw.tlsWrapper = this.tlsWrapper;
-
-        mapDraw.showEdgesID = this.showEdgesID;
-        mapDraw.showVehicleID = this.showVehicleID;
-        mapDraw.showRouteID = this.showRouteID;
 
         mapDraw.drawAll();
 
@@ -1383,10 +1392,5 @@ public class Controller {
         {
             mapDraw3D.drawRoad();
         }
-    }
-
-    private void updateVehicle3D()
-    {
-        mapDraw3D.updateVehicles();
     }
 }

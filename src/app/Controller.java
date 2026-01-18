@@ -1157,18 +1157,17 @@ public class Controller {
         if (mapDraw == null) {
             return;
         }
+        mapDraw.setScale(this.SCALE);
+        mapDraw.setOffsetX(this.OFFSET_X);
+        mapDraw.setOffsetY(this.OFFSET_Y);
+        mapDraw.setMapShapes(this.mapShapes);
 
-        mapDraw.SCALE = this.SCALE;
-        mapDraw.OFFSET_X = this.OFFSET_X;
-        mapDraw.OFFSET_Y = this.OFFSET_Y;
+        mapDraw.setShowEdgesID(this.showEdgesID);
+        mapDraw.setShowVehicleID(this.showVehicleID);
+        mapDraw.setShowRouteID(this.showRouteID);
 
-        mapDraw.mapShapes = this.mapShapes;
         mapDraw.panel = this.panel;
         mapDraw.tlsWrapper = this.tlsWrapper;
-
-        mapDraw.showEdgesID = this.showEdgesID;
-        mapDraw.showVehicleID = this.showVehicleID;
-        mapDraw.showRouteID = this.showRouteID;
 
         mapDraw.drawAll();
 

@@ -17,7 +17,11 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
+/**
+ * mapdraw3d provides a three-dimensional visualization of the sumo simulation.
+ * it manages a perspective camera, lighting, and translates 2d simulation data
+ * into a 3d world using javafx groups and primitives.
+ */
 public class MapDraw3D implements MapRenderer {
     private static final Logger LOG = LogManager.getLogger(MapDraw3D.class.getName());
 
@@ -84,7 +88,10 @@ public class MapDraw3D implements MapRenderer {
         rotateX = new Rotate(0, Rotate.X_AXIS);
         camera.getTransforms().add(rotateX);
     }
-
+    /**
+     * initializes the 3d environment by setting up the scene graph, camera, and lighting.
+     * it organizes the 3d world into specific groups for roads, vehicles, and lights.
+     */
     public void setup() {
         SumoPosition2D mapCenterCoord = getMapCenter();
 
@@ -409,7 +416,7 @@ public class MapDraw3D implements MapRenderer {
                 // subtract deltaY
                 cameraGroup.setTranslateY(currentPosY - deltaY);
             }
-            // fly down when "Ctrl"
+            // fly down when "Shift"
             else if (isShiftPressed)
             {
                 // add deltaY
@@ -519,8 +526,13 @@ public class MapDraw3D implements MapRenderer {
             LOG.error("Failed to move the camera left and right");
         }
     }
-
-        // control camera eye method
+    /**
+     * updates the camera's rotation based on mouse movement.
+     * @param x the change in horizontal mouse position.
+     * @param y the change in vertical mouse position.
+     * @param sensitivity the multiplier for rotation speed.
+     */
+    // control camera eye method
         public void controlCameraEye(double x, double y, double sensitivity) {
             // get the current angle
             double currentAngleX = rotateX.getAngle();
@@ -542,7 +554,12 @@ public class MapDraw3D implements MapRenderer {
             rotateY.setAngle(deltaAngleY);
             rotateX.setAngle(deltaAngleX);
         }
-
+    /**
+     * updates the camera position based on current keyboard input.
+     * it detects movement keys (wasd, space, shift) and triggers the
+     * corresponding translation methods to move the camera in 3d space.
+     * @param keyInputSet the set of keys currently pressed by the user.
+     */
     public void updateCamera(HashSet<KeyCode> keyInputSet) {
         double speed = 5.0;
 
@@ -587,7 +604,12 @@ public class MapDraw3D implements MapRenderer {
         leftRightMovement(isAPressed, isDPressed, speed);
         fowardBackwardMovement(isWPressed, isSPressed, speed);
     }
-
+    /**
+     * retrieves the current translation coordinates of the camera.
+     * the coordinates are rounded to the nearest integer for simplified display
+     * and stored in a list representing x, y, and z axes.
+     * @return a list of doubles containing the rounded camera coordinates.
+     */
     // get the camera coordinates
     public List<Double> getCameraCoords() {
         try
@@ -618,7 +640,11 @@ public class MapDraw3D implements MapRenderer {
         }
         return new ArrayList<>();
     }
-
+    /**
+     * handles the 3d rendering cycle for each frame.
+     * it ensures the road infrastructure is generated once and continuously
+     * updates the positions of all vehicle models in the scene.
+     */
     @Override
     public void drawAll() {
 

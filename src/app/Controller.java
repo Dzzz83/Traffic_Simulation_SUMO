@@ -242,6 +242,11 @@ public class Controller {
     private List<String> selectedRouteEdges = new ArrayList<>();
     private List<String> validNextEdges = new ArrayList<>();
 
+    /**
+     * initializes the controller after the fxml file has been loaded.
+     * sets up the simulation backend, initializes both 2d and 3d renderers,
+     * configures the chart data series, and starts the main animation timer loop.
+     */
     @FXML
     // initialize the GUI function
     public void initialize() {

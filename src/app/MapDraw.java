@@ -253,7 +253,7 @@ public class MapDraw
             if (showRouteID) {
                 try {
                     String routeID = panel.getVehicleRouteID(id);
-                    gc.setFill(Color.GREEN);
+                    gc.setFill(Color.RED);
                     gc.fillText(routeID, x, y + 15);
                 } catch (Exception e) {}
             }

@@ -120,8 +120,6 @@ public class Controller {
     @FXML
     private Label delayValue;
     @FXML
-    private Label inFlowValue;
-    @FXML
     private Label maxSpeedValue;
     @FXML
     private Label redValue;
@@ -351,6 +349,7 @@ public class Controller {
                 "DEFAULT_TAXITYPE",
                 "Evehicle"
         );
+        // default the first type
         vehicleTypeCombo.getSelectionModel().selectFirst();
 
         // initialize the traffic light selection dropdown menu

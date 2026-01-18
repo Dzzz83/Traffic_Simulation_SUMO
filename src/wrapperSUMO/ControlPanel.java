@@ -1114,7 +1114,7 @@ public class ControlPanel
         } catch (Exception e) {
             LOG.error("Error calculating CO2");
         }
-        return totalCO2;
+        return (totalCO2 / 1000.0); // mg to g
     }
 
     public double getCongestionPercentage() {

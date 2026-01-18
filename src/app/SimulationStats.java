@@ -24,7 +24,7 @@ public class SimulationStats {
     public SimulationStats(double time, double speed, double co2, double density) {
         this.time = time;
         this.speed = speed;
-        this.co2 = co2 / 1000; // The co2 method gives return the result in mg so divide 1000
+        this.co2 = co2;
         this.density = density;
     }
 }

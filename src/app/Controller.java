@@ -1188,7 +1188,7 @@ public class Controller {
             int edgeCount = panel.getEdgeCount();
             int trafficLightCount = panel.getTrafficLightCount();
             double currentSpeed = panel.getGlobalMeanSpeed() * 3.6; // Convert m/s to km/h
-            double totalCo2 = panel.getTotalCO2() / 1000;
+            double totalCo2 = panel.getTotalCO2();
             double congestion = panel.getCongestionPercentage();
             List<Double> waits = panel.getAccumulatedWaitingTimes();
             String hotspot = panel.getMostCongestedEdge();

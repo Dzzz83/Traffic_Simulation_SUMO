@@ -108,7 +108,6 @@
                                                                         <Button fx:id="EdgeIDBtn" mnemonicParsing="false" text="Edge ID" />
                                                                         <Button fx:id="RouteIDBtn" mnemonicParsing="false" text="Route ID" />
                                                                         <Button fx:id="VehicleIDBtn" mnemonicParsing="false" text="Vehicle ID" />
-                                                                        <Button fx:id="TrafficLightIDBtn" mnemonicParsing="false" text="TL ID" />
                                                                     </children>
                                                                 </HBox>
                                                             </children>
@@ -133,19 +132,6 @@
                                                                     </children>
                                                                 </HBox>
                                                                 <Slider fx:id="delaySlider" majorTickUnit="200" max="1000" min="0" showTickMarks="true" value="100" />
-                                                            </children>
-                                                        </VBox>
-
-                                                        <VBox spacing="5.0">
-                                                            <children>
-                                                                <HBox alignment="CENTER_LEFT">
-                                                                    <children>
-                                                                        <Label text="Inflow" textFill="black" />
-                                                                        <Region HBox.hgrow="ALWAYS" />
-                                                                        <Label fx:id="inFlowValue" text="0.0" textFill="black" />
-                                                                    </children>
-                                                                </HBox>
-                                                                <Slider fx:id="inFlowSlider" blockIncrement="0.1" max="5.0" showTickMarks="true" />
                                                             </children>
                                                         </VBox>
 
@@ -183,7 +169,7 @@
                                                                 <Separator /> <VBox spacing="5.0">
                                                                 <Label style="-fx-font-weight: bold; -fx-background-color: #EEE; -fx-padding: 3;" text="Global Control (Force State):" />
                                                                 <Button maxWidth="Infinity" onAction="#onRestoreAutoClick" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="RESTORE AUTO" />
-                                                                <Button fx:id="btnOptimize" maxWidth="Infinity" onAction="#onOptimizeClick" style="-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;" text="ENABLE OPTIMIZATION" />
+                                                                <Button fx:id="optimize_traffic" maxWidth="Infinity" onAction="#onOptimizeClick" style="-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;" text="ENABLE OPTIMIZATION" />
                                                                 <Button fx:id="optimize_all_traffic" maxWidth="Infinity" onAction="#onOptimizeAllClick" style="-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;" text="OPTIMIZE ALL TRAFFIC" />
                                                             </VBox> <Separator />
                                                                 <GridPane hgap="10.0" vgap="10.0">
@@ -254,12 +240,12 @@
                                                         <Label fx:id="congestionHotspot" text="Hotspot: N/A" textFill="#555555">
                                                             <font><Font name="Arial" size="13.0" /></font>
                                                         </Label>
-                                                        <BarChart minHeight="106.0" prefHeight="150.0" prefWidth="383.0">
+                                                        <BarChart fx:id="waitingTimeChart" minHeight="106.0" prefHeight="222.0" prefWidth="383.0">
                                                             <xAxis>
-                                                                <CategoryAxis side="BOTTOM" />
+                                                                <CategoryAxis label="Duration" side="BOTTOM" />
                                                             </xAxis>
                                                             <yAxis>
-                                                                <NumberAxis side="LEFT" />
+                                                                <NumberAxis label="Vehicles" side="LEFT" />
                                                             </yAxis>
                                                         </BarChart>
                                                         <Button fx:id="exportBtn" mnemonicParsing="false" onAction="#onExportClick" prefWidth="150.0" style="-fx-background-color: #9C27B0;" text="Export" textFill="WHITE">

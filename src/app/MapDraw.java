@@ -20,8 +20,16 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 public class MapDraw
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
+    /**
+     * The active filter for vehicle rendering.
+     * Defaults to "All".
+     */
     private String activeVehicleFilter = "All";
-
+    /**
+     * Updates the active vehicle filter.
+     *
+     * @param filter The new filter criteria (e.g., "Passenger", "Taxi", "Delivery").
+     */
     public void setVehicleFilter(String filter) {
         this.activeVehicleFilter = filter;
     }
@@ -36,8 +44,20 @@ public class MapDraw
     public double OFFSET_X = 0;
     public double OFFSET_Y = 0;
 
+    /**
+     * Flag to toggle the rendering of Edge IDs on the map.
+     * When true, text labels for edge IDs are drawn over the road segments.
+     */
     public boolean showEdgesID = false;
+    /**
+     * Flag to toggle the rendering of Vehicle IDs.
+     * When true, the vehicle's unique ID is drawn above the vehicle body.
+     */
     public boolean showVehicleID = false;
+    /**
+     * Flag to toggle the rendering of the vehicle's current Route ID.
+     * When true, the route ID is drawn below the vehicle body.
+     */
     public boolean showRouteID = false;
 
     private static final Color ASPHALT_COLOR = Color.web("#404040");
@@ -169,6 +189,12 @@ public class MapDraw
         }
     }
 
+    /**
+     * Determines if a specific vehicle should be drawn based on the active filter.
+     *
+     * @param vehicleTypeID The type ID of the vehicle being rendered.
+     * @return true if the vehicle matches the active filter or if filter is "All"; false otherwise.
+     */
     private boolean shouldDrawVehicle(String vehicleTypeID) {
         if ("All".equals(activeVehicleFilter)) {
             return true;
@@ -491,6 +517,20 @@ public class MapDraw
     }
 
 
+    /**
+     * Renders all traffic lights onto the simulation canvas.
+     * <p>
+     * This method iterates through all registered traffic lights. For each connection,
+     * it calculates the position and rotation of the stop line based on the lane geometry.
+     * It then applies a coordinate transformation (translate and rotate) to the
+     * {@link GraphicsContext} before drawing the specific light configuration.
+     * </p>
+     * <p>
+     * <strong>Optimization:</strong> Rendering is skipped if the current zoom scale
+     * is below 0.2 to improve performance.
+     * </p>
+     * * @param gc The JavaFX GraphicsContext used for drawing.
+     */
     public void drawTrafficLights(GraphicsContext gc) {
         if (tlsWrapper == null || !panel.isRunning()) return;
         if (SCALE < 0.2) return;
@@ -530,7 +570,19 @@ public class MapDraw
             }
         }
     }
-
+    /**
+     * Draws a specific traffic light box containing directional arrows.
+     * <p>
+     * Adapts the detail level (text vs. simple dots) based on the current zoom {@code SCALE}.
+     * Colors the arrows Red, Yellow, or Green based on the simulation state.
+     * </p>
+     * * @param gc The graphics context.
+     * @param x The center X coordinate.
+     * @param y The center Y coordinate.
+     * @param secondsLeft The countdown timer value to display (if detailed mode is on).
+     * @param connections The list of lane connections controlled by this light.
+     * @param trafficId The ID of the traffic light (for state lookup).
+     */
     private void drawDirectionalTrafficLight(GraphicsContext gc, double x, double y, int secondsLeft, List<TrafficConnectInfo> connections, String trafficId) {
         if (connections.isEmpty()) return;
         boolean isDetailed = SCALE > 0.6;

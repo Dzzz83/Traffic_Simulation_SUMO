@@ -6,8 +6,12 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class RouteWrapper {
     private SumoTraciConnection conn;
+    private static final Logger LOG = LogManager.getLogger(ControlPanel.class.getName());
 
     public RouteWrapper(SumoTraciConnection conn)
     {
@@ -22,7 +26,7 @@ public class RouteWrapper {
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get the list of all routes");
+            LOG.error("Failed to get the list of all routes");
             e.printStackTrace();
         }
         return new ArrayList<>();

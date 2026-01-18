@@ -1,4 +1,6 @@
+logs/
 .idea/
 out/
 *.class
 *.iml
+*.csv

@@ -9,6 +9,7 @@ import javafx.scene.*;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.BarChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -149,6 +150,8 @@ public class Controller {
     // chart
     @FXML
     private LineChart<Number, Number> avgSpeedChart;
+    @FXML
+    private BarChart<String, Number> waitingTimeChart;
 
     // traffic light
     @FXML
@@ -184,15 +187,20 @@ public class Controller {
     private MapDraw mapDraw;
     private MapDraw3D mapDraw3D;
 
+    private MapRenderer currentRenderer;
+
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
     private boolean showTrafficLightID = false;
     private boolean showRouteID = false;
     private boolean showVehicleID = false;
 
-    // variables for chart
+    // variables for line chart
     private XYChart.Series<Number, Number> speedSeries;
     private double timeSeconds = 0;
+
+    // variables for bar chart
+    private XYChart.Series<String, Number> timeDataSeries;
 
     // Data history storage
     private List<SimulationStats> sessionHistory = new LinkedList<>(); // can only hold SimulationStats objects and use linkedlist because it can grow dynamically
@@ -243,6 +251,10 @@ public class Controller {
         mapDraw = new MapDraw(mapCanvas);
         mapDraw3D = new MapDraw3D();
 
+        currentRenderer = mapDraw;
+        mapDraw.panel = panel;
+        mapDraw3D.panel = panel;
+
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
         if (panel.startSimulation()) {
@@ -258,6 +270,20 @@ public class Controller {
         mapShapes = panel.getMapShape();
 
         initialize3D();
+
+        // setup line chart
+        speedSeries = new XYChart.Series<>();
+        speedSeries.setName("Real-time Speed");
+        avgSpeedChart.getData().add(speedSeries);
+
+        // setup bar chart
+        timeDataSeries = new XYChart.Series<>();
+        timeDataSeries.setName("Waiting Time Distribution");
+        timeDataSeries.getData().add(new XYChart.Data<>("<30s", 0));
+        timeDataSeries.getData().add(new XYChart.Data<>("30-60s", 0));
+        timeDataSeries.getData().add(new XYChart.Data<>(">60s", 0));
+        waitingTimeChart.getData().add(timeDataSeries);
+        waitingTimeChart.setAnimated(false);
 
         // traffic light
         List<String> tlsIds = panel.getTrafficLightIDs();
@@ -293,12 +319,6 @@ public class Controller {
             }
         });
 
-        // setup chart
-
-        speedSeries = new XYChart.Series<>();
-        speedSeries.setName("Real-time Speed");
-        avgSpeedChart.getData().add(speedSeries);
-
         // setup UI interactions
         setupMapInteractions();
         setupMenu();
@@ -316,7 +336,11 @@ public class Controller {
                 if (panel.isRunning()) {
 
                     // control the camera
-                    mapDraw3D.updateCamera(keyInputSet);
+                    if (currentRenderer instanceof MapDraw3D) {
+                        ((MapDraw3D) currentRenderer).updateCamera(keyInputSet);
+                    }
+
+                    currentRenderer.drawAll();
 
                     // display the coords
                     displayCoords();
@@ -848,6 +872,7 @@ public class Controller {
      * @param count The number of vehicles to spawn.
      * Vehicles are spawned with a 2-second time gap to prevent collisions.
      */
+
     private void spawnMultipleVehicles(int count) {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
@@ -1000,6 +1025,7 @@ public class Controller {
     @FXML
     // 3D button
     public void on3DClick() {
+        initialize3D();
         SubScene subScene = mapDraw3D.getSubScene();
         if (subScene == null) {
             LOG.error("The subscene is not initialized yet");
@@ -1008,9 +1034,12 @@ public class Controller {
         if (mapCanvas.isVisible()) {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
+            currentRenderer = mapDraw3D;
+            subScene.requestFocus();
         } else {
             mapCanvas.setVisible(true);
             subScene.setVisible(false);
+            currentRenderer = mapDraw;
         }
 
         Group roadGroup = mapDraw3D.getRoadGroup();
@@ -1077,6 +1106,22 @@ public class Controller {
 
             timeSeconds += 0.1; // X-axis to show the time
             speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
+
+
+            List<Double> waits = panel.getAccumulatedWaitingTimes();
+            int stage1 = 0;
+            int stage2 = 0;
+            int stage3 = 0;
+
+            for (double w : waits) {
+                if (w < 30) stage1++;
+                else if (w < 60) stage2++;
+                else stage3++;
+            }
+
+            timeDataSeries.getData().get(0).setYValue(stage1);
+            timeDataSeries.getData().get(1).setYValue(stage2);
+            timeDataSeries.getData().get(2).setYValue(stage3);
 
             if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
                 speedSeries.getData().remove(0);
@@ -1169,26 +1214,24 @@ public class Controller {
         // refresh the UI labels
         updateStats();
         // redraw the entire map, including the new positions and colors of vehicles
-        drawMap();
-        updateVehicle3D();
+        currentRenderer.drawAll();
     }
 
     private void drawMap() {
         if (mapDraw == null) {
             return;
         }
+        mapDraw.setScale(this.SCALE);
+        mapDraw.setOffsetX(this.OFFSET_X);
+        mapDraw.setOffsetY(this.OFFSET_Y);
+        mapDraw.setMapShapes(this.mapShapes);
 
-        mapDraw.SCALE = this.SCALE;
-        mapDraw.OFFSET_X = this.OFFSET_X;
-        mapDraw.OFFSET_Y = this.OFFSET_Y;
+        mapDraw.setShowEdgesID(this.showEdgesID);
+        mapDraw.setShowVehicleID(this.showVehicleID);
+        mapDraw.setShowRouteID(this.showRouteID);
 
-        mapDraw.mapShapes = this.mapShapes;
         mapDraw.panel = this.panel;
         mapDraw.tlsWrapper = this.tlsWrapper;
-
-        mapDraw.showEdgesID = this.showEdgesID;
-        mapDraw.showVehicleID = this.showVehicleID;
-        mapDraw.showRouteID = this.showRouteID;
 
         mapDraw.drawAll();
 

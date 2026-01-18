@@ -18,7 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-public class MapDraw3D
+public class MapDraw3D implements MapRenderer
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw3D.class.getName());
 
@@ -641,6 +641,28 @@ public class MapDraw3D
             LOG.error("Failed to get the coordinates of the camera");
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public void drawAll() {
+
+        if (allRoadBoxes.isEmpty() && mapShapes != null) {
+            drawRoad();
+        }
+        updateVehicles();
+    }
+
+    @Override
+    public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
+        this.mapShapes = mapShapes;
+    }
+
+    @Override
+    public void setShowEdgesID(boolean show) {
+    }
+
+    @Override
+    public void setShowVehicleID(boolean show) {
     }
 
 }

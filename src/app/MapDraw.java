@@ -17,7 +17,7 @@ import wrapperSUMO.TrafficLightWrapper;
 import wrapperSUMO.TrafficConnectInfo;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
-public class MapDraw
+public class MapDraw implements MapRenderer
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
     /**
@@ -75,9 +75,11 @@ public class MapDraw
     {
         this.canvas = canvas;
     }
-
+    @Override
     public void drawAll() {
-        if (canvas == null) return;
+        if (canvas == null) {
+            return;
+        }
 
         drawRoads();
 
@@ -91,84 +93,87 @@ public class MapDraw
     public void drawRoads() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
-        // 1. Draw Background
-        gc.setFill(GRASS_COLOR);
-        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
         if (mapShapes == null || mapShapes.isEmpty()) return;
 
-        // 2. Generate markings if missing
+        drawGrass(gc);
+
         if (dashedWhiteLines.isEmpty()) {
-            generateLaneSeparators();
+            generateWhiteLines();
         }
 
-        // 3. Debug Mode (Show Edge IDs)
         if (showEdgesID) {
-            gc.setFill(Color.WHITE);
-            gc.setTextAlign(TextAlignment.CENTER);
-            for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
-                String laneID = entry.getKey();
-                String edgeID = laneID;
-                int _index = laneID.lastIndexOf('_');
-                if (_index != -1) {
-                    edgeID = laneID.substring(0, _index);
-                }
-                drawPolyLine(gc, entry.getValue());
-                if (!edgeID.startsWith(":") && entry.getValue().size() > 1) {
-                    drawEdgeLabel(gc, entry.getKey(), entry.getValue());
-                }
+            drawDebugRoads(gc);
+        } else {
+            drawBaseRoads(gc);
+        }
+    }
+
+    public void drawGrass(GraphicsContext gc)
+    {
+        gc.setFill(GRASS_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+
+    private void drawDebugRoads(GraphicsContext gc) {
+        gc.setFill(Color.WHITE);
+        gc.setTextAlign(TextAlignment.CENTER);
+        for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()) {
+            drawPolyLine(gc, entry.getValue());
+
+            String laneID = entry.getKey();
+            if (!laneID.startsWith(":") && entry.getValue().size() > 1) {
+                drawEdgeLabel(gc, laneID, entry.getValue());
             }
         }
-        // 4. Normal Mode
-        else {
-            double baseRoadWidth = 4.5 * SCALE;
-            if (baseRoadWidth < 2.0) baseRoadWidth = 2.0;
+    }
 
-            gc.setLineCap(StrokeLineCap.ROUND);
-            gc.setLineJoin(StrokeLineJoin.ROUND);
-            gc.setLineDashes(null);
+    private void drawBaseRoads(GraphicsContext gc) {
+        double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
 
-            // Layer 1: Curb (Light Gray)
-            gc.setStroke(Color.LIGHTGRAY);
-            gc.setLineWidth(baseRoadWidth + (1.0 * SCALE));
-            for (List<SumoPosition2D> points : mapShapes.values()) {
-                drawPolyLine(gc, points);
-            }
+        gc.setLineCap(StrokeLineCap.ROUND);
+        gc.setLineJoin(StrokeLineJoin.ROUND);
 
-            // Layer 2: Asphalt (Dark Gray)
-            gc.setStroke(ASPHALT_COLOR);
-            gc.setLineWidth(baseRoadWidth);
-            for (List<SumoPosition2D> points : mapShapes.values()) {
-                drawPolyLine(gc, points);
-            }
+        // draw first layer: curb
+        double firstLayerWidth = baseRoadWidth + (1.0 * SCALE);
+        drawRoadLayer(gc, Color.LIGHTGRAY, firstLayerWidth);
 
-            // Layer 3: White Markings
-            if (SCALE > 0.5) {
-                double lineWidth = 0.3 * SCALE;
+        // draw second layer: asphalt
+        drawRoadLayer(gc, ASPHALT_COLOR, baseRoadWidth);
 
-                // Dashed Lines
-                gc.setStroke(Color.WHITESMOKE);
-                gc.setLineWidth(lineWidth);
-                gc.setLineCap(StrokeLineCap.BUTT);
-                gc.setLineDashes(2.0 * SCALE, 3.0 * SCALE);
-
-                for (List<SumoPosition2D> points : dashedWhiteLines) {
-                    drawPolyLine(gc, points);
-                }
-
-                // Solid Lines
-                gc.setLineDashes(null);
-                gc.setLineWidth(lineWidth);
-                gc.setStroke(Color.WHITE);
-
-                for (List<SumoPosition2D> points : solidCenterLines) {
-                    drawPolyLine(gc, points);
-                }
-
-                gc.setLineDashes(null);
-                gc.setLineCap(StrokeLineCap.ROUND);
-            }
+        // draw dashed white lines and solid white lines
+        if (SCALE > 0.5) {
+            drawRoadMarkings(gc);
         }
+    }
+
+    private void drawRoadLayer(GraphicsContext gc, Color color, double width) {
+        gc.setStroke(color);
+        gc.setLineWidth(width);
+        for (List<SumoPosition2D> points : mapShapes.values()) {
+            drawPolyLine(gc, points);
+        }
+    }
+
+    private void drawRoadMarkings(GraphicsContext gc) {
+        double lineWidth = 0.3 * SCALE;
+        gc.setLineWidth(lineWidth);
+
+        // draw dashed Lines
+        gc.setStroke(Color.WHITESMOKE);
+        gc.setLineCap(StrokeLineCap.BUTT);
+        gc.setLineDashes(2.0 * SCALE, 3.0 * SCALE);
+        for (List<SumoPosition2D> points : dashedWhiteLines) {
+            drawPolyLine(gc, points);
+        }
+
+        // draw solid Lines
+        gc.setLineDashes(null);
+        gc.setStroke(Color.WHITE);
+        for (List<SumoPosition2D> points : solidCenterLines) {
+            drawPolyLine(gc, points);
+        }
+
+        gc.setLineCap(StrokeLineCap.ROUND); // Reset cap
     }
 
     //Helper to select the correct renderer based on XML ID
@@ -318,108 +323,200 @@ public class MapDraw
         gc.fillText(edgeID, screenX, screenY);
     }
 
+    private double normalizeVector(double length, double var)
+    {
+        try {
+            if (length > 0)
+            {
+                return var / length;
+            }
+        }
+        catch (Exception e)
+        {
+            LOG.error("Failed to normalize vectors");
+        }
+        return 0.0;
+    }
+    // find the line parallel to the left most lane
     private List<SumoPosition2D> calculateLeftParallelLine(List<SumoPosition2D> points, double offset) {
+
         List<SumoPosition2D> leftParallelLine = new ArrayList<>();
-        if (points.size() < 2) return leftParallelLine;
+        if (points.size() < 2) {
+            return leftParallelLine;
+        }
 
         for (int i = 0; i < points.size(); i++) {
-            double avgNx = 0, avgNy = 0;
+            // create variables to store the 90 degrees vector
+            double leftDirectionalX = 0, leftDirectionalY = 0;
 
             if (i > 0) {
+                // calculate dx, dy from the current point to the point before
                 double dx = points.get(i).x - points.get(i - 1).x;
                 double dy = points.get(i).y - points.get(i - 1).y;
-                double len = Math.sqrt(dx*dx + dy*dy);
-                if (len > 0) {
-                    avgNx -= dy / len;
-                    avgNy += dx / len;
-                }
+                // calculate the length of the segment between the 2 points using Pythargon
+                double len = Math.sqrt(dx * dx + dy * dy);
+
+                // to find the perpendicular vector, take (x, y) --> (-x, y)
+                // normalize dx, dy
+
+                leftDirectionalX -= normalizeVector(len, dy);
+                leftDirectionalY += normalizeVector(len, dx);
             }
 
             if (i < points.size() - 1) {
+                // calculate the points from the next point to the current point
                 double dx = points.get(i + 1).x - points.get(i).x;
                 double dy = points.get(i + 1).y - points.get(i).y;
+                // calculate the length of the segment between the 2 points using Pythargon
                 double len = Math.sqrt(dx*dx + dy*dy);
+
+                // to find the perpendicular vector, take (x, y) --> (-x, y)
+                // normalize dx, dy
                 if (len > 0) {
-                    avgNx -= dy / len;
-                    avgNy += dx / len;
+                    leftDirectionalX -= normalizeVector(len, dy);
+                    leftDirectionalY += normalizeVector(len, dx);
                 }
             }
 
-            double len = Math.sqrt(avgNx*avgNx + avgNy*avgNy);
+            // calculate the length
+            double len = Math.sqrt(leftDirectionalX * leftDirectionalX + leftDirectionalY * leftDirectionalY);
             if (len > 0) {
-                avgNx /= len;
-                avgNy /= len;
+                // normalize the vectors
+                leftDirectionalX /= len;
+                leftDirectionalY /= len;
+
             }
 
-            double newX = points.get(i).x + (avgNx * offset);
-            double newY = points.get(i).y + (avgNy * offset);
-            leftParallelLine.add(new SumoPosition2D(newX, newY));
+            // calculate the left parallel points
+            double newX = points.get(i).x + (leftDirectionalX * offset);
+            double newY = points.get(i).y + (leftDirectionalY * offset);
+
+            SumoPosition2D leftParallelPoint = new SumoPosition2D(newX, newY);
+
+            // add to the list
+            leftParallelLine.add(leftParallelPoint);
         }
         return leftParallelLine;
     }
 
-    private void generateLaneSeparators() {
+
+    private void generateWhiteLines() {
         dashedWhiteLines.clear();
         solidCenterLines.clear();
         if (mapShapes == null) return;
 
-        Map<String, Map<Integer, List<SumoPosition2D>>> edgeGroups = new HashMap<>();
+        // create the hashset
+        Map<String, Map<Integer, List<SumoPosition2D>>> edgeGroups = createRoadHashMap();
+        Set<String> alreadyDrawn = new HashSet<>();
 
-        for (Map.Entry<String, List<SumoPosition2D>> data: mapShapes.entrySet()) {
-            String laneID = data.getKey();
-            if (laneID.startsWith(":")) continue;
-            int underscoreIndex = laneID.lastIndexOf("_");
-            if (underscoreIndex != -1) {
-                String edgeID = laneID.substring(0, underscoreIndex);
-                String indexStr = laneID.substring(underscoreIndex + 1);
+        for (Map<Integer, List<SumoPosition2D>> laneMap : edgeGroups.values()) {
+            if (laneMap.isEmpty()) {
+                continue;
+            }
+
+            List<Integer> sortedIndices = new ArrayList<>(laneMap.keySet());
+            Collections.sort(sortedIndices);
+
+            // draw dashed white lines
+            createDashedWhiteLine(laneMap, sortedIndices);
+
+            // draw the left parallel line
+            createLeftBoundaryLine(laneMap, sortedIndices, alreadyDrawn);
+        }
+    }
+
+    // create road hash map
+    private Map<String, Map<Integer, List<SumoPosition2D>>> createRoadHashMap()
+    {
+        // create a hashmap
+        Map<String, Map<Integer, List<SumoPosition2D>>> roadMap = new HashMap<>();
+        // loop through each pairs of keys and values
+        for (Map.Entry<String, List<SumoPosition2D>> entry : mapShapes.entrySet()){
+            // extract the key
+            String fullEdgeID = entry.getKey();
+
+            // skip internal edges
+            if (fullEdgeID.startsWith(":")){
+                continue;
+            }
+
+            // get the position of "_"
+            int underScoreIndex = fullEdgeID.lastIndexOf("_");
+
+            if (underScoreIndex != -1) {
+                // get the edgeID
+                String edgeID = fullEdgeID.substring(0, underScoreIndex);
                 try {
-                    int index = Integer.parseInt(indexStr);
-                    edgeGroups.computeIfAbsent(edgeID, k -> new TreeMap<>()).put(index, data.getValue());
-                } catch (NumberFormatException e) {
-                    LOG.error("Something went wrong");
+                    // get the laneID
+                    int laneID = Integer.parseInt(fullEdgeID.substring(underScoreIndex + 1));
+                    // create a hashmap for that edgeID
+                    roadMap.putIfAbsent(edgeID, new HashMap<>());
+                    // put laneID and 2D data into the hashmap
+                    roadMap.get(edgeID).put(laneID, entry.getValue());
+                }
+                catch (NumberFormatException e) {
+                    LOG.error("Could not parse lane index for: " + fullEdgeID);
                 }
             }
         }
+        return roadMap;
+    }
 
-        Set<String> alreadyDrawDashed = new HashSet<>();
+    private void createDashedWhiteLine(Map<Integer, List<SumoPosition2D>> laneMap, List<Integer> sortedIndicies){
+        for (int i = 0; i < sortedIndicies.size() - 1; i++)
+        {
+            // get laneA and laneB
+            List<SumoPosition2D> laneA = laneMap.get(sortedIndicies.get(i));
+            List<SumoPosition2D> laneB = laneMap.get(sortedIndicies.get(i+1));
 
-        for (Map<Integer, List<SumoPosition2D>> lane : edgeGroups.values()) {
-            if (lane.isEmpty()) continue;
+            // create a list for the middle line
+            List<SumoPosition2D> separator = new ArrayList<>();
+            // find number of points
+            int numberOfPoints = Math.min(laneA.size(), laneB.size());
 
-            if (lane.size() >= 2) {
-                List<Integer> keys = new ArrayList<>(lane.keySet());
-                for (int i = 0; i < keys.size() - 1; i++) {
-                    List<SumoPosition2D> laneA = lane.get(keys.get(i));
-                    List<SumoPosition2D> laneB = lane.get(keys.get(i+1));
-                    List<SumoPosition2D> separator = new ArrayList<>();
-                    int numPoints = Math.min(laneA.size(), laneB.size());
-                    for (int j = 0; j < numPoints; j++) {
-                        double midX = (laneA.get(j).x + laneB.get(j).x) / 2.0;
-                        double midY = (laneA.get(j).y + laneB.get(j).y) / 2.0;
-                        separator.add(new SumoPosition2D(midX, midY));
-                    }
-                    dashedWhiteLines.add(separator);
-                }
+            for (int j = 0; j < numberOfPoints; j++)
+            {
+                // find the middle point
+                double midX = (laneA.get(j).x + laneB.get(j).x) / 2.0;
+                double midY = (laneA.get(j).y + laneB.get(j).y) / 2.0;
+                SumoPosition2D centerPoint = new SumoPosition2D(midX, midY);
+                // add to the list
+                separator.add(centerPoint);
             }
+            // add the middle line into dashedWhiteLines
+            dashedWhiteLines.add(separator);
+        }
+    }
 
-            int maxIndex = ((TreeMap<Integer, List<SumoPosition2D>>) lane).lastKey();
-            List<SumoPosition2D> leftmostLane = lane.get(maxIndex);
-            List<SumoPosition2D> leftParallelLine = calculateLeftParallelLine(leftmostLane, 1.6);
+    private void createLeftBoundaryLine(Map<Integer, List<SumoPosition2D>> laneMap, List<Integer> sortedIndices, Set<String> alreadyDrawn)
+    {
+        // get the index of the leftMostLane
+        int maxIndex = sortedIndices.getLast();
+        // get the leftMostLane
+        List<SumoPosition2D> leftMostLane = laneMap.get(maxIndex);
+        // calculate the road boundary
+        List<SumoPosition2D> roadBoundary = calculateLeftParallelLine(leftMostLane, 1.6);
 
-            if (lane.size() > 1) {
-                solidCenterLines.add(leftParallelLine);
-            } else {
-                if (!leftParallelLine.isEmpty()) {
-                    int midIdx = leftParallelLine.size() / 2;
-                    SumoPosition2D mid = leftParallelLine.get(midIdx);
-                    String key = Math.round(mid.x) + "_" + Math.round(mid.y);
-                    if (alreadyDrawDashed.add(key)) {
-                        dashedWhiteLines.add(leftParallelLine);
-                    }
-                }
+        // draw solid lines if the road has more than 1 lane
+        if (sortedIndices.size() > 1){
+            solidCenterLines.add(roadBoundary);
+        }
+        // draw dashed lines if the road has 1 lane
+        else if (!roadBoundary.isEmpty())
+        {
+            // create a unique key
+            int midIdx = roadBoundary.size() / 2;
+            SumoPosition2D mid = roadBoundary.get(midIdx);
+            String key = Math.round(mid.x) + "_" + Math.round(mid.y);
+            // add the key to the set
+            if (alreadyDrawn.add(key)) {
+                // if true, add the line to dashedWhiteLine
+                dashedWhiteLines.add(roadBoundary);
             }
         }
     }
+
+
     /**
      * Renders all traffic lights onto the simulation canvas.
      * <p>
@@ -571,5 +668,29 @@ public class MapDraw
             default:
                 gc.fillOval(cx - r, cy - r, r*2, r*2);
         }
+    }
+    @Override
+    public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
+        this.mapShapes = mapShapes;
+    }
+    public void setScale(double scale) {
+        this.SCALE = scale;
+    }
+    public void setOffsetX(double offsetX) {
+        this.OFFSET_X = offsetX;
+    }
+    public void setOffsetY(double offsetY) {
+        this.OFFSET_Y = offsetY;
+    }
+    @Override
+    public void setShowEdgesID(boolean show) {
+        this.showEdgesID = show;
+    }
+    @Override
+    public void setShowVehicleID(boolean show) {
+        this.showVehicleID = show;
+    }
+    public void setShowRouteID(boolean show) {
+        this.showRouteID = show;
     }
 }

@@ -189,6 +189,8 @@ public class Controller {
     private MapDraw mapDraw;
     private MapDraw3D mapDraw3D;
 
+    private MapRenderer currentRenderer;
+
     // variables to highlight edgeID on the map
     private boolean showEdgesID = false;
     private boolean showTrafficLightID = false;
@@ -250,6 +252,10 @@ public class Controller {
 
         mapDraw = new MapDraw(mapCanvas);
         mapDraw3D = new MapDraw3D();
+
+        currentRenderer = mapDraw;
+        mapDraw.panel = panel;
+        mapDraw3D.panel = panel;
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -332,7 +338,11 @@ public class Controller {
                 if (panel.isRunning()) {
 
                     // control the camera
-                    mapDraw3D.updateCamera(keyInputSet);
+                    if (currentRenderer instanceof MapDraw3D) {
+                        ((MapDraw3D) currentRenderer).updateCamera(keyInputSet);
+                    }
+
+                    currentRenderer.drawAll();
 
                     // display the coords
                     displayCoords();
@@ -863,6 +873,7 @@ public class Controller {
      * @param count The number of vehicles to spawn.
      * Vehicles are spawned with a 2-second time gap to prevent collisions.
      */
+
     private void spawnMultipleVehicles(int count) {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
@@ -1015,6 +1026,7 @@ public class Controller {
     @FXML
     // 3D button
     public void on3DClick() {
+        initialize3D();
         SubScene subScene = mapDraw3D.getSubScene();
         if (subScene == null) {
             LOG.error("The subscene is not initialized yet");
@@ -1023,9 +1035,12 @@ public class Controller {
         if (mapCanvas.isVisible()) {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
+            currentRenderer = mapDraw3D;
+            subScene.requestFocus();
         } else {
             mapCanvas.setVisible(true);
             subScene.setVisible(false);
+            currentRenderer = mapDraw;
         }
 
         Group roadGroup = mapDraw3D.getRoadGroup();
@@ -1200,8 +1215,7 @@ public class Controller {
         // refresh the UI labels
         updateStats();
         // redraw the entire map, including the new positions and colors of vehicles
-        drawMap();
-        updateVehicle3D();
+        currentRenderer.drawAll();
     }
 
     private void drawMap() {

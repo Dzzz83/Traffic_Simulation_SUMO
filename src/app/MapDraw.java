@@ -17,7 +17,7 @@ import wrapperSUMO.TrafficLightWrapper;
 import wrapperSUMO.TrafficConnectInfo;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
-public class MapDraw
+public class MapDraw implements MapRenderer
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
     /**
@@ -75,7 +75,7 @@ public class MapDraw
     {
         this.canvas = canvas;
     }
-
+    @Override
     public void drawAll() {
         if (canvas == null) {
             return;
@@ -669,7 +669,7 @@ public class MapDraw
                 gc.fillOval(cx - r, cy - r, r*2, r*2);
         }
     }
-
+    @Override
     public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
         this.mapShapes = mapShapes;
     }
@@ -682,9 +682,11 @@ public class MapDraw
     public void setOffsetY(double offsetY) {
         this.OFFSET_Y = offsetY;
     }
+    @Override
     public void setShowEdgesID(boolean show) {
         this.showEdgesID = show;
     }
+    @Override
     public void setShowVehicleID(boolean show) {
         this.showVehicleID = show;
     }

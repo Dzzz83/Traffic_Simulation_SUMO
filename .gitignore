@@ -1,7 +1,6 @@
 logs/
 .idea/
 out/
-logs/
 *.class
 *.iml
 *.csv

@@ -17,6 +17,13 @@ import wrapperSUMO.TrafficLightWrapper;
 import wrapperSUMO.TrafficConnectInfo;
 import de.tudresden.sumo.objects.SumoPosition2D;
 
+/**
+ * MapDraw handles the 2D visualization of the SUMO simulation using a JavaFX Canvas.
+ * It manages the rendering of road networks, traffic lights, and vehicles,
+ * supporting features like zooming, panning, and ID labeling.
+ * * This class implements the {@link MapRenderer} interface to allow for
+ * interchangeable use within the simulation controller.
+ */
 public class MapDraw implements MapRenderer
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
@@ -36,9 +43,9 @@ public class MapDraw implements MapRenderer
 
     private Canvas canvas;
 
-    public ControlPanel panel;
+    private ControlPanel panel;
     public TrafficLightWrapper tlsWrapper;
-    public Map<String, List<SumoPosition2D>> mapShapes;
+    private Map<String, List<SumoPosition2D>> mapShapes;
 
     public double SCALE = 1.0;
     public double OFFSET_X = 0;
@@ -71,10 +78,19 @@ public class MapDraw implements MapRenderer
     private final VehicleRenderer taxiRenderer = new TaxiRenderer();
     private final VehicleRenderer evRenderer = new EvehicleRenderer();
 
+    /**
+     * Constructs a MapDraw instance and associates it with a JavaFX Canvas.
+     * * @param canvas The Canvas object where the 2D map will be rendered.
+     */
     public MapDraw(Canvas canvas)
     {
         this.canvas = canvas;
     }
+    /**
+     * Executes the complete drawing sequence for the 2D map.
+     * It clears the canvas and redraws the road infrastructure,
+     * active traffic lights, and all simulated vehicles.
+     */
     @Override
     public void drawAll() {
         if (canvas == null) {
@@ -90,6 +106,11 @@ public class MapDraw implements MapRenderer
         drawAllVehicles();
     }
 
+    /**
+     * Manages the rendering of the road network infrastructure.
+     * Depending on current settings, it renders either the detailed
+     * road textures (asphalt, markings) or a debug view with IDs.
+     */
     public void drawRoads() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
@@ -107,7 +128,10 @@ public class MapDraw implements MapRenderer
             drawBaseRoads(gc);
         }
     }
-
+    /**
+     * Fills the entire background of the canvas with a grass texture color.
+     * * @param gc The GraphicsContext used to issue draw calls to the canvas.
+     */
     public void drawGrass(GraphicsContext gc)
     {
         gc.setFill(GRASS_COLOR);
@@ -126,7 +150,12 @@ public class MapDraw implements MapRenderer
             }
         }
     }
-
+    /**
+     * Renders the stylized road infrastructure in multiple layers.
+     * This method draws the road curb and asphalt layers using a painter's algorithm
+     * approach and conditionally renders road markings based on the current zoom level.
+     * * @param gc the GraphicsContext used for drawing on the canvas.
+     */
     private void drawBaseRoads(GraphicsContext gc) {
         double baseRoadWidth = Math.max(2.0, 4.5 * SCALE);
 
@@ -145,7 +174,13 @@ public class MapDraw implements MapRenderer
             drawRoadMarkings(gc);
         }
     }
-
+    /**
+     * Draws a specific layer of the road network with a designated color and width.
+     * It iterates through all map shapes to apply the stroke to every road segment.
+     * * @param gc    the GraphicsContext used for drawing.
+     * @param color the Color to be applied to this road layer.
+     * @param width the stroke thickness, adjusted by the current scale.
+     */
     private void drawRoadLayer(GraphicsContext gc, Color color, double width) {
         gc.setStroke(color);
         gc.setLineWidth(width);
@@ -153,7 +188,12 @@ public class MapDraw implements MapRenderer
             drawPolyLine(gc, points);
         }
     }
-
+    /**
+     * Renders the lane markings on top of the asphalt layer.
+     * This includes dashed lines for lane separation and solid lines for road boundaries
+     * or centerlines. Dash patterns are dynamically scaled based on the zoom level.
+     * * @param gc the GraphicsContext used for drawing.
+     */
     private void drawRoadMarkings(GraphicsContext gc) {
         double lineWidth = 0.3 * SCALE;
         gc.setLineWidth(lineWidth);
@@ -265,18 +305,28 @@ public class MapDraw implements MapRenderer
         }
     }
 
-    // --- HELPER FUNCTIONS ---
-
+    /**
+     * translates simulation coordinates into screen pixels and renders them as a polyline.
+     * this method applies scaling and offsets for zooming and panning, and inverts the y-axis
+     * to map the simulation's cartesian coordinate system to the javafx canvas coordinate system.
+     * * @param gc the graphicscontext used for drawing on the canvas.
+     * @param points the list of sumoposition2d coordinates representing the shape to be drawn.
+     */
     public void drawPolyLine(GraphicsContext gc, List<SumoPosition2D> points)
     {
-        if (points.isEmpty()) return;
+        if (points.isEmpty()) {
+            return;
+        }
         double[] xPoints = new double[points.size()];
         double[] yPoints = new double[points.size()];
         for (int i = 0; i < points.size(); i++)
         {
+            // apply zoom scale and horizontal offset
             xPoints[i] = (points.get(i).x * SCALE ) + OFFSET_X;
+            // invert the y-axis to match the javafx
             yPoints[i] = canvas.getHeight() - ((points.get(i).y * SCALE) + OFFSET_Y);
         }
+        // draw the connected line segment on the canvas
         gc.strokePolyline(xPoints, yPoints, points.size());
     }
 
@@ -322,7 +372,13 @@ public class MapDraw implements MapRenderer
         gc.setFill(Color.WHITE);
         gc.fillText(edgeID, screenX, screenY);
     }
-
+    /**
+     * performs vector normalization by dividing a component by the vector length.
+     * this helper ensures that the resulting directional components are within a unit range.
+     * * @param length the calculated magnitude of the vector.
+     * @param var the specific x or y component to be normalized.
+     * @return the normalized component, or 0.0 if length is zero or an error occurs.
+     */
     private double normalizeVector(double length, double var)
     {
         try {
@@ -337,6 +393,14 @@ public class MapDraw implements MapRenderer
         }
         return 0.0;
     }
+    /**
+     * calculates a new path that runs parallel to the provided coordinates at a specific offset.
+     * this is used to determine road boundaries or centerlines by calculating perpendicular
+     * vectors for each segment of the road.
+     * * @param points the original list of coordinates representing the lane center.
+     * @param offset the distance to shift the line (positive for left, negative for right).
+     * @return a list of coordinates representing the shifted parallel path.
+     */
     // find the line parallel to the left most lane
     private List<SumoPosition2D> calculateLeftParallelLine(List<SumoPosition2D> points, double offset) {
 
@@ -399,7 +463,11 @@ public class MapDraw implements MapRenderer
         return leftParallelLine;
     }
 
-
+    /**
+     * coordinates the generation of all white road markings.
+     * it groups lanes by their parent edge, sorts them, and then generates either
+     * dashed lines (for lane separation) or solid lines (for road boundaries).
+     */
     private void generateWhiteLines() {
         dashedWhiteLines.clear();
         solidCenterLines.clear();
@@ -425,6 +493,11 @@ public class MapDraw implements MapRenderer
         }
     }
 
+    /**
+     * parses the raw map data to group individual lanes into their respective road edges.
+     * it filters out internal sumo junctions and organizes coordinates by edge id and lane index.
+     * * @return a nested map structure where the primary key is the edge id and the value is a map of lanes.
+     */
     // create road hash map
     private Map<String, Map<Integer, List<SumoPosition2D>>> createRoadHashMap()
     {
@@ -461,7 +534,12 @@ public class MapDraw implements MapRenderer
         }
         return roadMap;
     }
-
+    /**
+     * generates coordinates for dashed lines that separate multiple lanes on the same road.
+     * it calculates the midpoint between adjacent lanes to place the separator correctly.
+     * * @param laneMap the map containing lane indices and their coordinates for a specific edge.
+     * @param sortedIndicies the list of lane indices sorted from right to left.
+     */
     private void createDashedWhiteLine(Map<Integer, List<SumoPosition2D>> laneMap, List<Integer> sortedIndicies){
         for (int i = 0; i < sortedIndicies.size() - 1; i++)
         {
@@ -487,7 +565,14 @@ public class MapDraw implements MapRenderer
             dashedWhiteLines.add(separator);
         }
     }
-
+    /**
+     * generates the leftmost boundary line for a road edge.
+     * depending on the lane count and road type, it assigns the boundary as either
+     * a solid center line or a dashed outer marking.
+     * * @param laneMap the map of lanes for the current edge.
+     * @param sortedIndices the sorted indices of the lanes.
+     * @param alreadyDrawn a set used to track and prevent duplicate drawing of identical boundaries.
+     */
     private void createLeftBoundaryLine(Map<Integer, List<SumoPosition2D>> laneMap, List<Integer> sortedIndices, Set<String> alreadyDrawn)
     {
         // get the index of the leftMostLane
@@ -673,12 +758,15 @@ public class MapDraw implements MapRenderer
     public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
         this.mapShapes = mapShapes;
     }
+    @Override
     public void setScale(double scale) {
         this.SCALE = scale;
     }
+    @Override
     public void setOffsetX(double offsetX) {
         this.OFFSET_X = offsetX;
     }
+    @Override
     public void setOffsetY(double offsetY) {
         this.OFFSET_Y = offsetY;
     }
@@ -690,7 +778,12 @@ public class MapDraw implements MapRenderer
     public void setShowVehicleID(boolean show) {
         this.showVehicleID = show;
     }
+    @Override
     public void setShowRouteID(boolean show) {
         this.showRouteID = show;
+    }
+    @Override
+    public void setPanel(ControlPanel panel) {
+        this.panel = panel;
     }
 }

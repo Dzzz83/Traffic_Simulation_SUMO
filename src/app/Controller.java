@@ -2,7 +2,6 @@
 package app;
 
 import javafx.animation.AnimationTimer;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.*;
@@ -15,8 +14,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
@@ -24,7 +21,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.text.FontWeight;
 
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Box;
 import javafx.scene.shape.StrokeLineCap;
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
@@ -33,7 +29,7 @@ import javafx.scene.control.Label;
 
 // import java.awt.*;
 import javafx.scene.text.Font;
-import java.security.spec.ECField;
+
 import java.util.*;
 import java.awt.geom.Line2D;
 import java.util.List;
@@ -242,6 +238,11 @@ public class Controller {
     private List<String> selectedRouteEdges = new ArrayList<>();
     private List<String> validNextEdges = new ArrayList<>();
 
+    /**
+     * initializes the controller after the fxml file has been loaded.
+     * sets up the simulation backend, initializes both 2d and 3d renderers,
+     * configures the chart data series, and starts the main animation timer loop.
+     */
     @FXML
     // initialize the GUI function
     public void initialize() {
@@ -254,8 +255,8 @@ public class Controller {
         mapDraw3D = new MapDraw3D();
 
         currentRenderer = mapDraw;
-        mapDraw.panel = panel;
-        mapDraw3D.panel = panel;
+        mapDraw.setPanel(panel);
+        mapDraw3D.setPanel(panel);
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -1043,6 +1044,7 @@ public class Controller {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
             currentRenderer = mapDraw3D;
+
             subScene.requestFocus();
         } else {
             mapCanvas.setVisible(true);
@@ -1054,7 +1056,7 @@ public class Controller {
         boolean check = (roadGroup.getChildren().isEmpty());
 
         if (check) {
-            mapDraw3D.mapShapes = this.mapShapes;
+            mapDraw3D.setMapShapes(this.mapShapes);
             mapDraw3D.drawRoad();
         }
         // make the subScene focus on the keyboard
@@ -1235,20 +1237,19 @@ public class Controller {
         if (mapDraw == null) {
             return;
         }
-        mapDraw.setScale(this.SCALE);
-        mapDraw.setOffsetX(this.OFFSET_X);
-        mapDraw.setOffsetY(this.OFFSET_Y);
-        mapDraw.setMapShapes(this.mapShapes);
+        currentRenderer.setScale(this.SCALE);
+        currentRenderer.setOffsetX(this.OFFSET_X);
+        currentRenderer.setOffsetY(this.OFFSET_Y);
+        currentRenderer.setMapShapes(this.mapShapes);
 
         mapDraw.setShowEdgesID(this.showEdgesID);
         mapDraw.setShowVehicleID(this.showVehicleID);
         mapDraw.setShowRouteID(this.showRouteID);
 
-        mapDraw.panel = this.panel;
+        currentRenderer.setPanel(this.panel);
         mapDraw.tlsWrapper = this.tlsWrapper;
 
-        mapDraw.drawAll();
-
+        currentRenderer.drawAll();
         GraphicsContext gc = mapCanvas.getGraphicsContext2D();
 
         // feature for highlighting the valid route when drag mouse to.
@@ -1335,8 +1336,8 @@ public class Controller {
             return;
         }
 
-        mapDraw3D.panel = this.panel;
-        mapDraw3D.mapShapes = this.mapShapes;
+        mapDraw3D.setPanel(this.panel);
+        mapDraw3D.setMapShapes(this.mapShapes);
 
         boolean check1 = (mapDraw3D.getSubScene() == null);
 

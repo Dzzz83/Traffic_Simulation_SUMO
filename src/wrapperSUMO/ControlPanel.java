@@ -1092,7 +1092,7 @@ public class ControlPanel
                 totalSpeed += getVehicleSpeed(vehicleId);
             }
 
-            return (totalSpeed / allVehicles.size());
+            return (totalSpeed / allVehicles.size()) * 3.6; // m/s to km/h
         } catch (Exception e) {
             LOG.error("Failed to calculate global mean speed");
             

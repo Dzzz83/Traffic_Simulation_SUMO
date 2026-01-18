@@ -643,9 +643,10 @@ public class Controller {
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
                 double speed = newVal.doubleValue();
-                maxSpeedValue.setText(String.format("%.1f m/s", speed));
+                double visualSpeed = speed * 3.6;
+                maxSpeedValue.setText(String.format("%.1f km/h", visualSpeed));
                 panel.setGlobalMaxSpeed(speed);
-                LOG.info("Max Speed: " + speed);
+                LOG.info("Max Speed: " + visualSpeed);
             });
         }
 
@@ -1187,7 +1188,7 @@ public class Controller {
             int vehicleCount = panel.getVehicleCount();
             int edgeCount = panel.getEdgeCount();
             int trafficLightCount = panel.getTrafficLightCount();
-            double currentSpeed = panel.getGlobalMeanSpeed() * 3.6; // Convert m/s to km/h
+            double currentSpeed = panel.getGlobalMeanSpeed(); // Convert m/s to km/h
             double totalCo2 = panel.getTotalCO2();
             double congestion = panel.getCongestionPercentage();
             List<Double> waits = panel.getAccumulatedWaitingTimes();

@@ -2,7 +2,6 @@
 package app;
 
 import javafx.animation.AnimationTimer;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.*;
@@ -15,8 +14,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.chart.LineChart;
@@ -24,7 +21,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.text.FontWeight;
 
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Box;
 import javafx.scene.shape.StrokeLineCap;
 import wrapperSUMO.ControlPanel;
 import wrapperSUMO.TrafficLightWrapper;
@@ -33,7 +29,7 @@ import javafx.scene.control.Label;
 
 // import java.awt.*;
 import javafx.scene.text.Font;
-import java.security.spec.ECField;
+
 import java.util.*;
 import java.awt.geom.Line2D;
 import java.util.List;
@@ -259,8 +255,8 @@ public class Controller {
         mapDraw3D = new MapDraw3D();
 
         currentRenderer = mapDraw;
-        mapDraw.panel = panel;
-        mapDraw3D.panel = panel;
+        mapDraw.setPanel(panel);
+        mapDraw3D.setPanel(panel);
 
         // connect to SUMO and load Map
         LOG.info("Connecting to SUMO to fetch map...");
@@ -1249,11 +1245,10 @@ public class Controller {
         mapDraw.setShowVehicleID(this.showVehicleID);
         mapDraw.setShowRouteID(this.showRouteID);
 
-        mapDraw.panel = this.panel;
+        currentRenderer.setPanel(this.panel);
         mapDraw.tlsWrapper = this.tlsWrapper;
 
-        mapDraw.drawAll();
-
+        currentRenderer.drawAll();
         GraphicsContext gc = mapCanvas.getGraphicsContext2D();
 
         // feature for highlighting the valid route when drag mouse to.

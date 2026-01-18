@@ -666,5 +666,9 @@ public class MapDraw3D implements MapRenderer {
     @Override
     public void setShowVehicleID(boolean show) {
     }
+    @Override
+    public void setPanel(ControlPanel panel) {
+        this.panel = panel;
+    }
 
 }

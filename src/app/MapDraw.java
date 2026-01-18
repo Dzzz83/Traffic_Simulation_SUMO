@@ -43,7 +43,7 @@ public class MapDraw implements MapRenderer
 
     private Canvas canvas;
 
-    public ControlPanel panel;
+    private ControlPanel panel;
     public TrafficLightWrapper tlsWrapper;
     public Map<String, List<SumoPosition2D>> mapShapes;
 
@@ -777,5 +777,9 @@ public class MapDraw implements MapRenderer
     }
     public void setShowRouteID(boolean show) {
         this.showRouteID = show;
+    }
+    @Override
+    public void setPanel(ControlPanel panel) {
+        this.panel = panel;
     }
 }

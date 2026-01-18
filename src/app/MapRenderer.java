@@ -3,6 +3,7 @@ package app;
 import java.util.List;
 import java.util.Map;
 import de.tudresden.sumo.objects.SumoPosition2D;
+import wrapperSUMO.ControlPanel;
 
 /**
  * the maprenderer interface defines the essential contract for simulation visualization.
@@ -32,4 +33,6 @@ public interface MapRenderer {
      * @param show true to enable labels, false to hide them.
      */
     void setShowVehicleID(boolean show);
+
+    void setPanel(ControlPanel panel);
 }

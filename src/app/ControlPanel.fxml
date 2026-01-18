@@ -248,7 +248,7 @@
                                                                 <NumberAxis label="Vehicles" side="LEFT" />
                                                             </yAxis>
                                                         </BarChart>
-                                                        <Button fx:id="exportBtn" mnemonicParsing="false" onAction="#onExportClick" prefWidth="150.0" style="-fx-background-color: #9C27B0;" text="Export" textFill="WHITE">
+                                                        <Button fx:id="exportBtn" mnemonicParsing="false" onAction="#onExportClick" prefWidth="150.0" style="-fx-background-color: #9C27B0;" text="Export CSV" textFill="WHITE">
                                                             <font><Font name="System Bold" size="14.0" /></font>
                                                         </Button>
                                                         <Button fx:id="exportPdfBtn" mnemonicParsing="false" onAction="#onExportPdfClick"

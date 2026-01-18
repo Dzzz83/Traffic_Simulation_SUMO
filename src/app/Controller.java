@@ -912,7 +912,7 @@ public class Controller {
             LOG.info("Stopping Recording & Saving...");
 
             isRecording = false;
-            exportBtn.setText("Export");
+            exportBtn.setText("Export CSV");
             String filename = "TrafficReport.csv";
 
             ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);

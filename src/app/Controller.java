@@ -337,12 +337,15 @@ public class Controller {
             public void handle(long now) {
                 if (panel.isRunning()) {
 
-                    // control the camera
+                    // control the camera in 3D
                     if (currentRenderer instanceof MapDraw3D) {
                         ((MapDraw3D) currentRenderer).updateCamera(keyInputSet);
+                        currentRenderer.drawAll();
                     }
-
-                    currentRenderer.drawAll();
+                    // same but for 2D
+                    else {
+                        drawMap();
+                    }
 
                     // display the coords
                     displayCoords();
@@ -502,10 +505,8 @@ public class Controller {
             }
         });
 
-        // 5. MOUSE CLICK (Updated for Selection)
+        // 5. Mouse click interaction
         mapCanvas.setOnMouseClicked(event -> {
-
-            // --- A. EXISTING: Spawn Mode Click ---
             if (isSpawnMode && hoveredEdge != null) {
                 String currentEdgeId = hoveredEdge;
                 if (hoveredEdge.contains("_") && !hoveredEdge.startsWith(":")) {
@@ -536,8 +537,6 @@ public class Controller {
                 drawMap();
             }
         });
-
-
     }
 
     /**
@@ -790,7 +789,7 @@ public class Controller {
      */
     @FXML
     public void onAddVehicleClick() {
-        // Case 1: user toggles the ON/OFF
+        // Scenario 1: user toggles the ON/OFF
         isSpawnMode = !isSpawnMode;
 
         if (isSpawnMode) {
@@ -805,7 +804,7 @@ public class Controller {
             // hide the number of vehicles form until the button "Add Vehicle" is clicked
             vehicleInputForm.setVisible(false);
         }
-        // Case 2: user has finished selecting routes and want to add vehicles
+        // Scenario 2: user has finished selecting routes and want to add vehicles
         else {
             if (!selectedRouteEdges.isEmpty()) {
                 LOG.info("Route selected. Prompting for vehicle count...");
@@ -1220,9 +1219,16 @@ public class Controller {
             }
         }
         // refresh the UI labels
+
         updateStats();
-        // redraw the entire map, including the new positions and colors of vehicles
-        currentRenderer.drawAll();
+        // redraw the entire map, including the new positions and colors of vehicles in 3D
+        if (currentRenderer instanceof MapDraw3D) {
+            currentRenderer.drawAll();
+        }
+        // same but for 2D
+        else {
+            drawMap();
+        }
     }
 
     private void drawMap() {

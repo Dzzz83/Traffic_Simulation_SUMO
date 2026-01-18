@@ -43,6 +43,10 @@ import org.apache.logging.log4j.LogManager; // use for logging
 import org.apache.logging.log4j.Logger;
 
 public class Controller {
+    /**
+     * Logger instance for the Controller.
+     * Used for recording simulation lifecycle events (start, stop, errors) and debugging info.
+     */
     private static final Logger LOG = LogManager.getLogger(Controller.class.getName());
 
     // initialize variables
@@ -92,12 +96,22 @@ public class Controller {
     private ComboBox<String> filterVehicleCombo;
 
     // sliders
+    /**
+     * Slider for controlling the simulation delay (speed).
+     * Values range from 0ms (fastest) to 1000ms (slowest).
+     */
     @FXML
     private Slider delaySlider;
-    @FXML
-    private Slider inFlowSlider;
+    /**
+     * Slider for setting the global maximum speed limit for all edges.
+     * Modifies the speed limit in the SUMO simulation in real-time.
+     */
     @FXML
     private Slider maxSpeedSlider;
+    /**
+     * Slider for adjusting the phase duration of the currently selected traffic light.
+     * Allows the user to manually override the duration of the current green/red phase.
+     */
     @FXML
     private Slider sliderPhaseDuration;
     @FXML
@@ -515,11 +529,25 @@ public class Controller {
 
     }
 
+    /**
+     * Initializes UI controls and listeners for interactive components.
+     * <p>
+     * Sets up listeners for:
+     * <ul>
+     * <li>{@code delaySlider}: Updates the simulation loop delay.</li>
+     * <li>{@code maxSpeedSlider}: Sends global speed limit commands to SUMO.</li>
+     * <li>{@code sliderPhaseDuration}: Updates traffic light phase timings on release.</li>
+     * </ul>
+     * </p>
+     */
     private void setupControls() {
         startBtn.setOnAction(e -> onStartClick());
         stopBtn.setOnAction(e -> onStopClick());
 
-        // make the edgeID button function
+        /*
+         * Toggles the display of Edge IDs on the map.
+         * Updates the button style to indicate active state and triggers a map redraw.
+         */
         if (EdgeIDBtn != null) {
             EdgeIDBtn.setOnAction(e -> {
                 showEdgesID = !showEdgesID;
@@ -609,14 +637,6 @@ public class Controller {
             });
         }
 
-        // temporarily not function, next time.
-        if (inFlowSlider != null) {
-            inFlowSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-                inFlowValue.setText(String.format("%.1f", newVal.doubleValue()));
-                LOG.info("In Flow: " + newVal);
-            });
-        }
-
         // make the maxSpeed slider function
         if (maxSpeedSlider != null) {
             maxSpeedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -646,6 +666,15 @@ public class Controller {
         filterVehicleCombo.getSelectionModel().select("All");
     }
 
+    /**
+     * Handling the event when the vehicle filter ComboBox value changes.
+     * <p>
+     * Updates the {@link MapDraw} instance with the selected filter type
+     * (e.g., limiting view to only "Electric Vehicles").
+     * </p>
+     *
+     * @param event The ActionEvent triggered by the ComboBox selection.
+     */
     @FXML
     public void onFilterVehicleChange(ActionEvent event) {
         String selectedType = filterVehicleCombo.getValue();
@@ -742,8 +771,14 @@ public class Controller {
         gc.strokeLine(x1, y1, x2, y2);
     }
 
+    /**
+     * Toggles the "Spawn Mode" for vehicle injection.
+     * <p>
+     * When enabled, the user can select a road segment (Edge) on the map to define a route.
+     * Changes the cursor to {@code CROSSHAIR} to indicate selection mode.
+     * </p>
+     */
     @FXML
-    // add vehicle button function
     public void onAddVehicleClick() {
         // Case 1: user toggles the ON/OFF
         isSpawnMode = !isSpawnMode;
@@ -775,6 +810,13 @@ public class Controller {
         }
     }
 
+    /**
+     * Confirms the vehicle spawn request.
+     * <p>
+     * Reads the vehicle count from the input field and triggers the spawning of vehicles
+     * onto the currently selected route edge.
+     * </p>
+     */
     @FXML
     public void onConfirmSpawnClick() {
         try {
@@ -815,6 +857,12 @@ public class Controller {
         drawMap();
     }
 
+    /**
+     * Spawns a batch of vehicles onto the selected route.
+     *
+     * @param count The number of vehicles to spawn.
+     * Vehicles are spawned with a 2-second time gap to prevent collisions.
+     */
     private void spawnMultipleVehicles(int count) {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;

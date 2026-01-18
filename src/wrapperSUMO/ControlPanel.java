@@ -25,6 +25,10 @@ import org.apache.logging.log4j.Logger;
 
 public class ControlPanel
 {
+    /**
+     * Logger instance for the ControlPanel.
+     * Used for recording simulation lifecycle events (start, stop, errors) and debugging info.
+     */
     private static final Logger LOG = LogManager.getLogger(ControlPanel.class.getName());
     // create the connection
     private SumoTraciConnection connection;
@@ -47,7 +51,15 @@ public class ControlPanel
         LOG.info("ControlPanel created - call startSimulation() to begin");
     }
 
-    // create function startSimulation
+    /**
+     * Attempts to start the SUMO simulation server.
+     * <p>
+     * Logs an INFO message upon success or an ERROR message if the connection
+     * fails or the configuration file is invalid.
+     * </p>
+     *
+     * @return true if the simulation started successfully, false otherwise.
+     */
     public boolean startSimulation()
     {
         try

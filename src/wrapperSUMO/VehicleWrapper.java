@@ -34,7 +34,15 @@ public class VehicleWrapper
         this.connection = connection;
     }
 
-    // getVehicleCount wrapper
+    /**
+     * Retrieves the current count of vehicles in the simulation.
+     * <p>
+     * If the SUMO command fails, the error is printed to standard output
+     * and a stack trace is printed to standard error.
+     * </p>
+     *
+     * @return The number of vehicles, or 0 if an error occurs.
+     */
     public int getVehicleCount()
     {
         try
@@ -143,7 +151,17 @@ public class VehicleWrapper
         return "";
     }
 
-    // add the vehicle
+    /**
+     * Adds a new vehicle to the simulation.
+     *
+     * @param vehicleId The unique ID for the new vehicle.
+     * @param typeId    The vehicle type ID (e.g., "DEFAULT_VEHTYPE", "Delivery").
+     * @param routeId   The ID of the route the vehicle will follow.
+     * @param depart    The departure time (in seconds).
+     * @param position  The initial position on the lane (in meters).
+     * @param speed     The initial speed (in m/s).
+     * @param lane      The lane index (byte) to start on.
+     */
     public void addVehicle(String vehicleId, String typeId, String routeId, int depart, double position, double speed, byte lane)
     {
         try

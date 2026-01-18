@@ -20,8 +20,16 @@ import de.tudresden.sumo.objects.SumoPosition2D;
 public class MapDraw
 {
     private static final Logger LOG = LogManager.getLogger(MapDraw.class.getName());
+    /**
+     * The active filter for vehicle rendering.
+     * Defaults to "All".
+     */
     private String activeVehicleFilter = "All";
-
+    /**
+     * Updates the active vehicle filter.
+     *
+     * @param filter The new filter criteria (e.g., "Passenger", "Taxi", "Delivery").
+     */
     public void setVehicleFilter(String filter) {
         this.activeVehicleFilter = filter;
     }
@@ -36,8 +44,20 @@ public class MapDraw
     public double OFFSET_X = 0;
     public double OFFSET_Y = 0;
 
+    /**
+     * Flag to toggle the rendering of Edge IDs on the map.
+     * When true, text labels for edge IDs are drawn over the road segments.
+     */
     public boolean showEdgesID = false;
+    /**
+     * Flag to toggle the rendering of Vehicle IDs.
+     * When true, the vehicle's unique ID is drawn above the vehicle body.
+     */
     public boolean showVehicleID = false;
+    /**
+     * Flag to toggle the rendering of the vehicle's current Route ID.
+     * When true, the route ID is drawn below the vehicle body.
+     */
     public boolean showRouteID = false;
 
     private static final Color ASPHALT_COLOR = Color.web("#404040");
@@ -164,6 +184,12 @@ public class MapDraw
         }
     }
 
+    /**
+     * Determines if a specific vehicle should be drawn based on the active filter.
+     *
+     * @param vehicleTypeID The type ID of the vehicle being rendered.
+     * @return true if the vehicle matches the active filter or if filter is "All"; false otherwise.
+     */
     private boolean shouldDrawVehicle(String vehicleTypeID) {
         if ("All".equals(activeVehicleFilter)) {
             return true;

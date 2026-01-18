@@ -17,10 +17,13 @@ import it.polito.appeal.traci.SumoTraciConnection;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 /**
  * @author Tai
  */
 public class EdgeWrapper {
+    private static final Logger LOG = LogManager.getLogger(ControlPanel.class.getName());
     // Initialize the connection
     private final SumoTraciConnection connection;
 
@@ -36,8 +39,8 @@ public class EdgeWrapper {
             List<String> visibleEdges = getEdgeIDs();
             return visibleEdges.size();
         } catch (Exception e) {
-            System.out.println("Failed to get number of edges");
-            
+            LOG.error("Failed to get number of edges");
+
         }
         return 0;
     }
@@ -55,8 +58,8 @@ public class EdgeWrapper {
             }
             return filterIds;
         } catch (Exception e) {
-            System.out.println("Failed to get the list of edge IDs");
-            
+            LOG.error("Failed to get the list of edge IDs");
+
         }
         return new ArrayList<>();
     }
@@ -66,8 +69,8 @@ public class EdgeWrapper {
         try {
             return (Integer) connection.do_job_get(Edge.getLaneNumber(edgeId));
         } catch (Exception e) {
-            System.out.println("Failed to get the number of lanes");
-            
+            LOG.error("Failed to get the number of lanes");
+
         }
         return 0;
     }
@@ -75,20 +78,20 @@ public class EdgeWrapper {
     // Basically setting the speed limit for a specific edge
     public int setMaxSpeed(String edgeID, double speed) {
         if (edgeID == null || edgeID.isEmpty()) {
-            System.err.println("Error: edgeID cannot be empty.");
+            LOG.error("Error: edgeID cannot be empty.");
             return -1;
         }
         if (speed < 0) // Speed cannot be negative
         {
-            System.err.println("Error: speed cannot be negative.");
+            LOG.error("Error: speed cannot be negative.");
             return -2;
         }
         try {
             connection.do_job_set(Edge.setMaxSpeed(edgeID, speed));
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to set max speed");
-            
+            LOG.error("Failed to set max speed");
+
             return 1;
         }
     }
@@ -98,8 +101,8 @@ public class EdgeWrapper {
         try {
             return (Double) connection.do_job_get(Edge.getLastStepMeanSpeed(edgeID));
         } catch (Exception e) {
-            System.out.println("Failed to get mean speed");
-            
+            LOG.error("Failed to get mean speed");
+
             return -1.0;
         }
     }
@@ -108,7 +111,7 @@ public class EdgeWrapper {
     public int setGlobalMaxSpeed(double speed) {
         if (speed < 0) // Check if the speed is negative
         {
-            System.err.println("Error: Speed cannot be negative");
+            LOG.error("Error: Speed cannot be negative");
             return -1;
         }
         try
@@ -120,8 +123,8 @@ public class EdgeWrapper {
             }
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to set the global max speed");
-            
+            LOG.error("Failed to set the global max speed");
+
             return -1;
         }
     }
@@ -130,7 +133,7 @@ public class EdgeWrapper {
         try {
             return (Integer) connection.do_job_get(Edge.getLastStepVehicleNumber(edgeID));
         } catch (Exception e) {
-            System.out.println("Failed to get last step vehicle count on edge");
+            LOG.error("Failed to get last step vehicle count on edge");
             return 0;
         }
     }
@@ -139,7 +142,7 @@ public class EdgeWrapper {
         try {
             return (Double) connection.do_job_get(Edge.getLastStepOccupancy(edgeID));
         } catch (Exception e) {
-            System.out.println("Failed to get last step edge occupancy");
+            LOG.error("Failed to get last step edge occupancy");
             return 0;
         }
     }

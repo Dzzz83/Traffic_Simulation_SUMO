@@ -77,6 +77,8 @@ public class Controller {
     private Button TrafficLightIDBtn;
     @FXML
     private Button exportBtn;
+    @FXML
+    private Button exportPdfBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
@@ -655,7 +657,6 @@ public class Controller {
             });
         }
 
-        // auto mode is currently for fun, does no real impact
         if (autoModeToggle != null) {
             autoModeToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal) {
@@ -920,7 +921,17 @@ public class Controller {
         }
     }
 
-
+    @FXML
+    public void onExportPdfClick() {
+        if (sessionHistory.isEmpty()) {
+            LOG.warn("No data to export! Please run the simulation first.");
+            return;
+        }
+        LOG.info("Generating PDF report....");
+        String filename = "TrafficReport.pdf";
+        PdfReportManager pdfManager = new PdfReportManager();
+        pdfManager.generatePdf(filename, sessionHistory, avgSpeedChart, waitingTimeChart);
+    }
 
     // is improving, have to create a longer route.
     private void spawnVehicleOnSelectedRoute() {
@@ -970,9 +981,8 @@ public class Controller {
             // Purple color
             optimize_traffic.setStyle("-fx-background-color: #673AB7; -fx-text-fill: white; -fx-font-weight: bold;");
 
-            // FIX: Use the same variable name as in updateSimulation()
             lastOptimizedPhase = -1;
-            lastSelectedId = ""; // Optional: Reset ID so it re-checks immediately on next enable
+            lastSelectedId = "";
         }
     }
 
@@ -985,7 +995,6 @@ public class Controller {
             optimize_all_traffic.setText("DISABLE ALL OPTIMIZATION");
             optimize_all_traffic.setStyle("-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;");
 
-            // Safety: Turn off Single mode to avoid double-processing
             if (isOptimizationActive) {
                 onOptimizeClick(); // Toggle the other button off
             }
@@ -1389,10 +1398,5 @@ public class Controller {
         {
             mapDraw3D.drawRoad();
         }
-    }
-
-    private void updateVehicle3D()
-    {
-        mapDraw3D.updateVehicles();
     }
 }

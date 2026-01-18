@@ -1044,6 +1044,7 @@ public class Controller {
             mapCanvas.setVisible(false);
             subScene.setVisible(true);
             currentRenderer = mapDraw3D;
+
             subScene.requestFocus();
         } else {
             mapCanvas.setVisible(true);
@@ -1055,7 +1056,7 @@ public class Controller {
         boolean check = (roadGroup.getChildren().isEmpty());
 
         if (check) {
-            mapDraw3D.mapShapes = this.mapShapes;
+            mapDraw3D.setMapShapes(this.mapShapes);
             mapDraw3D.drawRoad();
         }
         // make the subScene focus on the keyboard
@@ -1236,10 +1237,10 @@ public class Controller {
         if (mapDraw == null) {
             return;
         }
-        mapDraw.setScale(this.SCALE);
-        mapDraw.setOffsetX(this.OFFSET_X);
-        mapDraw.setOffsetY(this.OFFSET_Y);
-        mapDraw.setMapShapes(this.mapShapes);
+        currentRenderer.setScale(this.SCALE);
+        currentRenderer.setOffsetX(this.OFFSET_X);
+        currentRenderer.setOffsetY(this.OFFSET_Y);
+        currentRenderer.setMapShapes(this.mapShapes);
 
         mapDraw.setShowEdgesID(this.showEdgesID);
         mapDraw.setShowVehicleID(this.showVehicleID);
@@ -1335,8 +1336,8 @@ public class Controller {
             return;
         }
 
-        mapDraw3D.panel = this.panel;
-        mapDraw3D.mapShapes = this.mapShapes;
+        mapDraw3D.setPanel(this.panel);
+        mapDraw3D.setMapShapes(this.mapShapes);
 
         boolean check1 = (mapDraw3D.getSubScene() == null);
 

@@ -44,11 +44,15 @@ public class MapDraw3D implements MapRenderer {
     private Map<String, Group> vehicleWithNames = new HashMap<>();
     private Map<String, Box> roadWithNames = new HashMap<>();
 
-    public ControlPanel panel;
+    private ControlPanel panel;
 
-    public Map<String, List<SumoPosition2D>> mapShapes;
+    private Map<String, List<SumoPosition2D>> mapShapes;
     List<Box> allRoadBoxes = new ArrayList<>();
 
+    /**
+     * Constructs a MapDraw3D instance and initializes the root 3D group.
+     * Sets up the hierarchical structure for roads, vehicles, lights, and the camera.
+     */
     public MapDraw3D() {
         root3D = new Group();
 
@@ -57,7 +61,12 @@ public class MapDraw3D implements MapRenderer {
         ObservableList<Node> children = root3D.getChildren();
         children.addAll(vehicleGroup, roadGroup, lightGroup, cameraGroup);
     }
-
+    /**
+     * Initializes the 3D SubScene with the specified dimensions and rendering settings.
+     * Enables depth buffering and anti-aliasing for the 3D environment.
+     * @param width The width of the sub-scene in pixels.
+     * @param height The height of the sub-scene in pixels.
+     */
     public void setSubScene(double width, double height) {
         // initialize subScene
         subScene = new SubScene(root3D, width, height, true, SceneAntialiasing.BALANCED);
@@ -66,7 +75,12 @@ public class MapDraw3D implements MapRenderer {
         // set the background color
         subScene.setFill(Color.SKYBLUE);
     }
-
+    /**
+     * Configures the perspective camera and its initial orientation.
+     * Sets the clipping planes and moves the camera group to a position relative
+     * to the map center.
+     * @param mapCenterCoord The central coordinate of the SUMO network.
+     */
     public void setCamera(SumoPosition2D mapCenterCoord) {
         // "true" means the car will get smaller the farther it moves
         camera = new PerspectiveCamera(true);
@@ -104,7 +118,11 @@ public class MapDraw3D implements MapRenderer {
         // create light at the center
         createLight(mapCenterCoord);
     }
-
+    /**
+     * Establishes the lighting environment for the 3D scene.
+     * Adds both global ambient light and a specific point light positioned above the map.
+     * @param mapCenterCoord The coordinate used to center the point light.
+     */
     public void createLight(SumoPosition2D mapCenterCoord) {
         ambientLight = new AmbientLight(Color.WHITE);
 
@@ -125,7 +143,10 @@ public class MapDraw3D implements MapRenderer {
     public Group getRoadGroup() {
         return this.roadGroup;
     }
-
+    /**
+     * Clears all existing 3D nodes from the road and vehicle groups.
+     * This is used to reset the visualization state.
+     */
     public void clearAll() {
         // clear everything
         ObservableList<Node> roads = roadGroup.getChildren();
@@ -234,7 +255,11 @@ public class MapDraw3D implements MapRenderer {
         vehicle.setRotationAxis(Rotate.Y_AXIS);
         vehicle.setRotate(vehAngle+180);
     }
-
+    /**
+     * Synchronizes 3D vehicle models with the current simulation data.
+     * Creates, updates, or removes 3D car models based on the active vehicle list
+     * in the simulation.
+     */
     public void updateVehicles() {
         if (panel == null)
         {
@@ -313,56 +338,65 @@ public class MapDraw3D implements MapRenderer {
 
         return roadBox;
     }
-
-        public void drawRoad()
+    /**
+     * Generates 3D box primitives representing the road network geometry.
+     * Calculates the length, position, and rotation of each road segment
+     * based on the map's coordinate shapes.
+     */
+    public void drawRoad()
+    {
+        allRoadBoxes.clear();
+        Box grassBox = createGrassBox(2000, 2000);
+        for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
         {
-            allRoadBoxes.clear();
-            Box grassBox = createGrassBox(2000, 2000);
-            for (Map.Entry<String, List<SumoPosition2D>> data : mapShapes.entrySet())
+            // get the points
+            List<SumoPosition2D> points = data.getValue();
+            for (int i = 0; i < points.size() - 1; i++)
             {
-                // get the points
-                List<SumoPosition2D> points = data.getValue();
-                for (int i = 0; i < points.size() - 1; i++)
-                {
 
-                    SumoPosition2D startPoint = points.get(i);
-                    SumoPosition2D endPoint = points.get(i+1);
+                SumoPosition2D startPoint = points.get(i);
+                SumoPosition2D endPoint = points.get(i+1);
 
-                    // calculate length
-                    double dx = endPoint.x - startPoint.x;
-                    double dz = endPoint.y - startPoint.y;
-                    double roadLength = Math.sqrt(dx*dx + dz*dz);
+                // calculate length
+                double dx = endPoint.x - startPoint.x;
+                double dz = endPoint.y - startPoint.y;
+                double roadLength = Math.sqrt(dx*dx + dz*dz);
 
-                    // calculate midPoint
-                    double midPointX = (startPoint.x + endPoint.x) / 2;
-                    double midPointY = (startPoint.y + endPoint.y) / 2;
-                    SumoPosition2D midPoint = new SumoPosition2D(midPointX, midPointY);
+                // calculate midPoint
+                double midPointX = (startPoint.x + endPoint.x) / 2;
+                double midPointY = (startPoint.y + endPoint.y) / 2;
+                SumoPosition2D midPoint = new SumoPosition2D(midPointX, midPointY);
 
-                    // calculate the angle of the road(*)
-                    double angle_rad = Math.atan2(dx, dz);
-                    double angle_deg = Math.toDegrees(angle_rad);
+                // calculate the angle of the road(*)
+                double angle_rad = Math.atan2(dx, dz);
+                double angle_deg = Math.toDegrees(angle_rad);
 
-                    // create the roadBox
-                    Box roadBox = createRoadBox(4.5, roadLength);
+                // create the roadBox
+                Box roadBox = createRoadBox(4.5, roadLength);
 
-                    // set the position of the road box
-                    roadBox.setTranslateX(midPoint.x);
-                    roadBox.setTranslateZ(midPoint.y);
+                // set the position of the road box
+                roadBox.setTranslateX(midPoint.x);
+                roadBox.setTranslateZ(midPoint.y);
 
-                    // set the rotation axis of the road box
-                    roadBox.setRotationAxis(Rotate.Y_AXIS);
-                    roadBox.setRotate(angle_deg);
+                // set the rotation axis of the road box
+                roadBox.setRotationAxis(Rotate.Y_AXIS);
+                roadBox.setRotate(angle_deg);
 
-                    // add in the list
-                    allRoadBoxes.add(roadBox);
-                }
-
+                // add in the list
+                allRoadBoxes.add(roadBox);
             }
-            ObservableList<Node> roadList = roadGroup.getChildren();
-            roadList.addAll(allRoadBoxes);
-            roadList.add(grassBox);
-        }
 
+        }
+        ObservableList<Node> roadList = roadGroup.getChildren();
+        roadList.addAll(allRoadBoxes);
+        roadList.add(grassBox);
+    }
+    /**
+     * Calculates the geographic center point of the simulation map.
+     * Retrieves the network boundary and finds the midpoint between the
+     * bottom-left and top-right coordinates.
+     * @return A SumoPosition2D object representing the map's center.
+     */
     public SumoPosition2D getMapCenter() {
         try
         {
@@ -396,7 +430,12 @@ public class MapDraw3D implements MapRenderer {
         }
         return new SumoPosition2D(0, 0);
     }
-
+    /**
+     * Adjusts the camera's elevation (Y-axis) in the 3D world.
+     * @param isSpacePressed True to fly upward.
+     * @param isShiftPressed True to fly downward.
+     * @param speed The velocity multiplier for the movement.
+     */
     // fly up and fly down method
     public void upDownMovement(boolean isSpacePressed, boolean isShiftPressed, double speed) {
         // variable to store current Y-Axis
@@ -429,13 +468,24 @@ public class MapDraw3D implements MapRenderer {
         }
     }
 
+    /**
+     * Converts the camera's current Y-axis rotation from degrees to radians.
+     * Used for trigonometric calculations during camera translation.
+     * @return The camera angle in radians.
+     */
     // get angle and convert to radiance helper function
     public double getRadianAngle() {
         double angle = rotateY.getAngle();
         return Math.toRadians(angle);
     }
 
-
+    /**
+     * Translates the camera horizontally (left/right) relative to its current rotation.
+     * Uses trigonometry to ensure movement is aligned with the camera's view direction.
+     * @param isAPressed True to move left.
+     * @param isDPressed True to move right.
+     * @param speed The velocity multiplier for the movement.
+     */
     // move left move right method
     public void leftRightMovement(boolean isAPressed, boolean isDPressed, double speed) {
         // get the camera's angle
@@ -481,7 +531,13 @@ public class MapDraw3D implements MapRenderer {
             LOG.error("Failed to move the camera left and right");
         }
     }
-
+    /**
+     * Translates the camera forward or backward relative to its current rotation.
+     * Uses trigonometry to ensure movement is aligned with the camera's view direction.
+     * @param isWPressed True to move forward.
+     * @param isSPressed True to move backward.
+     * @param speed The velocity multiplier for the movement.
+     */
     // move foward and backward method
     public void fowardBackwardMovement(boolean isWPressed, boolean isSPressed, double speed) {
         // get the camera's angle
@@ -670,5 +726,20 @@ public class MapDraw3D implements MapRenderer {
     public void setPanel(ControlPanel panel) {
         this.panel = panel;
     }
+    @Override
+    public void setScale(double scale) {
+    }
 
+    @Override
+    public void setOffsetX(double offsetX) {
+    }
+
+    @Override
+    public void setOffsetY(double offsetY) {
+    }
+
+    @Override
+    public void setShowRouteID(boolean show){
+
+    }
 }

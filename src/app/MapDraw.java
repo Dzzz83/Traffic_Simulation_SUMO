@@ -45,7 +45,7 @@ public class MapDraw implements MapRenderer
 
     private ControlPanel panel;
     public TrafficLightWrapper tlsWrapper;
-    public Map<String, List<SumoPosition2D>> mapShapes;
+    private Map<String, List<SumoPosition2D>> mapShapes;
 
     public double SCALE = 1.0;
     public double OFFSET_X = 0;
@@ -758,12 +758,15 @@ public class MapDraw implements MapRenderer
     public void setMapShapes(Map<String, List<SumoPosition2D>> mapShapes) {
         this.mapShapes = mapShapes;
     }
+    @Override
     public void setScale(double scale) {
         this.SCALE = scale;
     }
+    @Override
     public void setOffsetX(double offsetX) {
         this.OFFSET_X = offsetX;
     }
+    @Override
     public void setOffsetY(double offsetY) {
         this.OFFSET_Y = offsetY;
     }
@@ -775,6 +778,7 @@ public class MapDraw implements MapRenderer
     public void setShowVehicleID(boolean show) {
         this.showVehicleID = show;
     }
+    @Override
     public void setShowRouteID(boolean show) {
         this.showRouteID = show;
     }

@@ -33,6 +33,30 @@ public interface MapRenderer {
      * @param show true to enable labels, false to hide them.
      */
     void setShowVehicleID(boolean show);
-
+    /**
+     * Toggles the visibility of the current route ID for each vehicle.
+     * * @param show True to display the route name, false to hide it.
+     */
+    void setShowRouteID(boolean show);
+    /**
+     * Sets the control panel reference to allow the renderer to query
+     * live simulation data such as vehicle positions, angles, and colors.
+     * * @param panel The active ControlPanel instance.
+     */
     void setPanel(ControlPanel panel);
+    /**
+     * Sets the global zoom scale for the visualization.
+     * * @param scale The multiplier for coordinate translation (e.g., 1.0 for default).
+     */
+    void setScale(double scale);
+    /**
+     * Sets the horizontal translation offset for panning the map view.
+     * * @param offsetX The pixel offset to be added to all X-coordinates.
+     */
+    void setOffsetX(double offsetX);
+    /**
+     * Sets the vertical translation offset for panning the map view.
+     * * @param offsetY The pixel offset to be added to all Y-coordinates.
+     */
+    void setOffsetY(double offsetY);
 }

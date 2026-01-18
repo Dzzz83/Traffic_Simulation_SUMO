@@ -5,6 +5,7 @@ import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
@@ -37,6 +38,7 @@ public class PdfReportManager {
 
             addReportHeader(document);
             addSimulationMetrics(document, history);
+            document.add(new AreaBreak());
             addVisualAnalysis(document, lineChart, barChart);
 
             document.close();
@@ -101,12 +103,12 @@ public class PdfReportManager {
 
     private SimulationMetrics calculateMetrics(List<SimulationStats> history) {
         double speedSum = 0;
-        double totalCo2 = 0;
+        double totalCo2Mg = 0;
         double maxSpeed = 0;
 
         for (SimulationStats record : history) {
             speedSum += record.speed;
-            totalCo2 += (record.co2 * 0.1);
+            totalCo2Mg += (record.co2 * 0.1);
             if (record.speed > maxSpeed) {
                 maxSpeed = record.speed;
             }
@@ -114,6 +116,7 @@ public class PdfReportManager {
 
         double avgSpeed = speedSum / history.size();
         double duration = history.size() * 0.1;
+        double totalCo2 = totalCo2Mg / 1000.0;
 
         return new SimulationMetrics(duration, avgSpeed, maxSpeed, totalCo2);
     }

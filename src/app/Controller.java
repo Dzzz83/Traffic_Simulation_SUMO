@@ -1148,9 +1148,8 @@ public class Controller {
             double totalCO2 = panel.getTotalCO2();
             // mg/s to grams/s
             co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
-            if (isRecording) {
-                sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
-            }
+
+            sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
 
             String hotspot = panel.getMostCongestedEdge();
             congestionHotspot.setText("Hotspot: " + hotspot);

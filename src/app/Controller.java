@@ -897,31 +897,44 @@ public class Controller {
         }
     }
 
+    /**
+     * Toggles the data recording state between starting a new session and saving the current one.
+     */
     @FXML
     public void onExportClick() {
         if (!isRecording) {
-            LOG.info("User requested Data Export...");
-
-            sessionHistory.clear();
-
-            isRecording = true;
-
-            exportBtn.setText("Stop & Save");
-        }
-        else {
-            LOG.info("Stopping Recording & Saving...");
-
-            isRecording = false;
-            exportBtn.setText("Export CSV");
-            String filename = "TrafficReport.csv";
-
-            ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
-            Thread exportThread = new Thread(myTask);
-
-            exportThread.start();
+            startRecording();
+        } else {
+            stopRecordingAndSave();
         }
     }
 
+    /**
+     * Initiates data collection by clearing previous history and updating the UI state.
+     */
+    private void startRecording() {
+        LOG.info("User requested Data Export...");
+        sessionHistory.clear();
+        isRecording = true;
+        exportBtn.setText("Stop & Save");
+    }
+
+    /**
+     * Terminates data collection and launches a background thread to save the CSV file.
+     */
+    private void stopRecordingAndSave() {
+        LOG.info("Stopping Recording & Saving...");
+        isRecording = false;
+        exportBtn.setText("Export CSV");
+
+        String filename = "TrafficReport.csv";
+        ExportTask myTask = new ExportTask(reportManager, new LinkedList<>(sessionHistory), filename);
+        new Thread(myTask).start();
+    }
+
+    /**
+     * Generates a PDF summary report if simulation data exists.
+     */
     @FXML
     public void onExportPdfClick() {
         if (sessionHistory.isEmpty()) {

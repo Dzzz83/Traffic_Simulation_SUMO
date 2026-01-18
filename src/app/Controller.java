@@ -381,9 +381,6 @@ public class Controller {
         );
         // default the first type
         vehicleTypeCombo.getSelectionModel().selectFirst();
-
-        // initialize the traffic light selection dropdown menu
-        trafficIdCombo.getItems().addAll("Junction_1", "Junction_2");
         trafficIdCombo.getSelectionModel().selectFirst();
     }
 
@@ -529,12 +526,6 @@ public class Controller {
             else if (hoveredTrafficLightId != null) {
                 trafficIdCombo.setValue(hoveredTrafficLightId);
                 LOG.info("Map Clicked: Selected Traffic Light " + hoveredTrafficLightId);
-                drawMap();
-            }
-            else if (hoveredTrafficLightId != null) {
-                trafficIdCombo.setValue(hoveredTrafficLightId);
-                LOG.info("Syncing Dropdown: Map Clicked -> " + hoveredTrafficLightId);
-
                 drawMap();
             }
         });
@@ -968,6 +959,14 @@ public class Controller {
         // This calls the method that sets the program back to "0"
         panel.turnOnAllLights();
     }
+
+    /**
+     * Toggles the automatic optimization mode for the currently selected traffic light.
+     * When enabled, the button updates to an "Active" state (Amber color) and the system begins
+     * optimizing the selected junction. When disabled, the button reverts to its default state
+     * (Purple), and the optimization tracking variables ({@code lastOptimizedPhase}, {@code lastSelectedId})
+     * are reset to ensure a clean state for future activations.
+     */
     @FXML
     public void onOptimizeClick() {
         isOptimizationActive = !isOptimizationActive;
@@ -987,6 +986,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Toggles the global optimization mode for all traffic lights in the simulation network.
+     * When enabled, this forces the system to attempt optimization on every available junction.
+     * To prevent conflict or double-processing, enabling global optimization will automatically
+     * disable the single-light optimization mode if it is currently active.
+     */
     @FXML
     public void onOptimizeAllClick() {
         isGlobalOptimizationActive = !isGlobalOptimizationActive;

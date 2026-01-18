@@ -28,8 +28,18 @@ import java.util.List;
 
 public class PdfReportManager {
 
+    /**
+     * Manages the generation of PDF summary reports for the traffic simulation.
+     */
     private static final Logger LOG = LogManager.getLogger(PdfReportManager.class);
 
+    /**
+     * Generates a complete PDF report at the specified destination.
+     * @param destination The file path where the PDF will be saved.
+     * @param history     The list of historical simulation stats to aggregate.
+     * @param lineChart   The JavaFX LineChart component for speed analysis.
+     * @param barChart    The JavaFX BarChart component for waiting time distribution.
+     */
     public void generatePdf(String destination, List<SimulationStats> history, Chart lineChart, Chart barChart) {
         try {
             PdfWriter writer = new PdfWriter(destination);
@@ -51,7 +61,10 @@ public class PdfReportManager {
         }
     }
 
-    // Helper classes
+    // Helper methods
+    /**
+     * Adds the report title and the current generation timestamp to the document.
+     */
     private void addReportHeader(Document document) {
         Paragraph title = new Paragraph("Traffic Simulation Report")
                 .setTextAlignment(TextAlignment.CENTER)
@@ -68,6 +81,12 @@ public class PdfReportManager {
         document.add(new Paragraph("\n"));
     }
 
+    /**
+     * Calculates aggregate metrics from the history and adds them as a text block.
+     *
+     * @param document The target PDF document.
+     * @param history  The raw simulation data.
+     */
     private void addSimulationMetrics(Document document, List<SimulationStats> history) {
         document.add(new Paragraph("Simulation Metrics:").setBold().setFontSize(14));
 
@@ -85,11 +104,17 @@ public class PdfReportManager {
         document.add(new Paragraph("\n"));
     }
 
+    /**
+     * Adds the visual chart components to the document.
+     */
     private void addVisualAnalysis(Document document, Chart lineChart, Chart barChart) {
         addChartToDocument(document, "Real-Time Speed Analysis", lineChart);
         addChartToDocument(document, "Congestion & Waiting Time Distribution", barChart);
     }
 
+    /**
+     * Helper to render a specific chart with a title into the PDF.
+     */
     private void addChartToDocument(Document document, String title, Chart chart) {
         document.add(new Paragraph(title).setBold());
 
@@ -101,6 +126,10 @@ public class PdfReportManager {
         }
     }
 
+    /**
+     * Aggregates raw history data into a single summary object.
+     * @param history The list of per-step stats.
+     */
     private SimulationMetrics calculateMetrics(List<SimulationStats> history) {
         double speedSum = 0;
         double totalCo2Mg = 0;
@@ -121,6 +150,10 @@ public class PdfReportManager {
         return new SimulationMetrics(duration, avgSpeed, maxSpeed, totalCo2);
     }
 
+    /**
+     * Converts a JavaFX Chart node into an iText-compatible Image.
+     * @param chart The JavaFX chart to capture.
+     */
     private Image convertChartToPdfImage(Chart chart) {
         try {
             WritableImage fxImage = chart.snapshot(new SnapshotParameters(), null);
@@ -141,7 +174,10 @@ public class PdfReportManager {
         }
     }
 
-    // Inner Class for Data Transfer
+    /**
+     * Data Transfer Object (DTO) for holding aggregated simulation statistics.
+     * Used to pass calculated metrics between the calculation logic and the PDF writing logic.
+     */
     private static class SimulationMetrics {
         final double duration;
         final double avgSpeed;

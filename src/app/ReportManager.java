@@ -10,6 +10,12 @@ import org.apache.logging.log4j.Logger;
 public class ReportManager  {
     private static final Logger LOG = LogManager.getLogger(ReportManager.class);
 
+    /**
+     * Saves the provided simulation history to a CSV file.
+     * @param filePath    The absolute or relative path where the file should be saved.
+     * @param dataHistory The list of SimulationStats objects containing the data to write.
+     * @throws TrafficSimulationException If the file cannot be created or opened.
+     */
     public void saveToCSV(String filePath, List<SimulationStats> dataHistory) throws TrafficSimulationException {
         File file = new File(filePath);
 
@@ -26,6 +32,7 @@ public class ReportManager  {
             }
             LOG.info("Report saved successfully to: " + file.getAbsolutePath());
         } catch (Exception e) {
+            LOG.error("Failed to write CSV file", e);
             throw new TrafficSimulationException("Could not create file: " + e.getMessage());
         }
 

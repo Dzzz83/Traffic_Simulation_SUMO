@@ -686,8 +686,13 @@ public class Controller {
     }
 
 
-    // button logic
-    // startButton
+    /**
+     * Resumes the simulation loop.
+     * <p>
+     * Re-starts the {@link AnimationTimer} and updates the start/stop button states
+     * to prevent duplicate activation.
+     * </p>
+     */
     @FXML
     public void onStartClick() {
         LOG.info("Resuming Simulation Loop...");
@@ -696,7 +701,12 @@ public class Controller {
         stopBtn.setDisable(false);
     }
 
-    // stop button
+    /**
+     * Pauses the simulation loop.
+     * <p>
+     * Stops the {@link AnimationTimer} and enables the start button.
+     * </p>
+     */
     @FXML
     public void onStopClick() {
         LOG.info("Stopping Simulation...");
@@ -722,6 +732,17 @@ public class Controller {
         return mapCanvas.getHeight() - ((worldY * SCALE) + OFFSET_Y);
     }
 
+    /**
+     * Identifies the road edge located at the specified screen coordinates.
+     * <p>
+     * Converts screen coordinates (mouse position) to world coordinates and checks
+     * for intersection with known map shapes.
+     * </p>
+     *
+     * @param screenX The X-coordinate of the mouse on the canvas.
+     * @param screenY The Y-coordinate of the mouse on the canvas.
+     * @return The ID of the edge found at the location, or {@code null} if no edge is found.
+     */
     private String findEdge(double screenX, double screenY) {
         if (mapShapes == null) return null;
 
@@ -756,6 +777,22 @@ public class Controller {
         return null;
     }
 
+    /**
+     * Renders a highlighted road segment with a specific two-tone visual style.
+     * <p>
+     * This method is a key component of the "Inject Vehicles" feature visualization.
+     * It draws a single segment of a road (from point p1 to p2) using a "cased line" effect:
+     * <ul>
+     * <li>First, a wide <b>LimeGreen</b> line is drawn to act as a border/background.</li>
+     * <li>Second, a narrower <b>Dark Grey (#404040)</b> line is drawn on top.</li>
+     * </ul>
+     * This creates a distinct visual contrast used to indicate selected routes or active edges.
+     * </p>
+     *
+     * @param gc The {@link GraphicsContext} used for rendering on the canvas.
+     * @param p1 The starting {@link SumoPosition2D} coordinate of the segment in simulation space.
+     * @param p2 The ending {@link SumoPosition2D} coordinate of the segment in simulation space.
+     */
     private void drawSegmentHighlight(GraphicsContext gc, SumoPosition2D p1, SumoPosition2D p2) {
         double x1 = worldToScreenX(p1.x);
         double y1 = worldToScreenY(p1.y);
@@ -837,6 +874,13 @@ public class Controller {
         }
     }
 
+    /**
+     * Cancels the vehicle spawn process.
+     * <p>
+     * Hides the vehicle input form, clears any selected routes, and resets the
+     * UI components (buttons, cursor) to their default state.
+     * </p>
+     */
     @FXML
     public void onCancelSpawnClick() {
         LOG.info("Spawn cancelled by user.");
@@ -844,6 +888,13 @@ public class Controller {
         resetSpawningVehicleUI();
     }
 
+    /**
+     * Resets the "Inject Vehicle" UI to its default state.
+     * <p>
+     * Clears the list of selected edges, resets the "Add Vehicle" button style,
+     * and restores the default mouse cursor.
+     * </p>
+     */
     private void resetSpawningVehicleUI() {
         selectedRouteEdges.clear();
         validNextEdges.clear();
@@ -864,7 +915,6 @@ public class Controller {
      * @param count The number of vehicles to spawn.
      * Vehicles are spawned with a 2-second time gap to prevent collisions.
      */
-
     private void spawnMultipleVehicles(int count) {
         long timestamp = System.currentTimeMillis();
         String tempRouteId = "route_" + timestamp;
@@ -925,7 +975,21 @@ public class Controller {
         pdfManager.generatePdf(filename, sessionHistory, avgSpeedChart, waitingTimeChart);
     }
 
-    // is improving, have to create a longer route.
+    /**
+     * Spawns a single vehicle on the currently selected route.
+     * <p>
+     * This method performs the following actions:
+     * <ul>
+     * <li>Generates unique IDs for the route and vehicle using the current system time.</li>
+     * <li>Registers the new route (defined by {@code selectedRouteEdges}) with the simulation backend.</li>
+     * <li>Injects a single vehicle of type "DEFAULT_VEHTYPE" to depart immediately at the current simulation time.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * If the route creation or vehicle injection fails (e.g., due to an invalid edge list),
+     * the error is caught and logged.
+     * </p>
+     */
     private void spawnVehicleOnSelectedRoute() {
         String vehId = "veh_" + System.currentTimeMillis();
         String tempRouteId = "route_" + System.currentTimeMillis();

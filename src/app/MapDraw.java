@@ -330,6 +330,17 @@ public class MapDraw implements MapRenderer
         gc.strokePolyline(xPoints, yPoints, points.size());
     }
 
+    /**
+     * Draws the ID label of a road edge at the midpoint of its geometry.
+     * <p>
+     * Calculates the center point and perpendicular vector of the middle segment
+     * to offset the text slightly away from the road line for better readability.
+     * </p>
+     *
+     * @param gc     The GraphicsContext used for drawing.
+     * @param laneID The unique identifier string of the lane/edge.
+     * @param points The list of 2D coordinates defining the shape of the edge.
+     */
     public void drawEdgeLabel(GraphicsContext gc, String laneID, List<SumoPosition2D> points)
     {
         if (points.size() < 2) return;

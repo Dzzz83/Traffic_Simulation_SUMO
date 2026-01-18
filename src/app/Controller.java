@@ -1096,65 +1096,97 @@ public class Controller {
         LOG.info("Map returned to beginning state. Press Start to begin");
     }
 
+    /**
+     * This is for the update cycle for the simulation UI and data recording.
+     */
     private void updateStats() {
         if (panel.isRunning()) {
-            int count = panel.getVehicleCount(); // Get the vehicle count from the ControlPanel
-            numberVehicles.setText("Vehicles: " + count);
-            int edgeCount = panel.getEdgeCount(); // Get the edge count from the ControlPanel
-            numberOfEdges.setText("Edges: " + edgeCount);
+            // Fetch data
+            int vehicleCount = panel.getVehicleCount();
+            int edgeCount = panel.getEdgeCount();
             int trafficLightCount = panel.getTrafficLightCount();
-            numOfTL.setText("Traffic Lights: " + trafficLightCount);
-
-
-            if (!panel.getVehicleIDs().isEmpty()) {
-                double avgSpeed = panel.getGlobalMeanSpeed(); // Get Avg speed from the ControlPanel
-                averageSpeed.setText(String.format("Avg Speed: %.2f km/h", avgSpeed * 3.6)); // Only take 2 decimal points and times 3.6 to be km/h rather than m/s
-            }
-
-            double currentSpeed = panel.getGlobalMeanSpeed(); // Get the GLOBAL mean speed (average speed for every vehicle on the map)
-            currentSpeed *= 3.6; // m/s to km/h
-
-            timeSeconds += 0.1; // X-axis to show the time
-            speedSeries.getData().add(new XYChart.Data<>(timeSeconds, currentSpeed)); // Data point for the chart
-
-
-            List<Double> waits = panel.getAccumulatedWaitingTimes();
-            int stage1 = 0;
-            int stage2 = 0;
-            int stage3 = 0;
-
-            for (double w : waits) {
-                if (w < 30) stage1++;
-                else if (w < 60) stage2++;
-                else stage3++;
-            }
-
-            timeDataSeries.getData().get(0).setYValue(stage1);
-            timeDataSeries.getData().get(1).setYValue(stage2);
-            timeDataSeries.getData().get(2).setYValue(stage3);
-
-            if (speedSeries.getData().size() > 50) { // Only keep the last 50 data point and remove all before it
-                speedSeries.getData().remove(0);
-            }
+            double currentSpeed = panel.getGlobalMeanSpeed() * 3.6; // Convert m/s to km/h
+            double totalCo2 = panel.getTotalCO2() / 1000;
             double congestion = panel.getCongestionPercentage();
-            // Color to gain insight
-            String color = "green";
-            if (congestion > 30) color = "orange";
-            if (congestion > 60) color = "red";
-
-            congestionDensity.setText(String.format("Density: %.1f%%", congestion));
-            congestionDensity.setStyle("-fx-text-fill: " + color + ";");
-
-            // 5. Show CO2
-            double totalCO2 = panel.getTotalCO2();
-            // mg/s to grams/s
-            co2Emission.setText(String.format("CO2 Emission: %.2f g/s", totalCO2 / 1000.0));
-
-            sessionHistory.add(new SimulationStats(timeSeconds, currentSpeed, totalCO2, congestion));
-
+            List<Double> waits = panel.getAccumulatedWaitingTimes();
             String hotspot = panel.getMostCongestedEdge();
-            congestionHotspot.setText("Hotspot: " + hotspot);
+
+            updateDashboardLabels(vehicleCount, edgeCount, trafficLightCount, currentSpeed, totalCo2, hotspot);
+            updateCongestionIndicator(congestion);
+            updateCharts(currentSpeed, waits);
+            recordHistory(currentSpeed, totalCo2, congestion);
         }
+    }
+
+    /**
+     * Updates the text-based dashboard labels with current simulation metrics.
+     *
+     * @param vehicles      The total number of active vehicles in the simulation.
+     * @param edges         The total count of edges (roads) in the network.
+     * @param trafficLights The number of active traffic light logic units.
+     * @param speed         The global average speed of all vehicles in km/h.
+     * @param co2           The total CO2 emissions in g/s.
+     * @param hotspot       The ID of the edge currently experiencing the highest congestion.
+     */
+    private void updateDashboardLabels(int vehicles, int edges, int trafficLights, double speed, double co2, String hotspot) {
+        numberVehicles.setText("Vehicles: " + vehicles);
+        numberOfEdges.setText("Edges: " + edges);
+        numOfTL.setText("Traffic Lights: " + trafficLights);
+        averageSpeed.setText(String.format("Avg Speed: %.2f km/h", speed));
+        co2Emission.setText(String.format("CO2 Emission: %.2f g/s", co2));
+        congestionHotspot.setText("Hotspot: " + hotspot);
+    }
+
+    /**
+     * Updates the congestion density label and applies color coding based on severity.
+     * @param congestion The current network congestion percentage (0.0 to 100.0).
+     */
+    private void updateCongestionIndicator(double congestion) {
+        String color = "green";
+        if (congestion > 60) color = "red";
+        else if (congestion > 30) color = "orange";
+
+        congestionDensity.setText(String.format("Density: %.1f%%", congestion));
+        congestionDensity.setStyle("-fx-text-fill: " + color + ";");
+    }
+
+    /**
+     * Updates the real-time JavaFX charts with the latest simulation data.
+     * @param speed     The current average speed in km/h to be plotted on the timeline.
+     * @param waitTimes A list of accumulated waiting times (in seconds) for all active vehicles.
+     */
+    private void updateCharts(double speed, List<Double> waitTimes) {
+        // Update Speed Line Chart
+        timeSeconds += 0.1;
+        speedSeries.getData().add(new XYChart.Data<>(timeSeconds, speed));
+
+        // Maintain buffer of 50 data points
+        if (speedSeries.getData().size() > 50) {
+            speedSeries.getData().remove(0);
+        }
+
+        // Update Waiting Time Bar Chart
+        int stage1 = 0, stage2 = 0, stage3 = 0;
+        for (double w : waitTimes) {
+            if (w < 30) stage1++;
+            else if (w < 60) stage2++;
+            else stage3++;
+        }
+
+        // Update existing data series points
+        timeDataSeries.getData().get(0).setYValue(stage1);
+        timeDataSeries.getData().get(1).setYValue(stage2);
+        timeDataSeries.getData().get(2).setYValue(stage3);
+    }
+
+    /**
+     * Records the current step's statistics into the session history list.
+     * @param speed      The average speed in km/h.
+     * @param co2        The total CO2 emissions in g/s.
+     * @param congestion The congestion percentage.
+     */
+    private void recordHistory(double speed, double co2, double congestion) {
+        sessionHistory.add(new SimulationStats(timeSeconds, speed, co2, congestion));
     }
 
     private void displayCoords()

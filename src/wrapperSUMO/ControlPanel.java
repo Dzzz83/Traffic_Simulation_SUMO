@@ -282,7 +282,7 @@ public class ControlPanel
         } catch (Exception e) {
             // if the vehicle ID doesn't exist yet or the connection drops,
             // log the error and return Yellow to prevent the GUI from crashing
-            System.err.println("TraCI Color Error for " + id + ": " + e.getMessage());
+            LOG.error("TraCI Color Error for " + id + ": " + e.getMessage());
             return Color.YELLOW;
         }
     }
@@ -408,7 +408,7 @@ public class ControlPanel
             //Delegate to the wrapper
             return vehicleWrapper.getVehicleTypeID(vehicleID);
         } catch (Exception e) {
-            System.err.println("Error getting type for " + vehicleID);
+            LOG.error("Error getting type for " + vehicleID);
             return "DEFAULT_VEHTYPE";
         }
     }
@@ -634,7 +634,7 @@ public class ControlPanel
         }
         catch (Exception e)
         {
-            System.out.println("Failed to get next switch time for " + tlsID);
+            LOG.error("Failed to get next switch time for " + tlsID);
             
         }
         return -1.0;
@@ -1100,7 +1100,7 @@ public class ControlPanel
                 totalCO2 += vehicleWrapper.getCO2Emission(id);
             }
         } catch (Exception e) {
-            System.out.println("Error calculating CO2");
+            LOG.error("Error calculating CO2");
         }
         return totalCO2;
     }

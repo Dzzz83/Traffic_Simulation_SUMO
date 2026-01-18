@@ -26,7 +26,7 @@ public class ExportTask implements Runnable {
             reportManager.saveToCSV(filename, dataToSave);
         } catch (TrafficSimulationException e) {
             LOG.error("Export Task Failed", e);
-            System.err.println("Error saving file: " + e.getMessage());
+            LOG.error("Error saving file: " + e.getMessage());
         }
     }
 }

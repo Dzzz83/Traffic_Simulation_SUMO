@@ -77,6 +77,8 @@ public class Controller {
     private Button TrafficLightIDBtn;
     @FXML
     private Button exportBtn;
+    @FXML
+    private Button exportPdfBtn;
 
     @FXML
     private ComboBox<String> trafficIdCombo;
@@ -911,7 +913,17 @@ public class Controller {
         }
     }
 
-
+    @FXML
+    public void onExportPdfClick() {
+        if (sessionHistory.isEmpty()) {
+            LOG.warn("No data to export! Please run the simulation first.");
+            return;
+        }
+        LOG.info("Generating PDF report....");
+        String filename = "TrafficReport.pdf";
+        PdfReportManager pdfManager = new PdfReportManager();
+        pdfManager.generatePdf(filename, sessionHistory, avgSpeedChart, waitingTimeChart);
+    }
 
     // is improving, have to create a longer route.
     private void spawnVehicleOnSelectedRoute() {

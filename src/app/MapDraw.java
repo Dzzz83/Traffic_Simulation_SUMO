@@ -258,7 +258,7 @@ public class MapDraw implements MapRenderer
             if (showRouteID) {
                 try {
                     String routeID = panel.getVehicleRouteID(id);
-                    gc.setFill(Color.GREEN);
+                    gc.setFill(Color.RED);
                     gc.fillText(routeID, x, y + 15);
                 } catch (Exception e) {}
             }
